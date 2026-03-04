@@ -1,27 +1,27 @@
 import NetInfo from '@react-native-community/netinfo';
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  increment,
-  orderBy,
-  query,
-  serverTimestamp,
-  Timestamp,
-  where,
-  writeBatch,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    increment,
+    orderBy,
+    query,
+    serverTimestamp,
+    Timestamp,
+    where,
+    writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import {
-  addToCache,
-  COLLECTIONS,
-  enqueue,
-  OP,
-  readFromCache,
-  removeFromCache,
-  saveToCache,
-  updateInCache,
+    addToCache,
+    COLLECTIONS,
+    enqueue,
+    OP,
+    readFromCache,
+    removeFromCache,
+    saveToCache,
+    updateInCache,
 } from './offlineQueue';
 
 const getUserId = () => {
@@ -491,9 +491,20 @@ export const getDashboardData = async (month, year) => {
 
     const categoryMap = {};
     expenses.forEach((e) => {
-      const key = e.categoryId || 'other';
+      // Group by ID, but if it's 'other', group by name to keep distinct types separate
+      // We must avoid duplicate 'id' fields in the final array to prevent React key errors
+      const catId = e.categoryId || 'other';
+      const key = catId !== 'other' ? catId : `other_${e.categoryName}`;
+      
       if (!categoryMap[key]) {
-        categoryMap[key] = { id: key, name: e.categoryName, icon: e.categoryIcon, total: 0, count: 0 };
+        categoryMap[key] = { 
+          id: key, // Use the unique key as ID for component mapping
+          originalId: catId, 
+          name: e.categoryName || 'Other', 
+          icon: e.categoryIcon || '📦', 
+          total: 0, 
+          count: 0 
+        };
       }
       categoryMap[key].total += e.amount || 0;
       categoryMap[key].count += 1;

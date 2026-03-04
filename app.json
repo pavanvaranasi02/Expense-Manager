@@ -5,6 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/ExpenseManager.jpg",
+    "splash": {
+      "image": "./assets/ExpenseManager.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A1A2E"
+    },
     "scheme": "expensemanager",
     "newArchEnabled": true,
     "ios": {
@@ -13,7 +19,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1a1a2e"
+        "foregroundImage": "./assets/ExpenseManager.jpg",
+        "backgroundColor": "#1A1A2E"
       },
       "package": "com.pavan.expensemanager"
     },

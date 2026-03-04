@@ -8,6 +8,7 @@ const useAuthStore = create((set, get) => ({
   isLoading: true,
   isOnboardingComplete: false,
   role: 'USER',
+  isStealthMode: false,
 
   // Actions
   setUser: (user) => set({
@@ -27,6 +28,7 @@ const useAuthStore = create((set, get) => ({
       userProfile: profile,
       isOnboardingComplete: profile?.onboardingComplete === true,
       role: profile?.role || 'USER',
+      isStealthMode: profile?.isStealthMode === true,
     });
   },
 
@@ -58,6 +60,9 @@ const useAuthStore = create((set, get) => ({
       isLoading: false,
     });
   },
+  
+  setStealthMode: (isStealthMode) => set({ isStealthMode }),
+  toggleStealthMode: () => set((state) => ({ isStealthMode: !state.isStealthMode })),
 
   // Getters
   isMaster: () => get().role === 'MASTER',

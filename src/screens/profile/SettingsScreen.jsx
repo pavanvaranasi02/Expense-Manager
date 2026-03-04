@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebase';
@@ -113,6 +113,26 @@ const SettingsScreen = ({ navigation }) => {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* Privacy */}
+        <Text style={styles.sectionTitle}>Privacy</Text>
+        <View style={styles.card}>
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Public Stealth Mode</Text>
+              <Text style={styles.settingSubLabel}>Mask balances and currency values (****)</Text>
+            </View>
+            <Switch
+              value={useAuthStore((state) => state.isStealthMode)}
+              onValueChange={(val) => {
+                useAuthStore.getState().setStealthMode(val);
+                saveToFirebase('isStealthMode', val);
+              }}
+              trackColor={{ true: '#6C63FF', false: '#E5E7EB' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
         </View>
 
         {/* Notifications */}

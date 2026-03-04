@@ -75,8 +75,12 @@ const CustomTabBarButton = ({ children, onPress }) => (
 // Dummy screen for the center tab
 const DummyScreen = () => null;
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 // ===== Main Tab Navigator =====
 const MainTabNavigator = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -110,8 +114,8 @@ const MainTabNavigator = () => {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: 65,
-          paddingBottom: 8,
+          height: 65 + Math.max(0, insets.bottom - 8),
+          paddingBottom: 8 + Math.max(0, insets.bottom - 8),
           paddingTop: 8,
         },
         tabBarLabelStyle: {

@@ -2,38 +2,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    ActivityIndicator,
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAccounts } from '../../services/accountService';
 import { addExpense } from '../../services/expenseService';
 import {
-  addInvestment,
-  addInvestmentAmount,
-  calculateInvestmentTotals,
-  confirmRdPayment,
-  confirmSip,
-  deleteInvestment,
-  getInvestments,
-  getPendingRdPayments,
-  getPendingSips,
-  INVESTMENT_TYPES,
-  processMaturedInvestments,
-  skipSip,
-  updateInvestment,
+    addInvestment,
+    addInvestmentAmount,
+    calculateInvestmentTotals,
+    confirmRdPayment,
+    confirmSip,
+    deleteInvestment,
+    getInvestments,
+    getPendingRdPayments,
+    getPendingSips,
+    INVESTMENT_TYPES,
+    processMaturedInvestments,
+    skipSip,
+    updateInvestment,
 } from '../../services/investmentService';
 
 const PortfolioScreen = ({ navigation }) => {
@@ -192,7 +192,7 @@ const PortfolioScreen = ({ navigation }) => {
       if (payFromAccount && amountToPay > 0) {
         const expRes = await addExpense({
           amount: amountToPay,
-          categoryId: 'other',
+          categoryId: 'investment',
           categoryName: 'Investment',
           categoryIcon: invType.icon,
           accountId: payFromAccount.id,
@@ -325,7 +325,7 @@ const PortfolioScreen = ({ navigation }) => {
       if (payFromAccount) {
         const expRes = await addExpense({
           amount: addAmtValue,
-          categoryId: 'other',
+          categoryId: 'investment',
           categoryName: 'Investment',
           categoryIcon: editingInvestment.typeIcon || '💰',
           accountId: payFromAccount.id,
@@ -367,7 +367,7 @@ const PortfolioScreen = ({ navigation }) => {
       if (payFromAccount) {
         await addExpense({
           amount: sipConfirmAmount,
-          categoryId: 'other',
+          categoryId: 'investment',
           categoryName: 'Investment',
           categoryIcon: '📊',
           accountId: payFromAccount.id,

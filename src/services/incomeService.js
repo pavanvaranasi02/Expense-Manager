@@ -75,26 +75,52 @@ export const addIncome = async (incomeData) => {
 };
 
 // ============ GET INCOMES ============
-export const getIncomes = async (month, year) => {
+export const getIncomes = async (filters = {}) => {
   try {
     const userId = getUserId();
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    let constraints = [];
+
+    if (filters.startDate) {
+      constraints.push(where('date', '>=', Timestamp.fromDate(new Date(filters.startDate))));
+    }
+    if (filters.endDate) {
+      constraints.push(where('date', '<=', Timestamp.fromDate(new Date(filters.endDate))));
+    }
+
+    constraints.push(orderBy('date', 'desc'));
 
     const q = query(
       collection(db, 'users', userId, 'incomes'),
-      where('date', '>=', Timestamp.fromDate(startDate)),
-      where('date', '<=', Timestamp.fromDate(endDate)),
-      orderBy('date', 'desc'),
+      ...constraints
     );
 
     const snapshot = await getDocs(q);
-    const incomes = snapshot.docs.map(d => ({
-      id: d.id, ...d.data(), date: d.data().date?.toDate(),
-    }));
+    let incomes = snapshot.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        date: data.date?.toDate?.() ? data.date.toDate().toISOString() : data.date || null,
+        type: 'income',
+      };
+    });
+
+    if (filters.searchText) {
+      const search = filters.searchText.toLowerCase();
+      incomes = incomes.filter(
+        (i) =>
+          i.note?.toLowerCase().includes(search) ||
+          i.sourceName?.toLowerCase().includes(search)
+      );
+    }
+
+    if (filters.accountId) {
+      incomes = incomes.filter((i) => i.accountId === filters.accountId);
+    }
 
     return { success: true, incomes };
   } catch (error) {
+    console.log('❌ Get incomes error:', error);
     return { success: false, error: error.message, incomes: [] };
   }
 };

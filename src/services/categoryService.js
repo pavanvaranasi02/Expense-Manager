@@ -32,6 +32,7 @@ export const DEFAULT_CATEGORIES = [
   { id: 'groceries', name: 'Groceries', icon: '🥬', color: '#8BC34A', isDefault: true },
   { id: 'fuel', name: 'Fuel', icon: '⛽', color: '#FF5722', isDefault: true },
   { id: 'subscription', name: 'Subscriptions', icon: '🔄', color: '#673AB7', isDefault: true },
+  { id: 'investment', name: 'Investment', icon: '📉', color: '#6C63FF', isDefault: true },
   { id: 'other', name: 'Other', icon: '📦', color: '#9E9E9E', isDefault: true },
 ];
 

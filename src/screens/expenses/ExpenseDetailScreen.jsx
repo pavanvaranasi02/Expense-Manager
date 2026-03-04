@@ -1,18 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { deleteExpense } from '../../services/expenseService';
+import { deleteIncome } from '../../services/incomeService';
 
-const ExpenseDetailScreen = ({ navigation, route }) => {
-  const expense = route?.params?.expense;
-  if (!expense) return null;
+const TransactionDetailScreen = ({ navigation, route }) => {
+  const txn = route?.params?.expense || route?.params?.income;
+  if (!txn) return null;
+
+  const isIncome = txn.type === 'income' || !!txn.sourceName;
 
   // FIX: Handle ISO strings, Date objects, and Firestore Timestamps
   const formatDate = (d) => {
@@ -45,13 +48,16 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
   };
 
   const handleEdit = () => {
-    // expense is already serialized (date is ISO string) — safe to pass
-    navigation.navigate('AddExpenseModal', { expense });
+    if (isIncome) {
+      navigation.navigate('AddIncomeModal', { income: txn });
+    } else {
+      navigation.navigate('AddExpenseModal', { expense: txn });
+    }
   };
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Expense',
+      `Delete ${isIncome ? 'Income' : 'Expense'}`,
       'Are you sure? This will restore the account balance.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -59,7 +65,9 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const result = await deleteExpense(expense.id, expense);
+            const result = isIncome
+              ? await deleteIncome(txn.id, txn)
+              : await deleteExpense(txn.id, txn);
             if (result.success) navigation.goBack();
             else Alert.alert('Error', result.error);
           },
@@ -77,7 +85,7 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Expense Detail</Text>
+        <Text style={styles.headerTitle}>{isIncome ? 'Income' : 'Expense'} Detail</Text>
         <TouchableOpacity onPress={handleDelete}>
           <Ionicons name="trash-outline" size={22} color="#EF4444" />
         </TouchableOpacity>
@@ -86,11 +94,15 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Amount */}
         <View style={styles.amountSection}>
-          <Text style={styles.icon}>{expense.categoryIcon || '📦'}</Text>
-          <Text style={styles.amount}>
-            ₹{(expense.amount || 0).toLocaleString('en-IN')}
+          <Text style={styles.icon}>
+            {isIncome ? txn.sourceIcon || '💰' : txn.categoryIcon || '📦'}
           </Text>
-          <Text style={styles.category}>{expense.categoryName}</Text>
+          <Text style={[styles.amount, isIncome && { color: '#10B981' }]}>
+            {isIncome ? '+' : '-'}₹{(txn.amount || 0).toLocaleString('en-IN')}
+          </Text>
+          <Text style={styles.category}>
+            {isIncome ? txn.sourceName : txn.categoryName}
+          </Text>
         </View>
 
         {/* Details */}
@@ -98,29 +110,29 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
           {[
             {
               label: 'Date',
-              value: formatDate(expense.date),
+              value: formatDate(txn.date),
               icon: 'calendar-outline',
             },
             {
               label: 'Account',
-              value: expense.accountName,
+              value: txn.accountName,
               icon: 'card-outline',
             },
-            {
+            !isIncome && {
               label: 'Payment',
-              value: expense.paymentMode?.replace('_', ' '),
+              value: txn.paymentMode?.replace('_', ' '),
               icon: 'wallet-outline',
             },
-            {
+            !isIncome && {
               label: 'Type',
-              value: expense.isCredit
+              value: txn.isCredit
                 ? '🔴 Credit Card (Debt)'
                 : '🟢 Direct Payment',
               icon: 'swap-horizontal',
             },
-            expense.note && {
+            txn.note && {
               label: 'Note',
-              value: expense.note,
+              value: txn.note,
               icon: 'document-text-outline',
             },
           ]
@@ -140,14 +152,14 @@ const ExpenseDetailScreen = ({ navigation, route }) => {
         </View>
 
         {/* Actions */}
-        <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
+        <TouchableOpacity style={[styles.editBtn, isIncome && { backgroundColor: '#10B981' }]} onPress={handleEdit}>
           <Ionicons name="create-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.editBtnText}>Edit Expense</Text>
+          <Text style={styles.editBtnText}>Edit {isIncome ? 'Income' : 'Expense'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          <Text style={styles.deleteBtnText}>Delete Expense</Text>
+          <Text style={styles.deleteBtnText}>Delete {isIncome ? 'Income' : 'Expense'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -239,4 +251,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExpenseDetailScreen;
+export default TransactionDetailScreen;

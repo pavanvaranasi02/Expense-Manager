@@ -1,26 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { PieChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Analytics } from '../../config/firebase';
 import { getAccounts } from '../../services/accountService';
-import { getBudgets } from '../../services/budgetService';
+import { updateUserProfile } from '../../services/authService';
+import { deleteBudget, getBudgets, updateBudget } from '../../services/budgetService';
 import { getDashboardData } from '../../services/expenseService';
 import { calculateInvestmentTotals, getAllPendingActions, getInvestments } from '../../services/investmentService';
 import useAuthStore from '../../store/useAuthStore';
+import { formatCurrency } from '../../utils/format';
+
+const screenWidth = Dimensions.get('window').width;
 
 const DashboardScreen = ({ navigation }) => {
   const userName = useAuthStore((s) => s.getUserName());
   const userProfile = useAuthStore((s) => s.userProfile);
+  const isStealthMode = useAuthStore((s) => s.isStealthMode);
 
   const now = new Date();
   const [month] = useState(now.getMonth() + 1);
@@ -32,51 +42,60 @@ const DashboardScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [investmentTotals, setInvestmentTotals] = useState(null);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [editingBudget, setEditingBudget] = useState(null);
+  const [newBudgetAmount, setNewBudgetAmount] = useState('');
+  const [savingBudget, setSavingBudget] = useState(false);
 const showInvestmentsInAssets = userProfile?.showInvestmentsInAssets || false;
 
   const cs = userProfile?.currency === 'USD' ? '$' : userProfile?.currency === 'EUR' ? '€' : '₹';
 
   // Replace your existing fetchAll with this:
-const fetchAll = async () => {
-  const [dashResult, accResult, budgetResult, invResult] = await Promise.all([
-    getDashboardData(month, year),
-    getAccounts(),
-    getBudgets(month, year),
-    getInvestments(),
-  ]);
+const fetchDashboardData = async () => {
+    try {
+      const [dashResult, accResult, budgetResult, invResult] = await Promise.all([
+        getDashboardData(month, year),
+        getAccounts(),
+        getBudgets(month, year),
+        getInvestments(),
+      ]);
 
-  if (dashResult.success) setDashData(dashResult.data);
-  if (accResult.success) setAccounts(accResult.accounts);
-  if (budgetResult.success) setBudgets(budgetResult.budgets);
+      if (dashResult.success) setDashData(dashResult.data);
+      if (accResult.success) setAccounts(accResult.accounts);
+      if (budgetResult.success) setBudgets(budgetResult.budgets);
 
-  let invTotals = null;
-  let allInvestments = [];
-  if (invResult.success) {
-    allInvestments = invResult.investments;
-    invTotals = calculateInvestmentTotals(allInvestments);
-    setInvestmentTotals(invTotals);
-  }
+      let invTotals = null;
+      let allInvestments = [];
+      if (invResult.success) {
+        allInvestments = invResult.investments;
+        invTotals = calculateInvestmentTotals(allInvestments);
+        setInvestmentTotals(invTotals);
+      }
 
-  generateAlerts(
-    accResult.accounts || [],
-    budgetResult.budgets || [],
-    dashResult.data,
-    allInvestments
-  );
-  setLoading(false);
-  setRefreshing(false);
-};
+      generateAlerts(
+        accResult.accounts || [],
+        budgetResult.budgets || [],
+        dashResult.data,
+        allInvestments
+      );
+    } catch (error) {
+      console.log('❌ Dashboard fetch error:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
       Analytics.screenView('Dashboard');
-      fetchAll();
+      fetchDashboardData();
     }, [])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchAll();
+    fetchDashboardData();
   };
 
   const generateAlerts = (accs, budgs, data, investments = []) => {
@@ -207,6 +226,46 @@ const fetchAll = async () => {
     return h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
   };
 
+  const handleEditBudget = (budget) => {
+    setEditingBudget(budget);
+    setNewBudgetAmount(budget.amount.toString());
+    setShowBudgetModal(true);
+  };
+
+  const handleUpdateBudget = async () => {
+    if (!newBudgetAmount || parseFloat(newBudgetAmount) <= 0) return;
+    setSavingBudget(true);
+    const res = await updateBudget(editingBudget.id, { amount: newBudgetAmount });
+    if (res.success) {
+      setShowBudgetModal(false);
+      fetchDashboardData();
+    } else {
+      Alert.alert('Error', res.error);
+    }
+    setSavingBudget(false);
+  };
+
+  const handleDeleteBudget = async () => {
+    Alert.alert('Delete Budget', `Are you sure you want to delete the budget for ${editingBudget.categoryName}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { 
+        text: 'Delete', 
+        style: 'destructive', 
+        onPress: async () => {
+          setSavingBudget(true);
+          const res = await deleteBudget(editingBudget.id);
+          if (res.success) {
+            setShowBudgetModal(false);
+            fetchDashboardData();
+          } else {
+            Alert.alert('Error', res.error);
+          }
+          setSavingBudget(false);
+        }
+      }
+    ]);
+  };
+
   const totalAssets = accounts.filter(a => a.type !== 'CREDIT_CARD').reduce((s, a) => s + (a.balance || 0), 0);
   const totalDebts = accounts.filter(a => a.type === 'CREDIT_CARD').reduce((s, a) => s + (a.currentUsage || 0), 0);
   const investmentValue = investmentTotals?.totalCurrentValue || 0;
@@ -241,66 +300,123 @@ const fetchAll = async () => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6C63FF']} />}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-            <Text style={styles.name}>{userName}</Text>
+        {/* Header Section with Gradient */}
+        <LinearGradient
+          colors={['#6C63FF', '#4F46E5']}
+          style={styles.topSection}
+        >
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>{getGreeting()} 👋</Text>
+              <Text style={styles.name}>{userName}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity 
+                style={styles.notifBtn}
+                onPress={async () => {
+                  const current = isStealthMode;
+                  useAuthStore.getState().setStealthMode(!current);
+                  const userId = useAuthStore.getState().user?.uid;
+                  if (userId) updateUserProfile(userId, { isStealthMode: !current });
+                }}
+              >
+                <Ionicons 
+                  name={isStealthMode ? "eye-off" : "eye"} 
+                  size={24} 
+                  color="#FFFFFF" 
+                />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.notifBtn}
+                onPress={() => navigation.navigate('Profile', { screen: 'Settings' })}
+              >
+                {alerts.length > 0 && <View style={styles.notifDot} />}
+                <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
-          <TouchableOpacity style={styles.notifBtn}>
-            {alerts.length > 0 && <View style={styles.notifDot} />}
-            <Ionicons name="notifications-outline" size={24} color="#1A1A2E" />
-          </TouchableOpacity>
-        </View>
 
-        {/* ===== ALERTS (Always on top) ===== */}
-        {alerts.map((alert) => (
-  <TouchableOpacity
-    key={alert.id}
-    style={[styles.alertCard, { backgroundColor: alert.bgColor }]}
-    onPress={alert.action || undefined}
-    activeOpacity={alert.action ? 0.7 : 1}
-  >
-    <Text style={styles.alertIcon}>{alert.icon}</Text>
-    <View style={{ flex: 1 }}>
-      <Text style={[styles.alertTitle, { color: alert.color }]}>{alert.title}</Text>
-      <Text style={styles.alertMessage}>{alert.message}</Text>
-    </View>
-    {alert.actionLabel && (
-      <View style={[styles.alertActionBtn, { backgroundColor: alert.color }]}>
-        <Text style={styles.alertActionBtnText}>{alert.actionLabel}</Text>
-      </View>
-    )}
-  </TouchableOpacity>
-))}
+          <View style={styles.netWorthSection}>
+            <Text style={styles.nwLabel}>Net Worth Balance</Text>
+            <Text style={styles.nwAmount}>{formatCurrency(netWorth, isStealthMode, cs)}</Text>
+            
+            <View style={styles.nwBreakdown}>
+              <View style={styles.nwBadge}>
+                <Ionicons name="arrow-up" size={12} color="#10B981" />
+                <Text style={styles.nwBadgeText}>Assets: {formatCurrency(totalAssets, isStealthMode, cs)}</Text>
+              </View>
+              <View style={[styles.nwBadge, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
+                <Ionicons name="arrow-down" size={12} color="#EF4444" />
+                <Text style={[styles.nwBadgeText, { color: '#EF4444' }]}>Debt: {formatCurrency(totalDebts, isStealthMode, cs)}</Text>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
 
-        {/* Net Worth */}
-<View style={styles.netWorthCard}>
-  <Text style={styles.nwLabel}>Net Worth</Text>
-  <Text style={styles.nwAmount}>{cs}{netWorth.toLocaleString('en-IN')}</Text>
-  <View style={styles.nwRow}>
-    <View style={styles.nwItem}>
-      <Ionicons name="arrow-up-circle" size={16} color="#10B981" />
-      <Text style={styles.nwItemText}>
-        {' '}Assets: {cs}{totalAssets.toLocaleString('en-IN')}
-      </Text>
-    </View>
-    <View style={styles.nwItem}>
-      <Ionicons name="arrow-down-circle" size={16} color="#EF4444" />
-      <Text style={styles.nwItemText}>
-        {' '}Debts: {cs}{totalDebts.toLocaleString('en-IN')}
-      </Text>
-    </View>
-  </View>
-  {showInvestmentsInAssets && investmentValue > 0 && (
-    <View style={[styles.nwItem, { marginTop: 8 }]}>
-      <Ionicons name="trending-up" size={16} color="#F59E0B" />
-      <Text style={styles.nwItemText}>
-        {' '}Investments: {cs}{investmentValue.toLocaleString('en-IN')} (included)
-      </Text>
-    </View>
-  )}
-        </View>
+        <View style={styles.mainContent}>
+          {/* Quick Actions - Floating style */}
+          <View style={styles.quickActionsContainer}>
+            {[
+              { label: 'Expense', icon: 'remove-circle', color: '#EF4444', bg: '#FEE2E2', onPress: () => navigation.navigate('AddExpenseModal') },
+              { label: 'Income', icon: 'add-circle', color: '#10B981', bg: '#D1FAE5', onPress: () => navigation.navigate('AddIncomeModal') },
+              { label: 'Accounts', icon: 'card', color: '#3B82F6', bg: '#DBEAFE', onPress: () => navigation.navigate('Profile', { screen: 'ManageAccounts' }) },
+              { label: 'Stats', icon: 'bar-chart', color: '#8B5CF6', bg: '#F3E8FF', onPress: () => navigation.navigate('Analytics') },
+            ].map((a, i) => (
+              <TouchableOpacity key={i} style={styles.actionItem} onPress={a.onPress}>
+                <View style={[styles.actionIcon, { backgroundColor: a.bg }]}>
+                  <Ionicons name={a.icon} size={22} color={a.color} />
+                </View>
+                <Text style={styles.actionText}>{a.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Alerts - More compact */}
+          {alerts.length > 0 && (
+            <View style={styles.alertsContainer}>
+              {alerts.slice(0, 2).map((alert) => (
+                <TouchableOpacity
+                  key={alert.id}
+                  style={[styles.alertBar, { borderLeftColor: alert.color }]}
+                  onPress={alert.action || undefined}
+                >
+                  <Text style={styles.alertIconMini}>{alert.icon}</Text>
+                  <Text style={styles.alertTextMini} numberOfLines={1}>{alert.title}</Text>
+                  <Ionicons name="chevron-forward" size={14} color="#9CA3AF" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Financial Summary Unified Card */}
+          <View style={styles.unifiedCard}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Activity This Month</Text>
+              <Text style={styles.cardSubtitle}>{new Date().toLocaleString('default', { month: 'long' })}</Text>
+            </View>
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryGridItem}>
+                <Text style={styles.summaryGridLabel}>Income</Text>
+                <Text style={[styles.summaryGridValue, { color: '#10B981' }]}>
+                  {formatCurrency(dashData?.totalIncome || 0, isStealthMode, cs)}
+                </Text>
+              </View>
+              <View style={styles.summaryGridDivider} />
+              <View style={styles.summaryGridItem}>
+                <Text style={styles.summaryGridLabel}>Spent</Text>
+                <Text style={[styles.summaryGridValue, { color: '#EF4444' }]}>
+                  {formatCurrency(dashData?.totalExpense || 0, isStealthMode, cs)}
+                </Text>
+              </View>
+              <View style={styles.summaryGridDivider} />
+              <View style={styles.summaryGridItem}>
+                <Text style={styles.summaryGridLabel}>Savings</Text>
+                <Text style={[styles.summaryGridValue, { color: '#6C63FF' }]}>
+                  {formatCurrency(dashData?.savings || 0, isStealthMode, cs)}
+                </Text>
+              </View>
+            </View>
+          </View>
         
         {/* Investment Portfolio */}
 {investmentTotals && investmentTotals.activeCount > 0 && (
@@ -320,7 +436,7 @@ const fetchAll = async () => {
         <View style={styles.investmentCol}>
           <Text style={styles.investmentLabel}>Portfolio Value</Text>
           <Text style={styles.investmentAmount}>
-            {cs}{investmentTotals.totalCurrentValue.toLocaleString('en-IN')}
+            {formatCurrency(investmentTotals.totalCurrentValue, isStealthMode, cs)}
           </Text>
         </View>
         <View style={[styles.investmentCol, { alignItems: 'flex-end' }]}>
@@ -330,14 +446,14 @@ const fetchAll = async () => {
             { color: investmentTotals.totalReturns >= 0 ? '#10B981' : '#EF4444', fontSize: 16 },
           ]}>
             {investmentTotals.totalReturns >= 0 ? '+' : ''}
-            {cs}{investmentTotals.totalReturns.toLocaleString('en-IN')}
-            {' '}({investmentTotals.returnPercent}%)
+            {formatCurrency(investmentTotals.totalReturns, isStealthMode, cs)}
+            {!isStealthMode && ` (${investmentTotals.returnPercent}%)`}
           </Text>
         </View>
       </View>
       <View style={styles.investmentMeta}>
         <Text style={styles.investmentMetaText}>
-          {investmentTotals.activeCount} investments • Invested: {cs}{investmentTotals.totalInvested.toLocaleString('en-IN')}
+          {investmentTotals.activeCount} investments • Invested: {formatCurrency(investmentTotals.totalInvested, isStealthMode, cs)}
         </Text>
         {!showInvestmentsInAssets && (
           <Text style={styles.investmentMetaNote}>Not included in net worth</Text>
@@ -347,131 +463,227 @@ const fetchAll = async () => {
   </>
 )}
 
-        {/* Monthly Summary */}
-        <Text style={styles.sectionTitle}>This Month</Text>
-        <View style={styles.summaryRow}>
-          <View style={[styles.summaryCard, { borderLeftColor: '#10B981' }]}>
-            <Ionicons name="arrow-down-circle" size={22} color="#10B981" />
-            <Text style={styles.summaryLabel}>Income</Text>
-            <Text style={[styles.summaryAmount, { color: '#10B981' }]}>
-              {cs}{(dashData?.totalIncome || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <View style={[styles.summaryCard, { borderLeftColor: '#EF4444' }]}>
-            <Ionicons name="arrow-up-circle" size={22} color="#EF4444" />
-            <Text style={styles.summaryLabel}>Expense</Text>
-            <Text style={[styles.summaryAmount, { color: '#EF4444' }]}>
-              {cs}{(dashData?.totalExpense || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <View style={[styles.summaryCard, { borderLeftColor: '#6C63FF' }]}>
-            <Ionicons name="wallet" size={22} color="#6C63FF" />
-            <Text style={styles.summaryLabel}>Savings</Text>
-            <Text style={[styles.summaryAmount, { color: '#6C63FF' }]}>
-              {cs}{(dashData?.savings || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-        </View>
 
-        {/* Account Cards */}
-        {accounts.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Accounts</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-              {accounts.map((acc) => (
-                <View key={acc.id} style={[styles.accountCard, { backgroundColor: acc.color || '#6C63FF' }]}>
-                  <Text style={styles.accCardName}>{acc.name}</Text>
-                  {acc.type === 'CREDIT_CARD' ? (
-                    <>
-                      <Text style={styles.accCardAmount}>
-                        {cs}{(acc.currentUsage || 0).toLocaleString('en-IN')}
-                      </Text>
-                      <Text style={styles.accCardSub}>
-                        of {cs}{(acc.creditLimit || 0).toLocaleString('en-IN')}
-                      </Text>
-                      <View style={styles.accBarBg}>
-                        <View style={[styles.accBarFill, {
-                          width: `${Math.min(((acc.currentUsage || 0) / (acc.creditLimit || 1)) * 100, 100)}%`
-                        }]} />
-                      </View>
-                    </>
-                  ) : (
-                    <Text style={styles.accCardAmount}>
-                      {cs}{(acc.balance || 0).toLocaleString('en-IN')}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-          </>
-        )}
 
-        {/* Top Categories */}
-        {dashData?.categoryBreakdown?.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Top Categories</Text>
-            {dashData.categoryBreakdown.slice(0, 4).map((cat, i) => {
-              const percent = dashData.totalExpense > 0
-                ? Math.round((cat.total / dashData.totalExpense) * 100)
-                : 0;
-              return (
-                <View key={cat.id} style={styles.catRow}>
-                  <Text style={styles.catIcon}>{cat.icon || '📦'}</Text>
-                  <View style={{ flex: 1 }}>
-                    <View style={styles.catNameRow}>
-                      <Text style={styles.catName}>{cat.name}</Text>
-                      <Text style={styles.catAmount}>{cs}{cat.total.toLocaleString('en-IN')}</Text>
+          {/* Account Cards */}
+          {accounts.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Your Accounts</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Profile', { screen: 'ManageAccounts' })}>
+                  <Text style={styles.seeAll}>Manage</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.accountsScroll}
+                contentContainerStyle={{ paddingRight: 20 }}
+              >
+                {accounts.map((acc) => (
+                  <TouchableOpacity 
+                    key={acc.id} 
+                    style={[styles.accountCard, { backgroundColor: acc.color || '#6C63FF' }]}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.accCardTop}>
+                      <Text style={styles.accCardName}>{acc.name}</Text>
+                      <Ionicons name={acc.type === 'CREDIT_CARD' ? 'card' : 'wallet'} size={16} color="rgba(255,255,255,0.6)" />
                     </View>
-                    <View style={styles.catBarBg}>
-                      <View style={[styles.catBarFill, { width: `${percent}%` }]} />
+                    <View style={styles.accCardBottom}>
+                      {acc.type === 'CREDIT_CARD' ? (
+                        <>
+                          <Text style={styles.accCardAmount}>
+                            {cs}{(acc.currentUsage || 0).toLocaleString('en-IN')}
+                          </Text>
+                          <Text style={styles.accCardSub}>
+                            of {cs}{(acc.creditLimit || 0).toLocaleString('en-IN')}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.accCardAmount}>
+                          {formatCurrency(acc.balance || 0, isStealthMode, cs)}
+                        </Text>
+                      )}
                     </View>
-                  </View>
-                  <Text style={styles.catPercent}>{percent}%</Text>
-                </View>
-              );
-            })}
-          </>
-        )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
 
-        {/* Budget Status */}
-        {budgets.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Budget Status</Text>
-            {budgets.map((budget) => {
-              let spent = 0;
-              if (budget.type === 'OVERALL') {
-                spent = dashData?.totalExpense || 0;
-              } else {
-                const cat = dashData?.categoryBreakdown?.find(c => c.id === budget.categoryId);
-                spent = cat?.total || 0;
-              }
-              const percent = budget.amount > 0 ? Math.min((spent / budget.amount) * 100, 100) : 0;
-              const exceeded = spent > budget.amount;
+          {/* Spendings Section - Pie Chart Visualization */}
+          {dashData?.categoryBreakdown?.length > 0 && (
+            <View style={styles.spendingsContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Spendings</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Analytics')}>
+                  <Text style={styles.seeAll}>Insights</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.chartWrapper}>
+                <PieChart
+                  data={dashData.categoryBreakdown.slice(0, 5).map((cat, index) => {
+                    const isStealth = isStealthMode;
+                    const percent = dashData.totalExpense > 0 ? Math.round((cat.total / dashData.totalExpense) * 100) : 0;
+                    return {
+                      name: isStealth ? `${cat.name} (${percent}%)` : cat.name,
+                      population: cat.total,
+                      color: ['#6C63FF', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'][index % 5],
+                      legendFontColor: '#64748B',
+                      legendFontSize: 11,
+                    };
+                  })}
+                  width={screenWidth - 40}
+                  height={180}
+                  chartConfig={{
+                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  }}
+                  accessor="population"
+                  backgroundColor="transparent"
+                  paddingLeft="15"
+                  center={[5, 0]}
+                  absolute
+                />
+              </View>
 
-              return (
-                <View key={budget.id} style={styles.budgetRow}>
-                  <View style={styles.budgetInfo}>
-                    <Text style={styles.budgetName}>{budget.categoryName}</Text>
-                    <Text style={styles.budgetDetail}>
-                      {cs}{spent.toLocaleString('en-IN')} / {cs}{budget.amount.toLocaleString('en-IN')}
-                    </Text>
-                  </View>
-                  <View style={styles.budgetBarBg}>
-                    <View style={[
-                      styles.budgetBarFill,
-                      { width: `${percent}%` },
-                      exceeded && { backgroundColor: '#EF4444' },
-                      percent >= 80 && !exceeded && { backgroundColor: '#F59E0B' },
-                    ]} />
-                  </View>
-                  <Text style={[styles.budgetPercent, exceeded && { color: '#EF4444' }]}>
-                    {Math.round(percent)}%
-                  </Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.categoriesScrollMini}
+                contentContainerStyle={{ paddingRight: 20 }}
+              >
+                {dashData.categoryBreakdown
+                  .filter(cat => !budgets.some(b => b.categoryId === cat.id))
+                  .slice(0, 6)
+                  .map((cat) => (
+                    <TouchableOpacity 
+                      key={cat.id} 
+                      style={styles.catSnapCardMini}
+                      onPress={() => navigation.navigate('Transactions', { categoryId: cat.id, categoryName: cat.name })}
+                    >
+                      <Text style={styles.catSnapEmoji}>{cat.icon || '📦'}</Text>
+                      <Text style={styles.catSnapName} numberOfLines={1}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Unified Budget Progress - Scrollable to avoid clutter */}
+          {budgets.length > 0 && (
+            <View style={styles.budgetMainWrapper}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Budget Progress</Text>
+              </View>
+              <ScrollView 
+                style={styles.budgetScrollContainer}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.budgetUnifiedContainer}>
+                  {budgets.map((budget, index) => {
+                    let spent = 0;
+                    if (budget.type === 'OVERALL') {
+                      spent = dashData?.totalExpense || 0;
+                    } else {
+                      const cat = dashData?.categoryBreakdown?.find(c => c.id === budget.categoryId);
+                      spent = cat?.total || 0;
+                    }
+                    const percent = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+                    const exceeded = spent > budget.amount;
+
+                    return (
+                      <TouchableOpacity 
+                        key={budget.id} 
+                        style={[styles.budgetModernRow, index === budgets.length - 1 && { borderBottomWidth: 0 }]}
+                        onPress={() => handleEditBudget(budget)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.budgetRowTop}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.budgetRowName}>{budget.categoryName}</Text>
+                            <Ionicons name="pencil" size={10} color="#94A3B8" style={{ marginLeft: 6 }} />
+                          </View>
+                          <Text style={styles.budgetRowValues}>
+                            <Text style={{ fontWeight: '700', color: exceeded ? '#EF4444' : '#1E293B' }}>{formatCurrency(spent, isStealthMode, cs)}</Text> 
+                            <Text style={{ color: '#94A3B8' }}> / {formatCurrency(budget.amount, isStealthMode, cs)}</Text>
+                          </Text>
+                        </View>
+                        <View style={styles.budgetRowBarBg}>
+                          <View style={[
+                            styles.budgetRowBarFill, 
+                            { width: `${Math.min(percent, 100)}%` },
+                            exceeded && { backgroundColor: '#EF4444' },
+                            percent >= 85 && !exceeded && { backgroundColor: '#F59E0B' }
+                          ]} />
+                        </View>
+                        <Text style={[styles.budgetPercentMini, exceeded && { color: '#EF4444' }]}>{Math.round(percent)}% used</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-              );
-            })}
-          </>
-        )}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Budget Action Modal */}
+          <Modal
+            visible={showBudgetModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowBudgetModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.budgetModalContent}>
+                <Text style={styles.modalTitle}>Manage {editingBudget?.categoryName} Budget</Text>
+                
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Monthly Target Amount</Text>
+                  <View style={styles.amountInputGroup}>
+                    <Text style={styles.currencyPrefix}>₹</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      placeholder="0"
+                      keyboardType="numeric"
+                      value={newBudgetAmount}
+                      onChangeText={setNewBudgetAmount}
+                      autoFocus
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity 
+                    style={[styles.modalBtn, styles.modalBtnDelete]}
+                    onPress={handleDeleteBudget}
+                  >
+                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.modalBtn, styles.modalBtnCancel]}
+                    onPress={() => setShowBudgetModal(false)}
+                  >
+                    <Text style={styles.modalBtnCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.modalBtn, styles.modalBtnApply]}
+                    onPress={handleUpdateBudget}
+                    disabled={savingBudget}
+                  >
+                    {savingBudget ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <Text style={styles.modalBtnApplyText}>Save Changes</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
         {/* Recent Transactions */}
         <View style={styles.sectionHeader}>
@@ -514,22 +726,6 @@ const fetchAll = async () => {
           ))
         )}
 
-        {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsRow}>
-          {[
-            { label: 'Expense', icon: 'add-circle', color: '#EF4444', bg: '#FEE2E2', onPress: () => navigation.navigate('AddExpenseModal') },
-            { label: 'Income', icon: 'arrow-down-circle', color: '#10B981', bg: '#D1FAE5', onPress: () => navigation.navigate('AddIncomeModal') },
-            { label: 'Accounts', icon: 'card', color: '#3B82F6', bg: '#DBEAFE', onPress: () => navigation.navigate('Profile', { screen: 'ManageAccounts' }) },
-            { label: 'Analytics', icon: 'pie-chart', color: '#8B5CF6', bg: '#F3E8FF', onPress: () => navigation.navigate('Analytics') },
-          ].map((a, i) => (
-            <TouchableOpacity key={i} style={styles.actionItem} onPress={a.onPress}>
-              <View style={[styles.actionIcon, { backgroundColor: a.bg }]}>
-                <Ionicons name={a.icon} size={24} color={a.color} />
-              </View>
-              <Text style={styles.actionText}>{a.label}</Text>
-            </TouchableOpacity>
-          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -538,127 +734,238 @@ const fetchAll = async () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FE' },
-  scrollContent: { padding: 20, paddingBottom: 100 },
-
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  greeting: { fontSize: 14, color: '#6B7280' },
-  name: { fontSize: 20, fontWeight: '600', color: '#1A1A2E', marginTop: 2 },
-  notifBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
-  notifDot: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', zIndex: 1 },
-
-  // Alerts
-  alertCard: {
-    flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 8,
+  scrollContent: { paddingBottom: 120 },
+  topSection: { 
+    paddingTop: 16,
+    paddingHorizontal: 20, 
+    paddingBottom: 40, 
+    borderBottomLeftRadius: 32, 
+    borderBottomRightRadius: 32,
   },
-  alertIcon: { fontSize: 22, marginRight: 10 },
-  alertTitle: { fontSize: 14, fontWeight: '600' },
-  alertMessage: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  // Add to existing styles
-alertActionBtn: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 8,
-  marginLeft: 8,
-},
-alertActionBtnText: {
-  color: '#FFFFFF',
-  fontSize: 11,
-  fontWeight: '700',
-},
-
-  // Net Worth
-  netWorthCard: { backgroundColor: '#6C63FF', padding: 20, borderRadius: 16, marginBottom: 16 },
-  nwLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
-  nwAmount: { fontSize: 28, fontWeight: '700', color: '#FFFFFF', marginTop: 4 },
-  nwRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
-  nwItem: { flexDirection: 'row', alignItems: 'center' },
-  nwItemText: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
-
-  sectionTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginBottom: 10, marginTop: 12 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  seeAll: { fontSize: 14, color: '#6C63FF', fontWeight: '500' },
-
-  // Investment Card
-  investmentCard: {
-  backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16, borderWidth: 1.5, borderColor: '#E5E7EB',
-  shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
-},
-investmentRow: { flexDirection: 'row', justifyContent: 'space-between' },
-investmentCol: {},
-investmentLabel: { fontSize: 12, color: '#6B7280' },
-investmentAmount: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginTop: 4 },
-investmentMeta: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 10 },
-investmentMetaText: { fontSize: 12, color: '#6B7280' },
-investmentMetaNote: { fontSize: 11, color: '#F59E0B', fontStyle: 'italic', marginTop: 2 },
-
-  // Summary
-  summaryRow: { flexDirection: 'row', gap: 8 },
-  summaryCard: {
-    flex: 1, backgroundColor: '#FFFFFF', padding: 12, borderRadius: 12, borderLeftWidth: 3,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  name: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginTop: 2 },
+  notifBtn: { 
+    width: 44, height: 44, borderRadius: 14, 
+    backgroundColor: 'rgba(255,255,255,0.15)', 
+    justifyContent: 'center', alignItems: 'center' 
   },
-  summaryLabel: { fontSize: 11, color: '#6B7280', marginTop: 6 },
-  summaryAmount: { fontSize: 15, fontWeight: '700', marginTop: 2 },
-
-  // Account Cards
-  accountCard: {
-    width: 160, padding: 16, borderRadius: 14, marginRight: 10,
+  notifDot: { 
+    position: 'absolute', top: 12, right: 12, 
+    width: 6, height: 6, borderRadius: 3, 
+    backgroundColor: '#EF4444', borderWeight: 1, borderColor: '#FFFFFF' 
   },
-  accCardName: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
-  accCardAmount: { fontSize: 20, fontWeight: '700', color: '#FFFFFF', marginTop: 8 },
-  accCardSub: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
-  accBarBg: { height: 4, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 2, marginTop: 8 },
-  accBarFill: { height: 4, backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 2 },
 
-  // Category rows
-  catRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    padding: 12, borderRadius: 10, marginBottom: 6,
+  netWorthSection: { alignItems: 'center' },
+  nwLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  nwAmount: { fontSize: 36, fontWeight: '800', color: '#FFFFFF', marginTop: 4 },
+  nwBreakdown: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  nwBadge: { 
+    flexDirection: 'row', alignItems: 'center', 
+    backgroundColor: 'rgba(16, 185, 129, 0.15)', 
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 
   },
-  catIcon: { fontSize: 22, marginRight: 10 },
-  catNameRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  catName: { fontSize: 14, fontWeight: '500', color: '#1A1A2E' },
-  catAmount: { fontSize: 14, fontWeight: '600', color: '#1A1A2E' },
-  catBarBg: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, marginTop: 6 },
-  catBarFill: { height: 4, backgroundColor: '#6C63FF', borderRadius: 2 },
-  catPercent: { fontSize: 12, fontWeight: '600', color: '#6B7280', marginLeft: 8, width: 35, textAlign: 'right' },
+  nwBadgeText: { fontSize: 11, fontWeight: '700', color: '#10B981', marginLeft: 4 },
 
-  // Budget rows
-  budgetRow: {
-    backgroundColor: '#FFFFFF', padding: 12, borderRadius: 10, marginBottom: 6,
-  },
-  budgetInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  budgetName: { fontSize: 14, fontWeight: '500', color: '#1A1A2E' },
-  budgetDetail: { fontSize: 12, color: '#6B7280' },
-  budgetBarBg: { height: 6, backgroundColor: '#E5E7EB', borderRadius: 3 },
-  budgetBarFill: { height: 6, backgroundColor: '#6C63FF', borderRadius: 3 },
-  budgetPercent: { fontSize: 12, fontWeight: '600', color: '#6B7280', textAlign: 'right', marginTop: 4 },
-
-  // Transactions
-  txnCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    padding: 14, borderRadius: 12, marginBottom: 6,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 2, elevation: 1,
-  },
-  txnIcon: { fontSize: 24, marginRight: 12 },
-  txnCategory: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
-  txnNote: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
-  txnAmount: { fontSize: 15, fontWeight: '700', color: '#EF4444' },
-  txnCredit: { fontSize: 10, color: '#F59E0B', marginTop: 2 },
+  mainContent: { paddingHorizontal: 20, marginTop: -25 },
 
   // Quick Actions
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  actionItem: { alignItems: 'center', width: '22%' },
-  actionIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
-  actionText: { fontSize: 11, color: '#6B7280' },
-
-  // Empty
-  emptyCard: {
-    backgroundColor: '#FFFFFF', padding: 32, borderRadius: 12, alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+  quickActionsContainer: { 
+    flexDirection: 'row', justifyContent: 'space-between', 
+    backgroundColor: '#FFFFFF', padding: 14, borderRadius: 18,
+    shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4,
   },
-  emptyTitle: { fontSize: 15, fontWeight: '600', color: '#1A1A2E', marginTop: 12 },
-  emptyText: { fontSize: 13, color: '#9CA3AF', marginTop: 4 },
+  actionItem: { alignItems: 'center', width: '22%' },
+  actionIcon: { width: 42, height: 42, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  actionText: { fontSize: 10, fontWeight: '700', color: '#64748B' },
+
+  // Alerts Mini
+  alertsContainer: { marginTop: 16, gap: 6 },
+  alertBar: { 
+    flexDirection: 'row', alignItems: 'center', 
+    backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12, 
+    borderLeftWidth: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2,
+  },
+  alertIconMini: { fontSize: 14, marginRight: 10 },
+  alertTextMini: { flex: 1, fontSize: 12, fontWeight: '600', color: '#1E293B' },
+
+  // Unified Card
+  unifiedCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, marginTop: 20, shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  cardTitle: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
+  cardSubtitle: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+  summaryGrid: { flexDirection: 'row', alignItems: 'center' },
+  summaryGridItem: { flex: 1, alignItems: 'center' },
+  summaryGridLabel: { fontSize: 10, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', marginBottom: 4 },
+  summaryGridValue: { fontSize: 15, fontWeight: '800' },
+  summaryGridDivider: { width: 1, height: 24, backgroundColor: '#F1F5F9' },
+
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.2 },
+  seeAll: { fontSize: 11, color: '#6C63FF', fontWeight: '700' },
+
+  // Accounts
+  accountsScroll: { marginHorizontal: -20, paddingLeft: 20, marginTop: 4 },
+  accountCard: { width: 130, height: 80, borderRadius: 16, padding: 10, marginRight: 10, justifyContent: 'space-between' },
+  accCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  accCardName: { fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '700' },
+  accCardBottom: {},
+  accCardAmount: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
+  accCardSub: { fontSize: 8, color: 'rgba(255,255,255,0.6)', marginTop: 1 },
+
+  // Spendings Pie
+  spendingsContainer: { marginTop: 4 },
+  chartWrapper: { 
+    backgroundColor: '#FFFFFF', borderRadius: 20, padding: 10, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    marginBottom: 12,
+  },
+  categoriesScrollMini: { marginHorizontal: -20, paddingLeft: 20 },
+  catSnapCardMini: { 
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', 
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, marginRight: 8,
+    borderWidth: 1, borderColor: '#F1F5F9',
+  },
+  catSnapEmoji: { fontSize: 14, marginRight: 6 },
+  catSnapName: { fontSize: 10, fontWeight: '700', color: '#64748B' },
+
+  // Budget Refined
+  budgetMainWrapper: { marginTop: 4 },
+  budgetScrollContainer: { maxHeight: 220 },
+  budgetUnifiedContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  budgetModernRow: { marginBottom: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  budgetRowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  budgetRowName: { fontSize: 12, fontWeight: '700', color: '#1E293B' },
+  budgetRowValues: { fontSize: 11 },
+  budgetRowBarBg: { height: 5, backgroundColor: '#F1F5F9', borderRadius: 2.5, overflow: 'hidden' },
+  budgetRowBarFill: { height: 5, backgroundColor: '#6C63FF', borderRadius: 2.5 },
+  budgetPercentMini: { fontSize: 9, fontWeight: '800', color: '#94A3B8', textAlign: 'right', marginTop: 4, textTransform: 'uppercase' },
+
+  // Investment
+  investmentCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#F1F5F9', shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  investmentRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  investmentLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase' },
+  investmentAmount: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginTop: 4 },
+  investmentMeta: { marginTop: 12, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
+  investmentMetaText: { fontSize: 12, color: '#64748B' },
+  investmentMetaNote: { fontSize: 11, color: '#F59E0B', fontStyle: 'italic', marginTop: 2 },
+
+  // Budget
+  budgetRow: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 2, elevation: 1 },
+  budgetInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  budgetName: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
+  budgetDetail: { fontSize: 12, color: '#64748B' },
+  budgetBarBg: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3 },
+  budgetBarFill: { height: 6, backgroundColor: '#6C63FF', borderRadius: 3 },
+  budgetPercent: { fontSize: 12, fontWeight: '700', color: '#64748B', textAlign: 'right', marginTop: 6 },
+
+  // Transaction card
+  txnCard: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
+    padding: 12, borderRadius: 16, marginBottom: 8,
+    borderWidth: 1, borderColor: '#F1F5F9',
+    shadowColor: '#64748B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
+  },
+  txnIcon: { fontSize: 22, marginRight: 12, width: 40, height: 40, backgroundColor: '#F8F9FE', borderRadius: 10, textAlign: 'center', lineHeight: 40 },
+  txnCategory: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
+  txnNote: { fontSize: 12, color: '#94A3B8', marginTop: 2 },
+  txnAmount: { fontSize: 15, fontWeight: '700', color: '#DC2626' },
+  txnCredit: { fontSize: 10, color: '#F59E0B', fontWeight: '600', marginTop: 2 },
+
+  emptyCard: { backgroundColor: '#FFFFFF', padding: 30, borderRadius: 20, alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#CBD5E1' },
+  emptyTitle: { fontSize: 15, fontWeight: '600', color: '#1E293B', marginTop: 12 },
+  emptyText: { fontSize: 13, color: '#94A3B8', marginTop: 4 },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  budgetModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1A1A2E',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '700',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+  },
+  amountInputGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FE',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  currencyPrefix: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#6C63FF',
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalBtn: {
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBtnDelete: {
+    width: 52,
+    backgroundColor: '#FEE2E2',
+  },
+  modalBtnCancel: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  modalBtnApply: {
+    flex: 2,
+    backgroundColor: '#6C63FF',
+  },
+  modalBtnCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  modalBtnApplyText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });
 
 export default DashboardScreen;

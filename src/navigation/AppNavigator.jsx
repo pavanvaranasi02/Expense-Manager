@@ -43,9 +43,6 @@ const AppNavigator = () => {
       console.log('🔔 Auth state changed:', firebaseUser ? firebaseUser.uid : 'null');
 
       if (firebaseUser) {
-        // User is signed in
-        setUser(firebaseUser);
-
         // Fetch their profile from Firestore
         const result = await getUserProfile(firebaseUser.uid);
 
@@ -61,6 +58,9 @@ const AppNavigator = () => {
           // This means they need onboarding
           setUserProfile({ onboardingComplete: false });
         }
+        
+        // Set user only after profile logic to avoid flashing Onboarding navigator
+        setUser(firebaseUser);
       } else {
         // User is signed out
         console.log('👋 User signed out');

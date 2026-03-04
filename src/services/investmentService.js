@@ -1,14 +1,14 @@
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    orderBy,
+    query,
+    serverTimestamp,
+    updateDoc
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { addIncome } from './incomeService';
@@ -294,7 +294,26 @@ export const confirmRdPayment = async (investmentId, amount) => {
 export const deleteInvestment = async (investmentId) => {
   try {
     const userId = getUserId();
-    await deleteDoc(doc(db, 'users', userId, 'investments', investmentId));
+    const docRef = doc(db, 'users', userId, 'investments', investmentId);
+    const snap = await getDoc(docRef);
+    
+    if (snap.exists()) {
+      const data = snap.data();
+      // If there's a linked expense, try to delete it too
+      if (data.expenseId) {
+        try {
+          const userId = getUserId();
+          const expRef = doc(db, 'users', userId, 'expenses', data.expenseId);
+          await deleteDoc(expRef);
+          // Also try to remove from offline cache if possible (best effort)
+          import('./offlineQueue').then(m => m.removeFromCache('expenses', data.expenseId)).catch(() => {});
+        } catch (e) {
+          console.log('Skipping expense cleanup:', e);
+        }
+      }
+    }
+
+    await deleteDoc(docRef);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
