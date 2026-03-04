@@ -41,3 +41,15 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+.env.staging
+
+# Keep the example file
+!.env.example
+
+.vscode/
+

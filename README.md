@@ -1,50 +1,158 @@
-# Welcome to your Expo app 👋
+# 💰 ExpenseManager
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A premium personal finance management suite built with **React Native** and **Expo**, powered by a robust **Firebase** backend. Take command of your financial journey with real-time tracking, intelligent budgeting, and an advanced investment portfolio tracker — all wrapped in a sleek, intuitive interface.
 
-## Get started
+---
 
-1. Install dependencies
+## 📱 Application Flow
 
-   ```bash
-   npm install
-   ```
+Understanding how the application flows from a first-time user to a power user.
 
-2. Start the app
+```mermaid
+graph TD
+    Start([Launch App]) --> AuthCheck{Authenticated?}
+    AuthCheck -- No --> WelcomeAuth[Login / Signup]
+    WelcomeAuth --> AuthCheck
+    
+    AuthCheck -- Yes --> OnboardCheck{Onboarding Done?}
+    OnboardCheck -- No --> WelcomeStep[Welcome Screen]
+    WelcomeStep --> ProfileSetup[Setup Profile]
+    ProfileSetup --> AccountSetup[Add Initial Accounts]
+    AccountSetup --> BudgetSetup[Set Monthly Budgets]
+    BudgetSetup --> Complete{Mark Complete}
+    Complete --> Dashboard
+    
+    OnboardCheck -- Yes --> Dashboard[🏠 Smart Dashboard]
+    
+    subgraph MainApp [Main Application Experience]
+        Dashboard --> Transactions[📑 Transactions List]
+        Dashboard --> Analytics[📊 Deep Analytics]
+        Dashboard --> Profile[👤 Your Profile & Settings]
+        Dashboard --> QuickAdd[➕ Quick Transaction]
+    end
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+    subgraph BusinessLogic [Intelligent Features]
+        QuickAdd -- Expense --> UpdAcc[Update Account Balance]
+        QuickAdd -- Expense --> UpdBdg[Update Budget Progress]
+        UpdBdg --> Alerts[Smart Notifications]
+        
+        Profile --> Portfolio[📈 Investment Portfolio]
+        Portfolio --> SIP_RD[Track SIPs/RDs]
+        Portfolio --> Maturity[Auto-credit Maturity to Bank]
+        
+        Dashboard --> CCAlerts[Credit Card Due Reminders]
+    end
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## ✨ Key Features
 
-To learn more about developing your project with Expo, look at the following resources:
+### 🏠 Intelligent Dashboard
+- **Dynamic Net Worth**: Real-time calculation of Assets – Debts ± Investments (configurable).
+- **Smart Alerts System**: Instant warnings for credit card dues, budget overruns (80%/100%), and high credit utilization.
+- **Account Carousel**: Quick glance at bank balances and credit card usage with visual progress bars.
+- **Recent Activity**: Categorized overview of your latest financial moves.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 💸 Financial Tracking
+- **Unified Recording**: Add expenses or income with category-specific icons, payment modes, and custom notes.
+- **Credit Card Intelligence**: Mark transactions as debt, automatically updating credit utilization and available limits.
+- **Auto-Balance Sync**: Seamlessly updates your account balances across bank, cash, and credit accounts with every transaction.
 
-## Join the community
+### 📊 Advanced Analytics
+- **Category Deep-Dive**: Horizontal bar charts showing exactly where your money goes.
+- **Daily Spending Trends**: Scrollable bar charts to visualize spending patterns over the month.
+- **Payment Mode Analysis**: See the split between UPI, Debit, Credit, and Cash spending.
+- **Comparison Engine**: Navigate through months to track your financial growth and saving trends.
 
-Join our community of developers creating universal apps.
+### 📈 Investment Portfolio (Pro)
+- **Multi-Asset Support**: Track 11+ investment types including Mutual Funds, Stocks, Gold, Crypto, FD, and PPF.
+- **SIP & RD Tracking**: Automated reminders for monthly payments with a dedicated "Confirm/Skip" workflow.
+- **Maturity Auto-Credit**: Link investments to bank accounts for automatic crediting upon maturity.
+- **Performance Overview**: Track invested amount vs. current value with ₹ and % return metrics.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 🎯 Proactive Budgeting
+- **Granular Control**: Set overall monthly limits or category-specific targets.
+- **Visual Progress**: Color-coded bars (Green → Amber → Red) keep you disciplined.
+- **Budget Suggestions**: Smart defaults provided during onboarding to get you started faster.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology |
+|---|---|
+| **Core Framework** | React Native 0.81 + Expo SDK 54 |
+| **Logic Engine** | Javascript (ES6+) |
+| **Navigation** | React Navigation 7 (Native Stack + Bottom Tabs) |
+| **State Management**| Zustand 5 (High-performance state) |
+| **Backend** | Firebase 12 (Auth, Firestore, Cloud Storage) |
+| **Interactions** | React Native Reanimated 4 + Gesture Handler |
+| **Analytics** | Firebase Analytics (Custom Event Tracking) |
+| **Forms** | React Hook Form + Yup Validation |
+| **Storage** | SecureStore (Credentials) + AsyncStorage (Persistence) |
+
+---
+
+## 📂 Architecture
+
+```
+ExpenseManager/
+├── src/
+│   ├── navigation/        # Root, Auth, Onboarding & Main Navigators
+│   ├── screens/           # UI implementations grouped by feature
+│   ├── services/          # Firebase logic (Auth, Expense, Investment, etc.)
+│   ├── store/             # Zustand stores for global state
+│   ├── config/            # Firebase and environmental configuration
+│   ├── components/        # Reusable UI elements (Buttons, Cards, Modals)
+│   └── constants/         # Theme, Colors, and Static Data
+├── assets/                # App icons, splash, and images
+└── App.js                 # Application entry point
+```
+
+---
+
+## 🚀 Setup & Installation
+
+### 1. Prerequisites
+- Node.js (v18+)
+- Expo Go app on your mobile device
+- Firebase Project
+
+### 2. Local Installation
+```bash
+# Clone the repository
+git clone https://github.com/pavanvaranasi02/Expense-Manager
+
+# Install dependencies
+npm install
+
+# Start development server
+npx expo start
+```
+
+### 3. Firebase Configuration
+Update `src/config/firebase.js` with your project credentials:
+```javascript
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "...",
+};
+```
+
+---
+
+## 🔒 Security & Privacy
+- **Secure Persistence**: User sessions and preferences are stored using encrypted device storage.
+- **Private Data**: All financial information is siloed per-user in Firebase Firestore with strict security rules.
+- **Danger Zone**: Full account and data deletion capabilities available in user settings.
+
+---
+
+<p align="center">
+  Built with ❤️ for Financial Freedom
+</p>
