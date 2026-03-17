@@ -2,24 +2,34 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
+// ===== Existing Screens =====
+import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
 import ExpenseListScreen from '../screens/expenses/ExpenseListScreen';
 import DashboardScreen from '../screens/home/DashboardScreen';
-import PortfolioScreen from '../screens/investments/PortfolioScreen';
+import IncomeListScreen from '../screens/income/IncomeListScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
-// Stack navigators for tabs that need inner navigation
+// Profile Stack Screens
 import BudgetListScreen from '../screens/budget/BudgetListScreen';
 import BudgetStatusScreen from '../screens/budget/BudgetStatusScreen';
 import SetBudgetScreen from '../screens/budget/SetBudgetScreen';
-import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
-import IncomeListScreen from '../screens/income/IncomeListScreen';
+import PortfolioScreen from '../screens/investments/PortfolioScreen';
 import AddAccountScreen from '../screens/profile/AddAccountScreen';
 import CreditCardBillScreen from '../screens/profile/CreditCardBillScreen';
 import ManageAccountsScreen from '../screens/profile/ManageAccountsScreen';
 import ManageCategoriesScreen from '../screens/profile/ManageCategoriesScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
+
+// Analytics (now accessible from Dashboard)
+import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
+
+// ===== NEW: Family Screens =====
+import FamilyNavigator from './FamilyNavigator';
+
+// ===== NEW: Notifications =====
+import NotificationsScreen from '../components/Notifications/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -29,6 +39,11 @@ const Stack = createNativeStackNavigator();
 const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Dashboard" component={DashboardScreen} />
+    {/* Analytics now accessible from Dashboard */}
+    <Stack.Screen name="AnalyticsMain" component={AnalyticsScreen} />
+    <Stack.Screen name="BudgetStatus" component={BudgetStatusScreen} />
+    {/* Notifications accessible from Dashboard header */}
+    <Stack.Screen name="Notifications" component={NotificationsScreen} />
   </Stack.Navigator>
 );
 
@@ -37,13 +52,6 @@ const TransactionsStack = () => (
     <Stack.Screen name="ExpenseList" component={ExpenseListScreen} />
     <Stack.Screen name="ExpenseDetail" component={ExpenseDetailScreen} />
     <Stack.Screen name="IncomeList" component={IncomeListScreen} />
-  </Stack.Navigator>
-);
-
-const AnalyticsStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="AnalyticsMain" component={AnalyticsScreen} />
-    <Stack.Screen name="BudgetStatus" component={BudgetStatusScreen} />
   </Stack.Navigator>
 );
 
@@ -75,8 +83,6 @@ const CustomTabBarButton = ({ children, onPress }) => (
 // Dummy screen for the center tab
 const DummyScreen = () => null;
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 // ===== Main Tab Navigator =====
 const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
@@ -97,8 +103,8 @@ const MainTabNavigator = () => {
             case 'Add':
               iconName = 'add';
               break;
-            case 'Analytics':
-              iconName = focused ? 'pie-chart' : 'pie-chart-outline';
+            case 'Family':
+              iconName = focused ? 'people' : 'people-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -143,7 +149,8 @@ const MainTabNavigator = () => {
           },
         })}
       />
-      <Tab.Screen name="Analytics" component={AnalyticsStack} />
+      {/* NEW: Family Tab (replaces Analytics) */}
+      <Tab.Screen name="Family" component={FamilyNavigator} />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );

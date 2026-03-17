@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container": "#efedf6",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2f3037",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#061fd0",
+                        "tertiary-fixed-dim": "#ffb5a0",
+                        "secondary-container": "#c8cffd",
+                        "outline": "#757684",
+                        "surface-container-low": "#f4f2fc",
+                        "background": "#fbf8ff",
+                        "on-tertiary-fixed": "#3b0900",
+                        "on-primary-fixed": "#000866",
+                        "tertiary-fixed": "#ffdbd1",
+                        "on-surface-variant": "#454652",
+                        "surface-bright": "#fbf8ff",
+                        "surface-container-highest": "#e3e1ea",
+                        "secondary-fixed-dim": "#bdc4f2",
+                        "inverse-on-surface": "#f2eff9",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#3647ea",
+                        "surface": "#fbf8ff",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e3e1ea",
+                        "outline-variant": "#c5c5d4",
+                        "secondary": "#555c84",
+                        "on-tertiary-container": "#ffc5b5",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#a92d00",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#bdc2ff",
+                        "on-secondary-fixed-variant": "#3d446b",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#dde1ff",
+                        "primary-container": "#3142e6",
+                        "on-primary-fixed-variant": "#1126d3",
+                        "surface-dim": "#dbd9e2",
+                        "on-secondary-fixed": "#11193d",
+                        "on-secondary-container": "#50577f",
+                        "tertiary": "#802000",
+                        "primary-fixed": "#dfe0ff",
+                        "on-primary-container": "#cbcfff",
+                        "on-tertiary-fixed-variant": "#862200",
+                        "on-background": "#1a1b22",
+                        "on-surface": "#1a1b22",
+                        "surface-container-high": "#e9e7f0"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Manrope", "sans-serif"],
+                        "label": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            background: rgba(251, 248, 255, 0.7);
+            backdrop-filter: blur(20px);
+        }
+        .rupee-symbol {
+            font-size: 0.8em;
+        }
+        .premium-gradient {
+            background: linear-gradient(135deg, #061fd0 0%, #3142e6 100%);
+        }
+        .indian-motif-bg {
+            background-image: radial-gradient(#c5c5d4 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top AppBar (Linear Process - No Nav Bars per Exclusion Protocol) -->
+<header class="fixed top-0 left-0 right-0 z-50 glass-nav px-6 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+</button>
+<h1 class="text-on-surface font-headline font-bold text-lg tracking-tight">Finance</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">info</span>
+</div>
+</header>
+<main class="pt-24 pb-12 px-6 max-w-md mx-auto relative overflow-hidden">
+<!-- Subtle Indian Motif Decoration -->
+<div class="absolute top-0 right-0 w-64 h-64 -mr-20 -mt-20 indian-motif-bg rounded-full"></div>
+<!-- Hero Section -->
+<section class="mb-10 relative z-10">
+<div class="inline-flex items-center px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold tracking-widest uppercase mb-4">
+                Exclusive Access
+            </div>
+<h2 class="text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tight mb-2">
+                Join the Future of Finance
+            </h2>
+<p class="text-on-surface-variant text-lg font-medium opacity-80">
+                Experience the next generation of wealth management in India.
+            </p>
+</section>
+<!-- Form Canvas -->
+<section class="space-y-6 relative z-10">
+<!-- Full Name Input -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface ml-4">Full Name</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-xl group-focus-within:text-primary transition-colors">person</span>
+</div>
+<input class="w-full bg-surface-container-highest border-none rounded-xl py-4 pl-14 pr-6 focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline-variant text-on-surface" placeholder="Arjun Malhotra" type="text"/>
+</div>
+</div>
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface ml-4">Email Address</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-xl group-focus-within:text-primary transition-colors">mail</span>
+</div>
+<input class="w-full bg-surface-container-highest border-none rounded-xl py-4 pl-14 pr-6 focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline-variant text-on-surface" placeholder="arjun@ethereal.com" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface ml-4">Password</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-xl group-focus-within:text-primary transition-colors">lock</span>
+</div>
+<input class="w-full bg-surface-container-highest border-none rounded-xl py-4 pl-14 pr-12 focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all placeholder:text-outline-variant text-on-surface" placeholder="••••••••" type="password"/>
+<div class="absolute inset-y-0 right-4 flex items-center">
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">visibility</span>
+</div>
+</div>
+</div>
+<!-- Terms & Conditions -->
+<div class="flex items-start gap-4 px-2 py-2">
+<div class="flex items-center h-6">
+<input class="h-5 w-5 rounded-md border-outline-variant text-primary focus:ring-primary bg-surface-container-low transition-all" id="terms" name="terms" type="checkbox"/>
+</div>
+<label class="text-sm leading-tight text-on-surface-variant" for="terms">
+                    I agree to the <span class="text-primary font-bold cursor-pointer underline decoration-primary/30">Terms of Service</span> and <span class="text-primary font-bold cursor-pointer underline decoration-primary/30">Privacy Policy</span>.
+                </label>
+</div>
+<!-- Primary CTA -->
+<button class="w-full premium-gradient text-on-primary py-5 rounded-xl font-bold text-lg shadow-[0px_24px_48px_rgba(6,31,208,0.15)] active:scale-[0.98] transition-all">
+                Create Account
+            </button>
+</section>
+<!-- Divider -->
+<div class="my-10 flex items-center gap-4">
+<div class="h-[1px] flex-1 bg-outline-variant/30"></div>
+<span class="text-xs font-bold text-outline-variant uppercase tracking-widest">or continue with</span>
+<div class="h-[1px] flex-1 bg-outline-variant/30"></div>
+</div>
+<!-- Social Signup -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-3 bg-surface-container-lowest py-4 rounded-xl border border-outline-variant/10 hover:bg-surface-bright transition-colors shadow-sm">
+<img alt="" class="w-5 h-5 opacity-80" data-alt="Google logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6udgks0-wt8WfcTMf6Ey2PKcnHgH7XFh9MDCbQJptyEBV9-OYfNoLGg7jxjcZZYdiXBryu2i5_exWEUlASRHPx2FbiyaD5hOAUmPm6g5qjT2Ze0h6n42aA0uOHsD7PXh66oaWFcaGRsdeY1aDzWzsN7ASNZkvUw8I0TyIhhpnF_s_KscnzBbEOEGzAPdND47k5vkcyBQJiUljGAqXyxndOxsZavrmBmdrjObBJD15gTMZ2MFmyJ41lK6jH9g8er3Qk7eSMgSavTg"/>
+<span class="text-sm font-bold text-on-surface">Google</span>
+</button>
+<button class="flex items-center justify-center gap-3 bg-surface-container-lowest py-4 rounded-xl border border-outline-variant/10 hover:bg-surface-bright transition-colors shadow-sm">
+<img alt="" class="w-5 h-5 opacity-80" data-alt="Apple logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWC83QH7JKJsKgaCUkaQ7x6l1pe9bOTXn4y_MjtoqvPl7gCyai2F4kPkVScQOgEzDbK6QZdT-jE3Ej6eVuIyYrg05BgYQDxH09JfmjnCUmiQS68t9L6koXezCAKgHkvekEk5tgO5EeB9e-W3F4-iHDcHHpoDFJ8NEXm-wOUYT325hdjyt8nHQUDWZmnZBq9zLzbxsGeyQSWCL8MhRlljlSbeIoHWSTtnAO-aaGWguqxFLjmiIUkMIvgUZuCj_e-YgmCwePUE_K2dY"/>
+<span class="text-sm font-bold text-on-surface">Apple</span>
+</button>
+</div>
+<!-- Footer Note -->
+<p class="mt-12 text-center text-on-surface-variant font-medium">
+            Already have an account? <span class="text-primary font-bold cursor-pointer">Log In</span>
+</p>
+</main>
+<!-- Visual Polish: Bottom Background Card -->
+<div class="fixed bottom-0 left-0 right-0 -z-10 h-32 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<!-- The Ethereal Flare (Design System Element) -->
+<div class="fixed -bottom-40 -left-40 w-96 h-96 bg-primary/5 blur-[100px] rounded-full -z-10"></div>
+</body></html>

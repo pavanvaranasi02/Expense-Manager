@@ -27,6 +27,7 @@ graph TD
     subgraph MainApp [Main Application Experience]
         Dashboard --> Transactions[📑 Transactions List]
         Dashboard --> Analytics[📊 Deep Analytics]
+        Dashboard --> Family[👥 Family Hub]
         Dashboard --> Profile[👤 Your Profile & Settings]
         Dashboard --> QuickAdd[➕ Quick Transaction]
     end
@@ -36,9 +37,13 @@ graph TD
         QuickAdd -- Expense --> UpdBdg[Update Budget Progress]
         UpdBdg --> Alerts[Smart Notifications]
         
+        Family --> SharedSpend[Shared Household Track]
+        Family --> FamilyBudgets[Collaborative Budgeting]
+        
         Profile --> Portfolio[📈 Investment Portfolio]
+        Profile --> StealthMode[🕵️ Public Stealth Mode]
+        
         Portfolio --> SIP_RD[Track SIPs/RDs]
-        Portfolio --> Maturity[Auto-credit Maturity to Bank]
         
         Dashboard --> CCAlerts[Credit Card Due Reminders]
     end
@@ -65,6 +70,13 @@ graph TD
 - **Payment Mode Analysis**: See the split between UPI, Debit, Credit, and Cash spending.
 - **Comparison Engine**: Navigate through months to track your financial growth and saving trends.
 
+### 👥 Family Management (New)
+- **Collaborative Tracking**: Create or join a family unit to manage shared household expenses.
+- **Role-Based Access**: Manage permissions with Owner, Co-Admin, and Member roles.
+- **Invite System**: Seamless onboarding via unique 6-digit family invite codes.
+- **Shared Budgets**: Set family-wide spending limits and track collective progress.
+- **Member Insights**: See who spent what and compare spending patterns across the family.
+
 ### 📈 Investment Portfolio (Pro)
 - **Multi-Asset Support**: Track 11+ investment types including Mutual Funds, Stocks, Gold, Crypto, FD, and PPF.
 - **SIP & RD Tracking**: Automated reminders for monthly payments with a dedicated "Confirm/Skip" workflow.
@@ -74,7 +86,46 @@ graph TD
 ### 🎯 Proactive Budgeting
 - **Granular Control**: Set overall monthly limits or category-specific targets.
 - **Visual Progress**: Color-coded bars (Green → Amber → Red) keep you disciplined.
-- **Budget Suggestions**: Smart defaults provided during onboarding to get you started faster.
+- **Notification Engine**: Get instant pings for budget thresholds (50%, 80%, 100%) and daily summaries.
+
+### 🕵️ Privacy & Smart Insights
+- **Public Stealth Mode**: Instantly mask sensitive balances and values in public with a single tap.
+- **Spending Personality**: Monthly AI-driven analysis of your financial behavior (e.g., "The Saver", "The Spender").
+- **Data Portability**: Export your entire transaction history to CSV or PDF for external auditing.
+
+---
+
+## 👥 Family Role Permissions Matrix
+
+Here is exactly what each role can do in the app based on the latest implementation:
+
+| Action / Feature | 👑 Owner | 🛡️ Co-Admin | 👤 Member |
+|---|:---:|:---:|:---:|
+| **Family Management** | | | |
+| Create a family | ✅ | - | - |
+| Leave family | ✅ (Transfers) | ✅ | ✅ |
+| Delete entire family | ✅ | ❌ | ❌ |
+| Rename family | ✅ | ❌ | ❌ |
+| Transfer Ownership | ✅ | ❌ | ❌ |
+| **Member Management** | | | |
+| Invite members (View Code) | ✅ | ✅ | ❌ |
+| Regenerate Invite Code | ✅ | ✅ | ❌ |
+| Remove a Member | ✅ | ✅ | ❌ |
+| Promote/Demote Co-Admin | ✅ | ❌ | ❌ |
+| **Expenses & Split** | | | |
+| View all family expenses | ✅ | ✅ | ✅ |
+| Add new family expense | ✅ | ✅ | ✅ |
+| Edit/Delete Own expense | ✅ | ✅ | ✅ |
+| Edit/Delete Others' expense | ✅ | ✅ | ❌ |
+| Use Custom/Percentage Splits | ✅ | ✅ | ✅ |
+| **Budgets & Analytics** | | | |
+| View Budgets & Analytics | ✅ | ✅ | ✅ |
+| Set/Edit Monthly Budgets | ✅ | ✅ | ❌ |
+| Receive Budget Alerts | ✅ | ✅ | ✅ |
+| Export to CSV / PDF | ✅ | ✅ | ✅ |
+| **Automation** | | | |
+| View Recurring Templates | ✅ | ✅ | ✅ |
+| Create/Edit/Delete Templates | ✅ | ✅ | ❌ |
 
 ---
 
@@ -99,14 +150,15 @@ graph TD
 ```
 ExpenseManager/
 ├── src/
-│   ├── navigation/        # Root, Auth, Onboarding & Main Navigators
-│   ├── screens/           # UI implementations grouped by feature
-│   ├── services/          # Firebase logic (Auth, Expense, Investment, etc.)
-│   ├── store/             # Zustand stores for global state
+│   ├── navigation/        # Root, Auth, Onboarding, and Family Navigators
+│   ├── screens/           # UI implementations (Grouped by Home, Family, Invest, etc.)
+│   ├── services/          # Logic (Auth, Family, Expense, Notification, Export)
+│   ├── store/             # Zustand stores (User, Family, Notifications, Accounts)
 │   ├── config/            # Firebase and environmental configuration
-│   ├── components/        # Reusable UI elements (Buttons, Cards, Modals)
-│   └── constants/         # Theme, Colors, and Static Data
-├── assets/                # App icons, splash, and images
+│   ├── components/        # Reusable UI (Family, Notifications, Layout, Charts)
+│   ├── utils/             # Helpers (Formatters, Validators, Code Generators)
+│   └── constants/         # Theme, Colors, Roles, and Static Data
+├── assets/                # App icons, splash, and animation assets
 └── App.js                 # Application entry point
 ```
 

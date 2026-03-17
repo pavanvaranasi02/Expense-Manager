@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container": "#efedf6",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#2f3037",
+              "on-tertiary": "#ffffff",
+              "primary": "#061fd0",
+              "tertiary-fixed-dim": "#ffb5a0",
+              "secondary-container": "#c8cffd",
+              "outline": "#757684",
+              "surface-container-low": "#f4f2fc",
+              "background": "#fbf8ff",
+              "on-tertiary-fixed": "#3b0900",
+              "on-primary-fixed": "#000866",
+              "tertiary-fixed": "#ffdbd1",
+              "on-surface-variant": "#454652",
+              "surface-bright": "#fbf8ff",
+              "surface-container-highest": "#e3e1ea",
+              "secondary-fixed-dim": "#bdc4f2",
+              "inverse-on-surface": "#f2eff9",
+              "primary-fixed-dim": "#bdc2ff",
+              "on-error-container": "#93000a",
+              "surface-tint": "#3647ea",
+              "surface": "#fbf8ff",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "surface-variant": "#e3e1ea",
+              "outline-variant": "#c5c5d4",
+              "secondary": "#555c84",
+              "on-tertiary-container": "#ffc5b5",
+              "on-secondary": "#ffffff",
+              "tertiary-container": "#a92d00",
+              "error-container": "#ffdad6",
+              "inverse-primary": "#bdc2ff",
+              "on-secondary-fixed-variant": "#3d446b",
+              "error": "#ba1a1a",
+              "secondary-fixed": "#dde1ff",
+              "primary-container": "#3142e6",
+              "on-primary-fixed-variant": "#1126d3",
+              "surface-dim": "#dbd9e2",
+              "on-secondary-fixed": "#11193d",
+              "on-secondary-container": "#50577f",
+              "tertiary": "#802000",
+              "primary-fixed": "#dfe0ff",
+              "on-primary-container": "#cbcfff",
+              "on-tertiary-fixed-variant": "#862200",
+              "on-background": "#1a1b22",
+              "on-surface": "#1a1b22",
+              "surface-container-high": "#e9e7f0"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ethereal-blur {
+            backdrop-filter: blur(20px);
+            background: rgba(251, 248, 255, 0.7);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #061fd0 0%, #3142e6 100%);
+        }
+        .ambient-shadow {
+            box-shadow: 0px 24px 48px rgba(26, 27, 34, 0.06);
+        }
+        .rupee-symbol {
+            font-size: 0.8em;
+        }
+        .glass-flare {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: white;
+            filter: blur(100px);
+            opacity: 0.05;
+            top: -100px;
+            right: -100px;
+            pointer-events: none;
+        }
+        input:focus {
+            outline: none !important;
+            border: 1px solid rgba(6, 31, 208, 0.2) !important;
+            background-color: #ffffff !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- The Exclusion Protocol: Linear Process screens hide navigation bars -->
+<main class="flex-grow flex flex-col items-center justify-center p-6 md:p-12 relative overflow-hidden">
+<!-- Background Accents (Ethereal Vault Theme) -->
+<div class="absolute top-0 left-0 w-full h-full pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary opacity-[0.03] rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary opacity-[0.03] rounded-full blur-[120px]"></div>
+</div>
+<div class="w-full max-w-md z-10">
+<!-- Branding/Identity Section -->
+<div class="mb-12 text-center md:text-left">
+<div class="inline-flex items-center justify-center w-14 h-14 primary-gradient rounded-lg mb-6 ambient-shadow">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<h1 class="text-4xl font-bold tracking-tight text-on-surface mb-2 font-headline">Welcome Back</h1>
+<p class="text-on-surface-variant text-lg">Your personal finance partner.</p>
+</div>
+<!-- Login Form Section -->
+<div class="space-y-6">
+<!-- Wealth Card Hint (Subtle contextual UI) -->
+<div class="bg-surface-container-low rounded-lg p-5 mb-8 flex items-center gap-4 relative overflow-hidden">
+<div class="glass-flare"></div>
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Secure India Vault</p>
+<p class="text-xs text-on-surface-variant">End-to-end encrypted sessions</p>
+</div>
+</div>
+<!-- Input Group: Email -->
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant ml-4">Email Address</label>
+<div class="relative">
+<input class="w-full h-14 px-6 bg-surface-container-highest rounded-xl border-none text-on-surface placeholder:text-outline focus:ring-0 transition-all duration-300" placeholder="arjun.sharma@example.in" type="email"/>
+</div>
+</div>
+<!-- Input Group: Password -->
+<div class="space-y-2">
+<div class="flex justify-between items-center ml-4 mr-2">
+<label class="text-sm font-semibold text-on-surface-variant">Password</label>
+<a class="text-sm font-bold text-primary" href="#">Forgot?</a>
+</div>
+<div class="relative">
+<input class="w-full h-14 px-6 bg-surface-container-highest rounded-xl border-none text-on-surface placeholder:text-outline focus:ring-0 transition-all duration-300" placeholder="••••••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<!-- Primary Action -->
+<button class="w-full h-14 primary-gradient text-on-primary rounded-xl font-bold text-lg ambient-shadow hover:opacity-90 transition-opacity mt-4">
+                    Continue to Dashboard
+                </button>
+<!-- Divider Alternative: Editorial Spacing -->
+<div class="py-6 flex items-center gap-4">
+<div class="flex-grow h-[1px] bg-outline-variant opacity-20"></div>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">or secure login with</span>
+<div class="flex-grow h-[1px] bg-outline-variant opacity-20"></div>
+</div>
+<!-- Social Login: Google -->
+<button class="w-full h-14 bg-surface-container-lowest border border-outline-variant border-opacity-20 text-on-surface rounded-xl font-semibold flex items-center justify-center gap-3 ambient-shadow hover:bg-surface-bright transition-colors">
+<img alt="Google Logo" class="w-6 h-6" data-alt="Google colorful brand logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE78fZwuAsGTkfHFBfnT_W0VKyC7Bm0hrW1R7yEUO_E5FyYMG7r0DSbeSAwxfBQSUsJgT1P1uZgaQ8L1uQw-7SlvL5OQG-BSGppwtfuhbWk7sQgqiOq_6XevUide128r1wt7Qf8i2hNtA2lLi3jJ2yY9-SYXt7XC5aA4JQ8IdwRsrNMFZIiO32tAm7MR32gWmbOVlGPJwP49cE0ZCpXQ79ethJQUuxdIDemnAxF31-7KvnnUutM_pET1XgsffmdmobVgDbLomh2Qg"/>
+<span>Google Account</span>
+</button>
+</div>
+<!-- Footer Meta -->
+<div class="mt-12 text-center">
+<p class="text-on-surface-variant">New to Finance? <a class="text-primary font-bold" href="#">Create an Account</a></p>
+<div class="mt-8 flex justify-center gap-6 opacity-40 grayscale">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">security</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">PCI DSS Compliant</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">language</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Made in India</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Decorative Element (Wealth Card Style) -->
+<div class="hidden lg:block absolute right-[-5%] top-[20%] w-[400px] h-[260px] primary-gradient rounded-lg rotate-[-6deg] ambient-shadow p-8 text-on-primary overflow-hidden">
+<div class="glass-flare"></div>
+<div class="flex justify-between items-start mb-12">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">contactless</span>
+<span class="text-xl font-bold italic tracking-wider opacity-60">PREMIUM</span>
+</div>
+<div class="space-y-1">
+<p class="text-xs opacity-60 uppercase tracking-widest">Available Balance</p>
+<p class="text-3xl font-bold"><span class="rupee-symbol">₹</span> 12,45,000.00</p>
+</div>
+<div class="mt-8 flex justify-between items-end">
+<p class="text-lg tracking-[0.2em] font-medium">•••• 4821</p>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-on-primary opacity-20"></div>
+<div class="w-8 h-8 rounded-full bg-on-primary opacity-40"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Decorative "Shell" Visual (Login process usually lacks persistent nav, but we can use brand elements) -->
+<div class="fixed bottom-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-primary-container to-secondary opacity-20"></div>
+</body></html>

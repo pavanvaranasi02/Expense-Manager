@@ -94,9 +94,17 @@ const TransactionDetailScreen = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Amount */}
         <View style={styles.amountSection}>
-          <Text style={styles.icon}>
-            {isIncome ? txn.sourceIcon || '💰' : txn.categoryIcon || '📦'}
-          </Text>
+          {isIncome ? (
+            txn.sourceIcon && txn.sourceIcon.length > 2 ? (
+              <Ionicons name={txn.sourceIcon} size={48} color="#10B981" style={{ marginBottom: 12 }} />
+            ) : (
+              <Text style={styles.icon}>{txn.sourceIcon || '💰'}</Text>
+            )
+          ) : txn.categoryIcon && txn.categoryIcon.length > 2 ? (
+            <Ionicons name={txn.categoryIcon} size={48} color="#EF4444" style={{ marginBottom: 12 }} />
+          ) : (
+            <Text style={styles.icon}>{txn.categoryIcon || '📦'}</Text>
+          )}
           <Text style={[styles.amount, isIncome && { color: '#10B981' }]}>
             {isIncome ? '+' : '-'}₹{(txn.amount || 0).toLocaleString('en-IN')}
           </Text>

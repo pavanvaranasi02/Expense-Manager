@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,20 +14,20 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Analytics } from '../../config/firebase';
-import { deleteExpense, getExpenses } from '../../services/expenseService';
-import { deleteIncome, getIncomes } from '../../services/incomeService';
-import useAuthStore from '../../store/useAuthStore';
-import { formatCurrency } from '../../utils/format';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Analytics } from "../../config/firebase";
+import { deleteExpense, getExpenses } from "../../services/expenseService";
+import { deleteIncome, getIncomes } from "../../services/incomeService";
+import useAuthStore from "../../store/useAuthStore";
+import { formatCurrency } from "../../utils/format";
 
 const FILTER_OPTIONS = [
-  { id: 'all', label: 'All' },
-  { id: 'today', label: 'Today' },
-  { id: 'week', label: 'This Week' },
-  { id: 'month', label: 'This Month' },
-  { id: 'custom', label: 'Custom' },
+  { id: "all", label: "All" },
+  { id: "today", label: "Today" },
+  { id: "week", label: "This Week" },
+  { id: "month", label: "This Month" },
+  { id: "custom", label: "Custom" },
 ];
 
 const ExpenseListScreen = ({ navigation }) => {
@@ -35,15 +35,15 @@ const ExpenseListScreen = ({ navigation }) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState('month');
-  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState("month");
+  const [search, setSearch] = useState("");
   const [summary, setSummary] = useState({ totalExpense: 0, totalIncome: 0 });
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeRangeLabel, setActiveRangeLabel] = useState('This Month');
+  const [activeRangeLabel, setActiveRangeLabel] = useState("This Month");
   // Custom Range State
-  const [customRange, setCustomRange] = useState({ 
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1), 
-    end: new Date() 
+  const [customRange, setCustomRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    end: new Date(),
   });
   const [showRangeModal, setShowRangeModal] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null); // 'start' or 'end'
@@ -53,41 +53,74 @@ const ExpenseListScreen = ({ navigation }) => {
   // FIX: Don't mutate Date — create fresh instances each time
   const getDateRange = (filterType, baseDate = new Date()) => {
     switch (filterType) {
-      case 'today': {
+      case "today": {
         const start = new Date(baseDate);
         start.setHours(0, 0, 0, 0);
         const end = new Date(baseDate);
         end.setHours(23, 59, 59, 999);
-        return { startDate: start, endDate: end, label: baseDate.toDateString() === new Date().toDateString() ? 'Today' : baseDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) };
+        return {
+          startDate: start,
+          endDate: end,
+          label:
+            baseDate.toDateString() === new Date().toDateString()
+              ? "Today"
+              : baseDate.toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                }),
+        };
       }
-      case 'week': {
+      case "week": {
         const end = new Date(baseDate);
         end.setHours(23, 59, 59, 999);
         const start = new Date(baseDate);
         start.setDate(start.getDate() - 7);
         start.setHours(0, 0, 0, 0);
-        return { startDate: start, endDate: end, label: 'Last 7 Days' };
+        return { startDate: start, endDate: end, label: "Last 7 Days" };
       }
-      case 'month': {
-        const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1, 0, 0, 0, 0);
-        const end = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0, 23, 59, 59, 999);
-        const isCurrentMonth = baseDate.getMonth() === new Date().getMonth() && baseDate.getFullYear() === new Date().getFullYear();
-        return { 
-          startDate: start, 
-          endDate: end, 
-          label: isCurrentMonth ? 'This Month' : baseDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) 
+      case "month": {
+        const start = new Date(
+          baseDate.getFullYear(),
+          baseDate.getMonth(),
+          1,
+          0,
+          0,
+          0,
+          0,
+        );
+        const end = new Date(
+          baseDate.getFullYear(),
+          baseDate.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
+        const isCurrentMonth =
+          baseDate.getMonth() === new Date().getMonth() &&
+          baseDate.getFullYear() === new Date().getFullYear();
+        return {
+          startDate: start,
+          endDate: end,
+          label: isCurrentMonth
+            ? "This Month"
+            : baseDate.toLocaleDateString("en-IN", {
+                month: "long",
+                year: "numeric",
+              }),
         };
       }
-      case 'custom': {
+      case "custom": {
         const start = new Date(customRange.start);
         start.setHours(0, 0, 0, 0);
         const end = new Date(customRange.end);
         end.setHours(23, 59, 59, 999);
-        const label = `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+        const label = `${start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} - ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`;
         return { startDate: start, endDate: end, label };
       }
       default:
-        return { label: 'All Time' }; 
+        return { label: "All Time" };
     }
   };
 
@@ -111,13 +144,13 @@ const ExpenseListScreen = ({ navigation }) => {
       let totalIn = 0;
 
       if (expResult.success) {
-        const exps = expResult.expenses.map(e => ({ ...e, type: 'expense' }));
+        const exps = expResult.expenses.map((e) => ({ ...e, type: "expense" }));
         allTxns = [...allTxns, ...exps];
         totalEx = exps.reduce((s, e) => s + (e.amount || 0), 0);
       }
 
       if (incResult.success) {
-        const incs = incResult.incomes.map(i => ({ ...i, type: 'income' }));
+        const incs = incResult.incomes.map((i) => ({ ...i, type: "income" }));
         allTxns = [...allTxns, ...incs];
         totalIn = incs.reduce((s, i) => s + (i.amount || 0), 0);
       }
@@ -128,7 +161,7 @@ const ExpenseListScreen = ({ navigation }) => {
       setTransactions(allTxns);
       setSummary({ totalExpense: totalEx, totalIncome: totalIn });
     } catch (error) {
-      console.log('❌ Fetch transactions error:', error);
+      console.log("❌ Fetch transactions error:", error);
     }
     setLoading(false);
     setRefreshing(false);
@@ -137,47 +170,47 @@ const ExpenseListScreen = ({ navigation }) => {
   // FIX: Always refetch fresh data when screen is focused
   useFocusEffect(
     useCallback(() => {
-      Analytics.screenView('TransactionList');
+      Analytics.screenView("TransactionList");
       // Check for navigation params
       const routes = navigation.getState()?.routes;
-      const params = routes?.find(r => r.name === 'Transactions')?.params;
-      
+      const params = routes?.find((r) => r.name === "Transactions")?.params;
+
       if (params?.categoryId) {
         setCategoryId(params.categoryId);
-        setCategoryName(params.categoryName || 'Category');
+        setCategoryName(params.categoryName || "Category");
         if (params.searchText) setSearch(params.searchText);
-        
+
         if (params.startDate && params.endDate) {
-          setCustomRange({ 
-            start: new Date(params.startDate), 
-            end: new Date(params.endDate) 
+          setCustomRange({
+            start: new Date(params.startDate),
+            end: new Date(params.endDate),
           });
-          setFilter('custom');
+          setFilter("custom");
         } else {
-          setFilter('all');
+          setFilter("all");
         }
       }
-      
+
       setLoading(true);
       fetchTransactions();
-    }, [filter, search, selectedDate, customRange, categoryId, navigation])
+    }, [filter, search, selectedDate, customRange, categoryId, navigation]),
   );
 
   const onDateChange = (event, date) => {
     setPickerTarget(null);
     if (date) {
-      if (pickerTarget === 'start') {
-        setCustomRange(prev => ({ ...prev, start: date }));
-      } else if (pickerTarget === 'end') {
+      if (pickerTarget === "start") {
+        setCustomRange((prev) => ({ ...prev, start: date }));
+      } else if (pickerTarget === "end") {
         const finalEnd = date < customRange.start ? customRange.start : date;
-        setCustomRange(prev => ({ ...prev, end: finalEnd }));
+        setCustomRange((prev) => ({ ...prev, end: finalEnd }));
       }
     }
   };
 
   const handleApplyRange = () => {
     setShowRangeModal(false);
-    setFilter('custom');
+    setFilter("custom");
   };
 
   const handleCalendarPress = () => {
@@ -185,51 +218,53 @@ const ExpenseListScreen = ({ navigation }) => {
   };
 
   const handleDelete = (tx) => {
-    const isIncome = tx.type === 'income';
+    const isIncome = tx.type === "income";
     Alert.alert(
-      'Delete',
-      `Delete this ${isIncome ? tx.sourceName : tx.categoryName} ${isIncome ? 'income' : 'expense'} of ₹${tx.amount}?`,
+      "Delete",
+      `Delete this ${isIncome ? tx.sourceName : tx.categoryName} ${isIncome ? "income" : "expense"} of ₹${tx.amount}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             const result = isIncome
               ? await deleteIncome(tx.id, tx)
               : await deleteExpense(tx.id, tx);
             if (result.success) {
               setTransactions((prev) => prev.filter((e) => e.id !== tx.id));
-              setSummary(prev => ({
+              setSummary((prev) => ({
                 ...prev,
-                [isIncome ? 'totalIncome' : 'totalExpense']: prev[isIncome ? 'totalIncome' : 'totalExpense'] - tx.amount
+                [isIncome ? "totalIncome" : "totalExpense"]:
+                  prev[isIncome ? "totalIncome" : "totalExpense"] - tx.amount,
               }));
             } else {
-              Alert.alert('Error', result.error);
+              Alert.alert("Error", result.error);
             }
           },
         },
-      ]
+      ],
     );
   };
 
   // FIX: Handle ISO strings properly
   const formatDate = (d) => {
-    if (!d) return '';
-    const date = typeof d === 'string' ? new Date(d) : d instanceof Date ? d : new Date(d);
+    if (!d) return "";
+    const date =
+      typeof d === "string" ? new Date(d) : d instanceof Date ? d : new Date(d);
 
-    if (isNaN(date.getTime())) return '';
+    if (isNaN(date.getTime())) return "";
 
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return date.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
@@ -252,7 +287,7 @@ const ExpenseListScreen = ({ navigation }) => {
           <Text style={styles.title}>Transactions</Text>
           <Text style={styles.rangeLabel}>{activeRangeLabel}</Text>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.calendarBtn}
           onPress={handleCalendarPress}
         >
@@ -270,15 +305,18 @@ const ExpenseListScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.rangeModalContent}>
             <Text style={styles.modalTitle}>Select Custom Range</Text>
-            
+
             <View style={styles.rangePickersRow}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.rangePickerBtn}
-                onPress={() => setPickerTarget('start')}
+                onPress={() => setPickerTarget("start")}
               >
                 <Text style={styles.rangePickerLabel}>Start Date</Text>
                 <Text style={styles.rangePickerValue}>
-                  {customRange.start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  {customRange.start.toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </Text>
               </TouchableOpacity>
 
@@ -286,25 +324,28 @@ const ExpenseListScreen = ({ navigation }) => {
                 <Ionicons name="arrow-forward" size={16} color="#94A3B8" />
               </View>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.rangePickerBtn}
-                onPress={() => setPickerTarget('end')}
+                onPress={() => setPickerTarget("end")}
               >
                 <Text style={styles.rangePickerLabel}>End Date</Text>
                 <Text style={styles.rangePickerValue}>
-                  {customRange.end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  {customRange.end.toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnCancel]}
                 onPress={() => setShowRangeModal(false)}
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnApply]}
                 onPress={handleApplyRange}
               >
@@ -317,7 +358,7 @@ const ExpenseListScreen = ({ navigation }) => {
 
       {pickerTarget && (
         <DateTimePicker
-          value={pickerTarget === 'start' ? customRange.start : customRange.end}
+          value={pickerTarget === "start" ? customRange.start : customRange.end}
           mode="date"
           display="default"
           onChange={onDateChange}
@@ -337,7 +378,7 @@ const ExpenseListScreen = ({ navigation }) => {
             onChangeText={setSearch}
           />
           {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
+            <TouchableOpacity onPress={() => setSearch("")}>
               <Ionicons name="close-circle" size={18} color="#9CA3AF" />
             </TouchableOpacity>
           )}
@@ -364,7 +405,7 @@ const ExpenseListScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.filterText,
-                  filter === f.id && { color: '#FFF' },
+                  filter === f.id && { color: "#FFF" },
                 ]}
               >
                 {f.label}
@@ -378,7 +419,12 @@ const ExpenseListScreen = ({ navigation }) => {
             <View style={styles.catChip}>
               <Ionicons name="pricetag" size={14} color="#6C63FF" />
               <Text style={styles.catChipText}>{categoryName}</Text>
-              <TouchableOpacity onPress={() => { setCategoryId(null); setCategoryName(null); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setCategoryId(null);
+                  setCategoryName(null);
+                }}
+              >
                 <Ionicons name="close-circle" size={16} color="#94A3B8" />
               </TouchableOpacity>
             </View>
@@ -398,32 +444,37 @@ const ExpenseListScreen = ({ navigation }) => {
               setRefreshing(true);
               fetchTransactions();
             }}
-            colors={['#6C63FF']}
+            colors={["#6C63FF"]}
           />
         }
       >
         {/* Summary Card */}
         {!loading && transactions.length > 0 && (
           <LinearGradient
-            colors={['#6C63FF', '#4F46E5']}
+            colors={["#6C63FF", "#4F46E5"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.summaryBanner}
           >
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Income</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(summary.totalIncome, isStealthMode)}</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(summary.totalIncome, isStealthMode)}
+              </Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Expense</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(summary.totalExpense, isStealthMode)}</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(summary.totalExpense, isStealthMode)}
+              </Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Balance</Text>
-              <Text style={[styles.summaryValue, { fontWeight: '800' }]}>
-                {balance < 0 ? '-' : '+'}{formatCurrency(Math.abs(balance), isStealthMode)}
+              <Text style={[styles.summaryValue, { fontWeight: "800" }]}>
+                {balance < 0 ? "-" : "+"}
+                {formatCurrency(Math.abs(balance), isStealthMode)}
               </Text>
             </View>
           </LinearGradient>
@@ -439,24 +490,31 @@ const ExpenseListScreen = ({ navigation }) => {
             <Ionicons name="receipt-outline" size={56} color="#D1D5DB" />
             <Text style={styles.emptyTitle}>No transactions found</Text>
             <Text style={styles.emptyText}>
-              {search
-                ? 'Try a different search'
-                : 'Tap + to add a transaction'}
+              {search ? "Try a different search" : "Tap + to add a transaction"}
             </Text>
           </View>
         ) : (
           Object.entries(grouped).map(([dateLabel, items], index) => (
             <View key={dateLabel}>
-              <View style={[styles.dateHeader, index === 0 && { marginTop: 8 }]}>
+              <View
+                style={[styles.dateHeader, index === 0 && { marginTop: 8 }]}
+              >
                 <Text style={styles.dateLabel}>{dateLabel}</Text>
                 <Text style={styles.dateTotal}>
                   {(() => {
-                    const dayEx = items.filter(i => i.type === 'expense').reduce((s, e) => s + e.amount, 0);
-                    const dayIn = items.filter(i => i.type === 'income').reduce((s, i) => s + i.amount, 0);
+                    const dayEx = items
+                      .filter((i) => i.type === "expense")
+                      .reduce((s, e) => s + e.amount, 0);
+                    const dayIn = items
+                      .filter((i) => i.type === "income")
+                      .reduce((s, i) => s + i.amount, 0);
                     const dayBal = dayIn - dayEx;
                     return (
-                      <Text style={{ color: dayBal < 0 ? '#EF4444' : '#10B981' }}>
-                        {dayBal < 0 ? '-' : '+'}{formatCurrency(Math.abs(dayBal), isStealthMode)}
+                      <Text
+                        style={{ color: dayBal < 0 ? "#EF4444" : "#10B981" }}
+                      >
+                        {dayBal < 0 ? "-" : "+"}
+                        {formatCurrency(Math.abs(dayBal), isStealthMode)}
                       </Text>
                     );
                   })()}
@@ -467,35 +525,66 @@ const ExpenseListScreen = ({ navigation }) => {
                   key={tx.id}
                   style={styles.txnCard}
                   onPress={() => {
-                    navigation.navigate('ExpenseDetail', {
-                      [tx.type === 'income' ? 'income' : 'expense']: tx,
+                    navigation.navigate("ExpenseDetail", {
+                      [tx.type === "income" ? "income" : "expense"]: tx,
                     });
                   }}
                   onLongPress={() => handleDelete(tx)}
                   activeOpacity={0.7}
                 >
-                  <View style={[
-                    styles.txnIconContainer,
-                    { backgroundColor: tx.type === 'income' ? '#D1FAE5' : '#FEE2E2' }
-                  ]}>
-                    <Text style={styles.txnIcon}>
-                      {tx.type === 'income' ? tx.sourceIcon || '💰' : tx.categoryIcon || '📦'}
-                    </Text>
+                  <View
+                    style={[
+                      styles.txnIconContainer,
+                      {
+                        backgroundColor:
+                          tx.type === "income" ? "#D1FAE5" : "#FEE2E2",
+                      },
+                    ]}
+                  >
+                    {tx.type === "income" ? (
+                      tx.sourceIcon && tx.sourceIcon.length > 2 ? (
+                        <Ionicons
+                          name={tx.sourceIcon}
+                          size={20}
+                          color="#059669"
+                        />
+                      ) : (
+                        <Text style={styles.txnIcon}>
+                          {tx.sourceIcon || "💰"}
+                        </Text>
+                      )
+                    ) : tx.categoryIcon && tx.categoryIcon.length > 2 ? (
+                      <Ionicons
+                        name={tx.categoryIcon}
+                        size={20}
+                        color="#DC2626"
+                      />
+                    ) : (
+                      <Text style={styles.txnIcon}>
+                        {tx.categoryIcon || "📦"}
+                      </Text>
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.txnCategory} numberOfLines={1}>
-                      {tx.type === 'income' ? tx.sourceName : tx.categoryName}
+                      {tx.type === "income" ? tx.sourceName : tx.categoryName}
                     </Text>
                     <Text style={styles.txnNote} numberOfLines={1}>
-                      {tx.note || (tx.type === 'income' ? 'Income' : tx.paymentMode)}
+                      {tx.note ||
+                        (tx.type === "income" ? "Income" : tx.paymentMode)}
                     </Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[
-                      styles.txnAmount,
-                      tx.type === 'income' ? { color: '#059669' } : { color: '#DC2626' }
-                    ]}>
-                      {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, isStealthMode)}
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text
+                      style={[
+                        styles.txnAmount,
+                        tx.type === "income"
+                          ? { color: "#059669" }
+                          : { color: "#DC2626" },
+                      ]}
+                    >
+                      {tx.type === "income" ? "+" : "-"}
+                      {formatCurrency(tx.amount, isStealthMode)}
                     </Text>
                     <Text style={styles.txnAccount}>{tx.accountName}</Text>
                   </View>
@@ -510,96 +599,132 @@ const ExpenseListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: "#F8F9FE" },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 4,
   },
-  title: { fontSize: 26, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.5 },
-  rangeLabel: { fontSize: 13, color: '#6B7280', fontWeight: '600', marginTop: -2 },
+  title: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#1A1A2E",
+    letterSpacing: -0.5,
+  },
+  rangeLabel: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "600",
+    marginTop: -2,
+  },
   calendarBtn: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#F0EFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F0EFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   searchRow: { paddingHorizontal: 20, paddingVertical: 8 },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#64748B',
+    borderColor: "#F1F5F9",
+    shadowColor: "#64748B",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
   },
-  searchInput: { flex: 1, fontSize: 14, color: '#1A1A2E', marginLeft: 8 },
+  searchInput: { flex: 1, fontSize: 14, color: "#1A1A2E", marginLeft: 8 },
 
   filterRow: { marginBottom: 8, height: 48 },
-  filterContainer: { paddingHorizontal: 20, paddingRight: 40, alignItems: 'center' },
+  filterContainer: {
+    paddingHorizontal: 20,
+    paddingRight: 40,
+    alignItems: "center",
+  },
   filterChip: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: "#F1F5F9",
     marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     height: 40,
   },
-  filterChipActive: { backgroundColor: '#6C63FF', borderColor: '#6C63FF', elevation: 4, shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  filterText: { fontSize: 13, fontWeight: '600', color: '#64748B' },
+  filterChipActive: {
+    backgroundColor: "#6C63FF",
+    borderColor: "#6C63FF",
+    elevation: 4,
+    shadowColor: "#6C63FF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  filterText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
 
   content: { paddingHorizontal: 20, paddingBottom: 120 },
 
   summaryBanner: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     borderRadius: 16,
     marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600', textTransform: 'uppercase' },
-  summaryValue: { fontSize: 16, color: '#FFFFFF', fontWeight: '700', marginTop: 4 },
-  summaryDivider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.2)' },
+  summaryItem: { flex: 1, alignItems: "center" },
+  summaryLabel: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.7)",
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  summaryValue: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
 
   dateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 16,
     marginBottom: 8,
   },
-  dateLabel: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
-  dateTotal: { fontSize: 13, fontWeight: '600' },
+  dateLabel: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+  dateTotal: { fontSize: 13, fontWeight: "600" },
 
   txnCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 12,
     borderRadius: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#64748B',
+    borderColor: "#F1F5F9",
+    shadowColor: "#64748B",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -609,32 +734,37 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   txnIcon: { fontSize: 24 },
-  txnCategory: { fontSize: 15, fontWeight: '600', color: '#1E293B', marginBottom: 2 },
-  txnNote: { fontSize: 12, color: '#94A3B8' },
-  txnAmount: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
-  txnAccount: { fontSize: 10, color: '#94A3B8', fontWeight: '500' },
+  txnCategory: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 2,
+  },
+  txnNote: { fontSize: 12, color: "#94A3B8" },
+  txnAmount: { fontSize: 16, fontWeight: "700", marginBottom: 2 },
+  txnAccount: { fontSize: 10, color: "#94A3B8", fontWeight: "500" },
 
-  emptyText: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
+  emptyText: { fontSize: 14, color: "#9CA3AF", marginTop: 4 },
 
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   rangeModalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
-    width: '100%',
-    shadowColor: '#000',
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -642,94 +772,94 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#1A1A2E',
+    fontWeight: "800",
+    color: "#1A1A2E",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   rangePickersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 28,
   },
   rangePickerBtn: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: "#F8F9FE",
     borderRadius: 12,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: "#F1F5F9",
   },
   rangePickerLabel: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    color: "#94A3B8",
+    fontWeight: "700",
+    textTransform: "uppercase",
     marginBottom: 4,
   },
   rangePickerValue: {
     fontSize: 14,
-    color: '#1E293B',
-    fontWeight: '700',
+    color: "#1E293B",
+    fontWeight: "700",
   },
   rangePickerArrow: {
     paddingHorizontal: 10,
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   modalBtn: {
     flex: 1,
     height: 48,
     borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalBtnCancel: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: "#F1F5F9",
   },
   modalBtnCancelText: {
-    color: '#64748B',
-    fontWeight: '700',
+    color: "#64748B",
+    fontWeight: "700",
   },
   modalBtnApply: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: "#6C63FF",
   },
   modalBtnApplyText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 
   catFilterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 12,
     gap: 10,
   },
   catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0EFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0EFFF",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#6C63FF40',
+    borderColor: "#6C63FF40",
   },
   catChipText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontWeight: "700",
+    color: "#6C63FF",
   },
   catFilterNote: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontStyle: 'italic',
+    color: "#94A3B8",
+    fontStyle: "italic",
   },
 });
 

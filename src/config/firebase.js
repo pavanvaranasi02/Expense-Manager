@@ -231,6 +231,60 @@ export const Analytics = {
   // Call this in useFocusEffect on important screens
   screenView: (screenName) =>
     logAnalyticsEvent('screen_view', { screen_name: screenName }),
+
+  // ── Family Events ────────────────────────────────────
+  createFamily: (name) =>
+    logAnalyticsEvent('create_family', { family_name: name }),
+
+  joinFamily: () =>
+    logAnalyticsEvent('join_family'),
+
+  leaveFamily: () =>
+    logAnalyticsEvent('leave_family'),
+
+  deleteFamily: () =>
+    logAnalyticsEvent('delete_family'),
+
+  inviteFamily: (method) =>
+    logAnalyticsEvent('invite_family', { method }), // 'copy' or 'share'
+
+  promoteToCoAdmin: () =>
+    logAnalyticsEvent('promote_to_coadmin'),
+
+  removeFamilyMember: () =>
+    logAnalyticsEvent('remove_family_member'),
+
+  transferOwnership: () =>
+    logAnalyticsEvent('transfer_ownership'),
+
+  // ── Notifications ───────────────────────────────────
+  viewNotifications: () =>
+    logAnalyticsEvent('view_notifications'),
+
+  clearNotifications: () =>
+    logAnalyticsEvent('clear_notifications'),
+
+  // ── Family Expenses ──────────────────────────────────
+  addFamilyExpense: (category, amount) =>
+    logAnalyticsEvent('add_family_expense', { category, amount }),
+
+  editFamilyExpense: (category) =>
+    logAnalyticsEvent('edit_family_expense', { category }),
+
+  deleteFamilyExpense: (category) =>
+    logAnalyticsEvent('delete_family_expense', { category }),
+
+  // ── Family Budget ────────────────────────────────────
+  setFamilyBudget: (overall, categories_count) =>
+    logAnalyticsEvent('set_family_budget', { overall, categories_count }),
+
+  deleteFamilyBudget: () =>
+    logAnalyticsEvent('delete_family_budget'),
+
+  // ── Family Analytics ─────────────────────────────────
+  viewFamilyAnalytics: () =>
+    logAnalyticsEvent('view_family_analytics'),
+  
 };
 
 export { analytics, app, auth, db, storage };
