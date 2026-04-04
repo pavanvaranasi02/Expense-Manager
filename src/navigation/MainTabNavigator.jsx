@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAuthStore from '../store/useAuthStore';
 
 // ===== Existing Screens =====
 import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
@@ -86,6 +87,7 @@ const DummyScreen = () => null;
 // ===== Main Tab Navigator =====
 const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
+  const showTabLabels = useAuthStore((state) => state.showTabLabels);
 
   return (
     <Tab.Navigator
@@ -112,21 +114,45 @@ const MainTabNavigator = () => {
             default:
               iconName = 'ellipse';
           }
-          return <Ionicons name={iconName} size={size} color={color} />;
+          
+          return (
+            <View style={{ alignItems: 'center', justifyContent: 'center', height: '100%', width: 50 }}>
+              <Ionicons 
+                name={iconName} 
+                size={focused ? size + 2 : size} 
+                color={color} 
+              />
+            </View>
+          );
         },
-        tabBarActiveTintColor: '#6C63FF',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarShowLabel: showTabLabels,
+        tabBarActiveTintColor: 
+          route.name === 'Family' ? '#F59E0B' : 
+          route.name === 'Transactions' ? '#EF4444' : 
+          '#6366F1',
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
-          height: 65 + Math.max(0, insets.bottom - 8),
-          paddingBottom: 8 + Math.max(0, insets.bottom - 8),
-          paddingTop: 8,
+          borderTopColor: '#F1F5F9',
+          height: showTabLabels 
+            ? 70 + Math.max(0, insets.bottom - 8)
+            : 65 + Math.max(0, insets.bottom - 8),
+          paddingBottom: showTabLabels 
+            ? 10 + Math.max(0, insets.bottom - 8)
+            : Math.max(0, insets.bottom - 8),
+          paddingTop: 10,
+          elevation: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -10 },
+          shadowOpacity: 0.05,
+          shadowRadius: 15,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
+          fontWeight: '700',
           marginTop: 2,
+          letterSpacing: 0.1,
         },
       })}
     >
@@ -163,21 +189,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#6C63FF',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#6C63FF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
     }),
   },

@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Theme } from '../../theme/theme';
 
-const NotificationBell = ({ unreadCount = 0, onPress, color = '#FFFFFF' }) => {
+const NotificationBell = ({ unreadCount = 0, onPress }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      <Ionicons name="notifications-outline" size={24} color={color} />
+      <Ionicons name="notifications-outline" size={22} color={Theme.colors.textMuted} />
       {unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
@@ -18,30 +20,33 @@ const NotificationBell = ({ unreadCount = 0, onPress, color = '#FFFFFF' }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Theme.colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.soft,
   },
   badge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#EF4444',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Theme.colors.error,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: Theme.colors.surface,
   },
   badgeText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: Theme.typography.weight.extrabold,
     color: '#FFFFFF',
   },
 });

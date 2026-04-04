@@ -51,14 +51,30 @@ export const registerWithEmail = async (name, email, password) => {
 export const loginWithEmail = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    // Update last login
-    await setDoc(doc(db, 'users', userCredential.user.uid), {
-      lastLoginAt: serverTimestamp(),
-    }, { merge: true });
+    // Check if profile exists, if not create one
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      await setDoc(doc(db, 'users', user.uid), {
+        name: user.displayName || 'User',
+        email: user.email,
+        role: 'USER',
+        onboardingComplete: false,
+        isActive: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
+      });
+    } else {
+      await setDoc(doc(db, 'users', user.uid), {
+        lastLoginAt: serverTimestamp(),
+      }, { merge: true });
+    }
 
-    console.log('✅ User logged in:', userCredential.user.uid);
-    return { success: true, user: userCredential.user };
+    console.log('✅ User logged in:', user.uid);
+    return { success: true, user };
   } catch (error) {
     console.log('❌ Login error:', error.code);
     return { success: false, error: getErrorMessage(error.code) };
@@ -80,9 +96,7 @@ export const signInWithGoogle = async (idToken) => {
       await setDoc(doc(db, 'users', user.uid), {
         name: user.displayName || 'User',
         email: user.email,
-        phone: null,
         role: 'USER',
-        currency: 'INR',
         authProvider: 'google',
         profileImage: user.photoURL,
         onboardingComplete: false,
@@ -92,9 +106,15 @@ export const signInWithGoogle = async (idToken) => {
         lastLoginAt: serverTimestamp(),
       });
     } else {
-      await setDoc(doc(db, 'users', user.uid), {
-        lastLoginAt: serverTimestamp(),
-      }, { merge: true });
+      // Ensure existing profile has the onboardingComplete field if it's missing
+      const data = userDoc.data();
+      const updates = { lastLoginAt: serverTimestamp() };
+      
+      if (data.onboardingComplete === undefined) {
+          updates.onboardingComplete = false;
+      }
+
+      await setDoc(doc(db, 'users', user.uid), updates, { merge: true });
     }
 
     return { success: true, user };

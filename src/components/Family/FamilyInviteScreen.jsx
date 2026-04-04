@@ -108,7 +108,7 @@ const FamilyInviteScreen = ({ navigation }) => {
             <View style={styles.stepNumber}>
               <Text style={styles.stepNumberText}>2</Text>
             </View>
-            <Text style={styles.stepText}>Family member opens ExpenseManager app</Text>
+            <Text style={styles.stepText}>Family member opens KOSH app</Text>
           </View>
 
           <View style={styles.step}>

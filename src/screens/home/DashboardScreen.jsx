@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useState } from "react";
+import * as Haptics from "expo-haptics";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Theme } from "../../theme/theme";
+
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
   Modal,
   RefreshControl,
@@ -15,7 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { PieChart } from "react-native-chart-kit";
+import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
 import NotificationBell from "../../components/Notifications/NotificationBell";
 import { Analytics } from "../../config/firebase";
@@ -256,16 +260,16 @@ const DashboardScreen = ({ navigation }) => {
     }
   };
 
-  const getGreeting = () => {
+  const greeting = useMemo(() => {
     const h = new Date().getHours();
     return h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening";
-  };
+  }, []);
 
-  const handleEditBudget = (budget) => {
+  const handleEditBudget = useCallback((budget) => {
     setEditingBudget(budget);
     setNewBudgetAmount(budget.amount.toString());
     setShowBudgetModal(true);
-  };
+  }, []);
 
   const handleUpdateBudget = async () => {
     if (!newBudgetAmount || parseFloat(newBudgetAmount) <= 0) return;
@@ -307,16 +311,87 @@ const DashboardScreen = ({ navigation }) => {
     );
   };
 
-  const totalAssets = accounts
-    .filter((a) => a.type !== "CREDIT_CARD")
-    .reduce((s, a) => s + (a.balance || 0), 0);
-  const totalDebts = accounts
-    .filter((a) => a.type === "CREDIT_CARD")
-    .reduce((s, a) => s + (a.currentUsage || 0), 0);
+  const { totalAssets, totalDebts, netWorth } = useMemo(() => {
+    const assets = accounts
+      .filter((a) => a.type !== "CREDIT_CARD")
+      .reduce((s, a) => s + (a.balance || 0), 0);
+    const debts = accounts
+      .filter((a) => a.type === "CREDIT_CARD")
+      .reduce((s, a) => s + (a.currentUsage || 0), 0);
+    const invValue = investmentTotals?.totalCurrentValue || 0;
+    const nw = showInvestmentsInAssets ? assets + invValue - debts : assets - debts;
+
+    return { totalAssets: assets, totalDebts: debts, netWorth: nw };
+  }, [accounts, investmentTotals, showInvestmentsInAssets]);
+
   const investmentValue = investmentTotals?.totalCurrentValue || 0;
-  const netWorth = showInvestmentsInAssets
-    ? totalAssets + investmentValue - totalDebts
-    : totalAssets - totalDebts;
+
+  const chartData = useMemo(() => {
+    if (!dashData?.categoryBreakdown) return [];
+    return dashData.categoryBreakdown.slice(0, 5).map((cat, index) => {
+      const percent =
+        dashData.totalExpense > 0
+          ? Math.round((cat.total / dashData.totalExpense) * 100)
+          : 0;
+      return {
+        name: isStealthMode ? `${cat.name} (${percent}%)` : cat.name,
+        population: cat.total,
+        color: [
+          Theme.colors.primary,
+          Theme.colors.info,
+          Theme.colors.success,
+          Theme.colors.warning,
+          Theme.colors.error,
+        ][index % 5],
+        legendFontColor: Theme.colors.textMuted,
+        legendFontSize: 11,
+      };
+    });
+  }, [dashData, isStealthMode]);
+
+  const trendData = useMemo(() => {
+    if (!dashData?.dailyTotals) return null;
+    
+    // Sort days and get last 7 active spending days
+    const activeDays = Object.keys(dashData.dailyTotals)
+      .map(d => parseInt(d))
+      .sort((a, b) => a - b);
+    
+    // Take the last 7 days from the array
+    const selection = activeDays.slice(-7);
+    
+    return {
+      labels: selection.map(d => `${d}`),
+      datasets: [
+        {
+          data: selection.map(d => dashData.dailyTotals[d])
+        }
+      ]
+    };
+  }, [dashData]);
+
+  const cumulativeData = useMemo(() => {
+    if (!dashData?.dailyTotals) return null;
+    const days = Object.keys(dashData.dailyTotals).map(d => parseInt(d)).sort((a, b) => a - b);
+    let runningSum = 0;
+    const history = [];
+    const labels = [];
+    
+    // Fill in every 5 days for a clean line
+    days.forEach((day, idx) => {
+      runningSum += dashData.dailyTotals[day];
+      if (idx % 3 === 0 || idx === days.length - 1) {
+        history.push(runningSum);
+        labels.push(`${day}`);
+      }
+    });
+
+    return {
+      labels,
+      datasets: [{ data: history }]
+    };
+  }, [dashData]);
+
 
   const formatDate = (d) => {
     if (!d) return "";
@@ -329,13 +404,32 @@ const DashboardScreen = ({ navigation }) => {
     return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   };
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color={Theme.colors.primary} />
+
         </View>
       </SafeAreaView>
     );
@@ -343,6 +437,8 @@ const DashboardScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+
+      
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -350,132 +446,128 @@ const DashboardScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#6C63FF"]}
+            colors={[Theme.colors.primary]}
           />
         }
       >
-        {/* Header Section with Gradient */}
-        <LinearGradient
-          colors={["#6C63FF", "#4F46E5"]}
-          style={styles.topSection}
-        >
-          <View style={styles.header}>
+        {/* Clean Modern Header */}
+        <View style={styles.headerContainer}>
+          <View style={styles.headerTop}>
             <View>
-              <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-              <Text style={styles.name}>{userName}</Text>
+              <Text style={styles.greetingText}>{greeting} 👋</Text>
+              <Text style={styles.userNameText}>{userName}</Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {/* Eye icon - only shows when stealth mode is OFF, clicking enables it */}
-              {!isStealthMode && (
-                <TouchableOpacity
-                  style={styles.notifBtn}
-                  onPress={() => {
-                    Alert.alert(
-                      "Enable Stealth Mode",
-                      "Once enabled, you can only turn off Stealth Mode from the Settings screen. Do you want to continue?",
-                      [
-                        {
-                          text: "Cancel",
-                          style: "cancel",
-                        },
-                        {
-                          text: "Enable",
-                          onPress: async () => {
-                            // Enable stealth mode
-                            toggleStealthMode();
-                            // Sync to Firebase
-                            setTimeout(async () => {
-                              const userId = useAuthStore.getState().user?.uid;
-                              const newState =
-                                useAuthStore.getState().isStealthMode;
-                              if (userId) {
-                                await updateUserProfile(userId, {
-                                  isStealthMode: newState,
-                                });
-                              }
-                            }, 0);
-                          },
-                        },
-                      ],
-                    );
-                  }}
-                >
-                  <Ionicons name="eye" size={24} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
-              <NotificationBell
-                unreadCount={unreadCount}
-                onPress={() => navigation.navigate("Notifications")}
-              />
+            <View style={styles.headerRight}>
+               <TouchableOpacity 
+                style={styles.headerIconBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  // Toggle stealth mode logic is already handled, let's just make it accessible
+                  toggleStealthMode();
+                }}
+               >
+                 <Ionicons name={isStealthMode ? "eye-off" : "eye"} size={22} color={Theme.colors.textMuted} />
+               </TouchableOpacity>
+               <NotificationBell
+                  unreadCount={unreadCount}
+                  onPress={() => navigation.navigate("Notifications")}
+               />
             </View>
           </View>
 
-          <View style={styles.netWorthSection}>
-            <Text style={styles.nwLabel}>Net Worth Balance</Text>
-            <Text style={styles.nwAmount}>
+          {/* Hero Net Worth Card */}
+          <LinearGradient
+            colors={[Theme.colors.primary, Theme.colors.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCard}
+          >
+            <Text style={styles.heroLabel}>TOTAL NET WORTH</Text>
+            <Text style={styles.heroAmount}>
               {formatCurrency(netWorth, isStealthMode, cs)}
             </Text>
-
-            <View style={styles.nwBreakdown}>
-              <View style={styles.nwBadge}>
-                <Ionicons name="arrow-up" size={12} color="#10B981" />
-                <Text style={styles.nwBadgeText}>
-                  Assets: {formatCurrency(totalAssets, isStealthMode, cs)}
-                </Text>
+            
+            <View style={styles.heroDivider} />
+            
+            <View style={styles.heroStats}>
+              <View style={styles.heroStatItem}>
+                <View style={styles.heroStatIcon}>
+                    <Ionicons name="trending-up" size={14} color="#FFF" />
+                </View>
+                <View>
+                    <Text style={styles.heroStatLabel}>ASSETS</Text>
+                    <Text style={styles.heroStatValue}>{formatCurrency(totalAssets, isStealthMode, cs)}</Text>
+                </View>
               </View>
-              <View
-                style={[
-                  styles.nwBadge,
-                  { backgroundColor: "rgba(239, 68, 68, 0.15)" },
-                ]}
-              >
-                <Ionicons name="arrow-down" size={12} color="#EF4444" />
-                <Text style={[styles.nwBadgeText, { color: "#EF4444" }]}>
-                  Debt: {formatCurrency(totalDebts, isStealthMode, cs)}
-                </Text>
+              <View style={styles.heroStatItem}>
+                <View style={[styles.heroStatIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                    <Ionicons name="trending-down" size={14} color="#FFF" />
+                </View>
+                <View>
+                    <Text style={styles.heroStatLabel}>DEBTS</Text>
+                    <Text style={styles.heroStatValue}>{formatCurrency(totalDebts, isStealthMode, cs)}</Text>
+                </View>
               </View>
             </View>
-          </View>
-        </LinearGradient>
+          </LinearGradient>
+        </View>
 
-        <View style={styles.mainContent}>
+        <Animated.View style={[styles.mainContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+
+          {/* Quick Actions - Bento Box Style */}
+
+
           {/* Quick Actions - Floating style */}
           <View style={styles.quickActionsContainer}>
             {[
               {
-                label: "Expense ",
+                label: "Expense",
                 icon: "remove-circle",
-                color: "#EF4444",
-                bg: "#FEE2E2",
-                onPress: () => navigation.navigate("AddExpenseModal"),
+                color: Theme.colors.error,
+                bg: Theme.colors.errorLight,
+                onPress: () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("AddExpenseModal");
+                },
               },
               {
-                label: "Income ",
+                label: "Income",
                 icon: "add-circle",
-                color: "#10B981",
-                bg: "#D1FAE5",
-                onPress: () => navigation.navigate("AddIncomeModal"),
+                color: Theme.colors.success,
+                bg: Theme.colors.successLight,
+                onPress: () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("AddIncomeModal");
+                },
               },
               {
-                label: "Accounts ",
+                label: "Accounts",
                 icon: "card",
-                color: "#3B82F6",
-                bg: "#DBEAFE",
-                onPress: () =>
-                  navigation.navigate("Profile", { screen: "ManageAccounts" }),
+                color: Theme.colors.info,
+                bg: Theme.colors.infoLight,
+                onPress: () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("Profile", { screen: "ManageAccounts" });
+                },
               },
               {
-                label: "Analytics ",
+                label: "Analytics",
                 icon: "bar-chart",
-                color: "#8B5CF6",
-                bg: "#F3E8FF",
-                onPress: () => navigation.navigate("AnalyticsMain"),
+                color: Theme.colors.secondary,
+                bg: Theme.colors.secondaryLight,
+                onPress: () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("AnalyticsMain");
+                },
               },
+
+
             ].map((a, i) => (
               <TouchableOpacity
                 key={i}
                 style={styles.actionItem}
                 onPress={a.onPress}
+                activeOpacity={0.7}
               >
                 <View style={[styles.actionIcon, { backgroundColor: a.bg }]}>
                   <Ionicons name={a.icon} size={22} color={a.color} />
@@ -484,6 +576,7 @@ const DashboardScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
+
 
           {/* Financial Summary Unified Card */}
           <View style={styles.unifiedCard}>
@@ -496,29 +589,21 @@ const DashboardScreen = ({ navigation }) => {
             <View style={styles.summaryGrid}>
               <View style={styles.summaryGridItem}>
                 <Text style={styles.summaryGridLabel}>Income</Text>
-                <Text style={[styles.summaryGridValue, { color: "#10B981" }]}>
-                  {formatCurrency(
-                    dashData?.totalIncome || 0,
-                    isStealthMode,
-                    cs,
-                  )}
+                <Text style={[styles.summaryGridValue, { color: Theme.colors.success }]}>
+                  {formatCurrency(dashData?.totalIncome || 0, isStealthMode, cs)}
                 </Text>
               </View>
               <View style={styles.summaryGridDivider} />
               <View style={styles.summaryGridItem}>
                 <Text style={styles.summaryGridLabel}>Spent</Text>
-                <Text style={[styles.summaryGridValue, { color: "#EF4444" }]}>
-                  {formatCurrency(
-                    dashData?.totalExpense || 0,
-                    isStealthMode,
-                    cs,
-                  )}
+                <Text style={[styles.summaryGridValue, { color: Theme.colors.error }]}>
+                  {formatCurrency(dashData?.totalExpense || 0, isStealthMode, cs)}
                 </Text>
               </View>
               <View style={styles.summaryGridDivider} />
               <View style={styles.summaryGridItem}>
                 <Text style={styles.summaryGridLabel}>Savings</Text>
-                <Text style={[styles.summaryGridValue, { color: "#6C63FF" }]}>
+                <Text style={[styles.summaryGridValue, { color: Theme.colors.primary }]}>
                   {formatCurrency(dashData?.savings || 0, isStealthMode, cs)}
                 </Text>
               </View>
@@ -560,29 +645,35 @@ const DashboardScreen = ({ navigation }) => {
                     style={[styles.investmentCol, { alignItems: "flex-end" }]}
                   >
                     <Text style={styles.investmentLabel}>Returns</Text>
-                    <Text
-                      style={[
-                        styles.investmentAmount,
-                        {
-                          color:
-                            investmentTotals.totalReturns >= 0
-                              ? "#10B981"
-                              : "#EF4444",
-                          fontSize: 16,
-                        },
-                      ]}
-                    >
-                      {investmentTotals.totalReturns >= 0 ? "+" : ""}
-                      {formatCurrency(
-                        investmentTotals.totalReturns,
-                        isStealthMode,
-                        cs,
-                      )}
-                      {!isStealthMode &&
-                        ` (${investmentTotals.returnPercent}%)`}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text
+                        style={[
+                          styles.investmentAmount,
+                          {
+                            color: investmentTotals.totalReturns >= 0 ? Theme.colors.success : Theme.colors.error,
+                            fontSize: 16,
+                          },
+                        ]}
+                      >
+                        {investmentTotals.totalReturns > 0 ? "+" : ""}
+                        {formatCurrency(
+                          investmentTotals.totalReturns,
+                          isStealthMode,
+                          cs,
+                        )}
+                        {!isStealthMode &&
+                          ` (${investmentTotals.returnPercent}%)`}
+                      </Text>
+                      <Ionicons 
+                        name={investmentTotals.totalReturns >= 0 ? "trending-up" : "trending-down"} 
+                        size={16} 
+                        color={investmentTotals.totalReturns >= 0 ? Theme.colors.success : Theme.colors.error} 
+                        style={{ marginLeft: 6 }} 
+                      />
+                    </View>
                   </View>
                 </View>
+
                 <View style={styles.investmentMeta}>
                   <Text style={styles.investmentMetaText}>
                     {investmentTotals.activeCount} investments • Invested:{" "}
@@ -626,10 +717,15 @@ const DashboardScreen = ({ navigation }) => {
                     key={acc.id}
                     style={[
                       styles.accountCard,
-                      { backgroundColor: acc.color || "#6C63FF" },
+                      { backgroundColor: acc.color || Theme.colors.primary },
+
                     ]}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
                     activeOpacity={0.9}
                   >
+
                     <View style={styles.accCardTop}>
                       <Text style={styles.accCardName}>{acc.name}</Text>
                       <Ionicons
@@ -676,32 +772,7 @@ const DashboardScreen = ({ navigation }) => {
 
               <View style={styles.chartWrapper}>
                 <PieChart
-                  data={dashData.categoryBreakdown
-                    .slice(0, 5)
-                    .map((cat, index) => {
-                      const isStealth = isStealthMode;
-                      const percent =
-                        dashData.totalExpense > 0
-                          ? Math.round(
-                              (cat.total / dashData.totalExpense) * 100,
-                            )
-                          : 0;
-                      return {
-                        name: isStealth
-                          ? `${cat.name} (${percent}%)`
-                          : cat.name,
-                        population: cat.total,
-                        color: [
-                          "#6C63FF",
-                          "#3B82F6",
-                          "#10B981",
-                          "#F59E0B",
-                          "#EF4444",
-                        ][index % 5],
-                        legendFontColor: "#64748B",
-                        legendFontSize: 11,
-                      };
-                    })}
+                  data={chartData}
                   width={screenWidth - 40}
                   height={180}
                   chartConfig={{
@@ -714,6 +785,80 @@ const DashboardScreen = ({ navigation }) => {
                   absolute
                 />
               </View>
+
+              {trendData && trendData.labels.length > 0 && (
+                <>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Daily Momentum</Text>
+                    <Text style={styles.cardSubtitle}>Last 7 Dynamic Days</Text>
+                  </View>
+                  <View style={styles.chartWrapper}>
+                    <BarChart
+                      data={trendData}
+                      width={screenWidth - 60}
+                      height={200}
+                      chartConfig={{
+                        backgroundColor: '#ffffff',
+                        backgroundGradientFrom: '#ffffff',
+                        backgroundGradientTo: '#ffffff',
+                        decimalPlaces: 0,
+                        color: (opacity = 1) => Theme.colors.primary,
+                        labelColor: (opacity = 1) => Theme.colors.textLight,
+                        style: { borderRadius: 16 },
+                        propsForBackgroundLines: {
+                          strokeDasharray: '', // solid background lines
+                          stroke: Theme.colors.border,
+                        },
+                      }}
+                      verticalLabelRotation={0}
+                      style={{
+                        marginVertical: 8,
+                        borderRadius: 16,
+                      }}
+                      showValuesOnTopOfBars={true}
+                      fromZero={true}
+                    />
+                  </View>
+                </>
+              )}
+
+              {cumulativeData && cumulativeData.labels.length > 0 && (
+                <>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Spending Pace</Text>
+                    <Text style={styles.cardSubtitle}>Monthly Accumulation</Text>
+                  </View>
+                  <View style={styles.chartWrapper}>
+                    <LineChart
+                      data={cumulativeData}
+                      width={screenWidth - 60}
+                      height={180}
+                      chartConfig={{
+                        backgroundColor: '#ffffff',
+                        backgroundGradientFrom: '#ffffff',
+                        backgroundGradientTo: '#ffffff',
+                        color: (opacity = 1) => Theme.colors.secondary,
+                        labelColor: (opacity = 1) => Theme.colors.textLight,
+                        propsForDots: {
+                          r: '4',
+                          strokeWidth: '2',
+                          stroke: Theme.colors.secondary,
+                        },
+                        propsForBackgroundLines: {
+                          strokeWidth: 1,
+                          stroke: Theme.colors.border,
+                        },
+                      }}
+                      bezier
+                      style={{
+                        marginVertical: 8,
+                        borderRadius: 16,
+                      }}
+                    />
+                  </View>
+                </>
+              )}
+
 
               <ScrollView
                 horizontal
@@ -739,7 +884,8 @@ const DashboardScreen = ({ navigation }) => {
                     >
                       {cat.icon && cat.icon.length > 2 ? (
                         <View style={styles.catSnapIconContainer}>
-                          <Ionicons name={cat.icon} size={20} color="#6C63FF" />
+                          <Ionicons name={cat.icon} size={20} color={Theme.colors.primary} />
+
                         </View>
                       ) : (
                         <Text style={styles.catSnapEmoji}>
@@ -754,6 +900,7 @@ const DashboardScreen = ({ navigation }) => {
               </ScrollView>
             </View>
           )}
+
 
           {/* Unified Budget Progress - Scrollable to avoid clutter */}
           {budgets.length > 0 && (
@@ -806,7 +953,8 @@ const DashboardScreen = ({ navigation }) => {
                             <Ionicons
                               name="pencil"
                               size={10}
-                              color="#94A3B8"
+                              color={Theme.colors.textLight}
+
                               style={{ marginLeft: 6 }}
                             />
                           </View>
@@ -814,12 +962,13 @@ const DashboardScreen = ({ navigation }) => {
                             <Text
                               style={{
                                 fontWeight: "700",
-                                color: exceeded ? "#EF4444" : "#1E293B",
+                                color: exceeded ? Theme.colors.error : Theme.colors.text,
+
                               }}
                             >
                               {formatCurrency(spent, isStealthMode, cs)}
                             </Text>
-                            <Text style={{ color: "#94A3B8" }}>
+                            <Text style={{ color: Theme.colors.textLight }}>
                               {" "}
                               /{" "}
                               {formatCurrency(budget.amount, isStealthMode, cs)}
@@ -831,16 +980,18 @@ const DashboardScreen = ({ navigation }) => {
                             style={[
                               styles.budgetRowBarFill,
                               { width: `${Math.min(percent, 100)}%` },
-                              exceeded && { backgroundColor: "#EF4444" },
+                              exceeded && { backgroundColor: Theme.colors.error },
                               percent >= 85 &&
-                                !exceeded && { backgroundColor: "#F59E0B" },
+                                !exceeded && { backgroundColor: Theme.colors.warning },
+
                             ]}
                           />
                         </View>
                         <Text
                           style={[
                             styles.budgetPercentMini,
-                            exceeded && { color: "#EF4444" },
+                            exceeded && { color: Theme.colors.error },
+
                           ]}
                         >
                           {Math.round(percent)}% used
@@ -886,7 +1037,8 @@ const DashboardScreen = ({ navigation }) => {
                     style={[styles.modalBtn, styles.modalBtnDelete]}
                     onPress={handleDeleteBudget}
                   >
-                    <Ionicons name="trash" size={20} color="#EF4444" />
+                    <Ionicons name="trash" size={20} color={Theme.colors.error} />
+
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -902,11 +1054,12 @@ const DashboardScreen = ({ navigation }) => {
                     disabled={savingBudget}
                   >
                     {savingBudget ? (
-                      <ActivityIndicator size="small" color="#FFF" />
+                      <ActivityIndicator size="small" color={Theme.colors.surface} />
                     ) : (
                       <Text style={styles.modalBtnApplyText}>Save Changes</Text>
                     )}
                   </TouchableOpacity>
+
                 </View>
               </View>
             </View>
@@ -916,10 +1069,14 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Transactions</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Transactions")}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate("Transactions");
+              }}
             >
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
+
           </View>
 
           {!dashData?.recentExpenses || dashData.recentExpenses.length === 0 ? (
@@ -935,19 +1092,22 @@ const DashboardScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={exp.id}
                 style={styles.txnCard}
-                onPress={() =>
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   navigation.navigate("Transactions", {
                     screen: "ExpenseDetail",
                     params: { expense: exp },
-                  })
-                }
+                  });
+                }}
+
               >
                 {exp.categoryIcon && exp.categoryIcon.length > 2 ? (
                   <View style={styles.txnIconContainer}>
                     <Ionicons
                       name={exp.categoryIcon}
                       size={20}
-                      color="#DC2626"
+                      color={Theme.colors.error}
+
                     />
                   </View>
                 ) : (
@@ -971,157 +1131,213 @@ const DashboardScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))
           )}
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
   scrollContent: { paddingBottom: 120 },
-  topSection: {
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+  
+
+  headerContainer: {
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.md,
+    paddingBottom: Theme.spacing.lg,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.xl,
   },
-  greeting: { fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: "500" },
-  name: { fontSize: 18, fontWeight: "700", color: "#FFFFFF", marginTop: 2 },
-  notifBtn: {
-    width: 44,
-    height: 44,
+  greetingText: {
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.textLight,
+    fontWeight: Theme.typography.weight.semibold,
+  },
+  userNameText: {
+    fontSize: Theme.typography.size.lg,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
+    marginTop: 2,
+    letterSpacing: -0.5,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIconBtn: {
+    width: 42,
+    height: 42,
     borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notifDot: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#EF4444",
-    borderWeight: 1,
-    borderColor: "#FFFFFF",
+    backgroundColor: Theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.soft,
   },
 
-  netWorthSection: { alignItems: "center" },
-  nwLabel: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.7)",
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1,
+  // Hero Card
+  heroCard: {
+    padding: 24,
+    borderRadius: 32,
+    ...Theme.shadows.premium,
   },
-  nwAmount: { fontSize: 36, fontWeight: "800", color: "#FFFFFF", marginTop: 4 },
-  nwBreakdown: { flexDirection: "row", gap: 10, marginTop: 16 },
-  nwBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+  heroLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+    fontWeight: Theme.typography.weight.extrabold,
+    letterSpacing: 1.5,
   },
-  nwBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#10B981",
-    marginLeft: 4,
+  heroAmount: {
+    color: '#FFF',
+    fontSize: 34,
+    fontWeight: Theme.typography.weight.extrabold,
+    marginTop: 8,
+    letterSpacing: -1,
+  },
+  heroDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginVertical: 20,
+  },
+  heroStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  heroStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  heroStatIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heroStatLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 9,
+    fontWeight: Theme.typography.weight.extrabold,
+    letterSpacing: 0.5,
+  },
+  heroStatValue: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: Theme.typography.weight.bold,
+    marginTop: 1,
   },
 
-  mainContent: { paddingHorizontal: 20, marginTop: -25 },
+  mainContent: { paddingHorizontal: Theme.spacing.lg },
 
   // Quick Actions
   quickActionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    padding: 14,
-    borderRadius: 18,
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    backgroundColor: Theme.colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    borderRadius: 24,
+    marginTop: -15, // Overlap effect
+    ...Theme.shadows.card,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
   },
-  actionItem: { alignItems: "center", width: "22%" },
+  actionItem: { alignItems: "center", width: "23%" },
   actionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: Theme.spacing.xs,
   },
-  actionText: { fontSize: 10, fontWeight: "700", color: "#64748B" },
+  actionText: { 
+    fontSize: 11, 
+    fontWeight: Theme.typography.weight.bold, 
+    color: Theme.colors.textMuted 
+  },
 
-  // Unified Card
+  // Cards
   unifiedCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    marginTop: 20,
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 24,
+    padding: 20,
+    marginTop: 24,
+    ...Theme.shadows.soft,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  cardTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  cardSubtitle: { fontSize: 11, color: "#94A3B8", fontWeight: "600" },
+  cardTitle: { 
+    fontSize: 15, 
+    fontWeight: Theme.typography.weight.extrabold, 
+    color: Theme.colors.text,
+    letterSpacing: -0.3,
+  },
+  cardSubtitle: { 
+    fontSize: 11, 
+    color: Theme.colors.textLight, 
+    fontWeight: Theme.typography.weight.bold 
+  },
   summaryGrid: { flexDirection: "row", alignItems: "center" },
   summaryGridItem: { flex: 1, alignItems: "center" },
   summaryGridLabel: {
     fontSize: 10,
-    color: "#94A3B8",
-    fontWeight: "700",
+    color: Theme.colors.textLight,
+    fontWeight: Theme.typography.weight.extrabold,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 8,
+    letterSpacing: 0.5,
   },
-  summaryGridValue: { fontSize: 15, fontWeight: "800" },
-  summaryGridDivider: { width: 1, height: 24, backgroundColor: "#F1F5F9" },
+  summaryGridValue: { 
+    fontSize: 16, 
+    fontWeight: Theme.typography.weight.extrabold 
+  },
+  summaryGridDivider: { width: 1, height: 36, backgroundColor: Theme.colors.border },
 
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 32,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    letterSpacing: -0.2,
+    fontSize: 18,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
+    letterSpacing: -0.5,
   },
-  seeAll: { fontSize: 11, color: "#6C63FF", fontWeight: "700" },
+  seeAll: { 
+    fontSize: 12, 
+    color: Theme.colors.primary, 
+    fontWeight: Theme.typography.weight.bold 
+  },
 
   // Accounts
-  accountsScroll: { marginHorizontal: -20, paddingLeft: 20, marginTop: 4 },
+  accountsScroll: { marginHorizontal: -20, paddingLeft: 20 },
   accountCard: {
-    width: 130,
-    height: 80,
-    borderRadius: 16,
-    padding: 10,
-    marginRight: 10,
+    width: 160,
+    height: 100,
+    borderRadius: 24,
+    padding: 16,
+    marginRight: 12,
     justifyContent: "space-between",
+    ...Theme.shadows.card,
   },
   accCardTop: {
     flexDirection: "row",
@@ -1129,319 +1345,308 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   accCardName: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.8)",
-    fontWeight: "700",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.85)",
+    fontWeight: Theme.typography.weight.bold,
   },
   accCardBottom: {},
-  accCardAmount: { fontSize: 16, fontWeight: "800", color: "#FFFFFF" },
-  accCardSub: { fontSize: 8, color: "rgba(255,255,255,0.6)", marginTop: 1 },
+  accCardAmount: { 
+    fontSize: 18, 
+    fontWeight: Theme.typography.weight.extrabold, 
+    color: Theme.colors.surface 
+  },
+  accCardSub: { fontSize: 10, color: "rgba(255,255,255,0.65)", marginTop: 2 },
 
-  // Spendings Pie
+  // Charts
   spendingsContainer: { marginTop: 4 },
   chartWrapper: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 10,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    marginBottom: 12,
+    ...Theme.shadows.soft,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    marginBottom: 20,
   },
   categoriesScrollMini: { marginHorizontal: -20, paddingLeft: 20 },
   catSnapCardMini: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    marginRight: 8,
+    backgroundColor: Theme.colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    marginRight: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.soft,
   },
-  catSnapEmoji: { fontSize: 14, marginRight: 6 },
+  catSnapEmoji: { fontSize: 16, marginRight: 8 },
   catSnapIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: "#F0EFFF",
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.background,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 6,
+    marginRight: 8,
   },
-  catSnapName: { fontSize: 10, fontWeight: "700", color: "#64748B" },
+  catSnapName: { 
+    fontSize: 12, 
+    fontWeight: Theme.typography.weight.bold, 
+    color: Theme.colors.textMuted 
+  },
 
-  // Budget Refined
+  // Budget
   budgetMainWrapper: { marginTop: 4 },
-  budgetScrollContainer: { maxHeight: 220 },
+  budgetScrollContainer: { maxHeight: 300 },
   budgetUnifiedContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 24,
+    padding: 20,
+    ...Theme.shadows.soft,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
   budgetModernRow: {
-    marginBottom: 14,
-    paddingBottom: 14,
+    marginBottom: 20,
+    paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: Theme.colors.border,
   },
   budgetRowTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 12,
   },
-  budgetRowName: { fontSize: 12, fontWeight: "700", color: "#1E293B" },
-  budgetRowValues: { fontSize: 11 },
+  budgetRowName: { 
+    fontSize: 14, 
+    fontWeight: Theme.typography.weight.bold, 
+    color: Theme.colors.text 
+  },
+  budgetRowValues: { fontSize: 13 },
   budgetRowBarBg: {
-    height: 5,
-    backgroundColor: "#F1F5F9",
-    borderRadius: 2.5,
+    height: 8,
+    backgroundColor: Theme.colors.background,
+    borderRadius: 4,
     overflow: "hidden",
   },
   budgetRowBarFill: {
-    height: 5,
-    backgroundColor: "#6C63FF",
-    borderRadius: 2.5,
+    height: 8,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 4,
   },
   budgetPercentMini: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: "#94A3B8",
+    fontSize: 10,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.textLight,
     textAlign: "right",
-    marginTop: 4,
+    marginTop: 8,
     textTransform: "uppercase",
   },
 
   // Investment
   investmentCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.card,
   },
   investmentRow: { flexDirection: "row", justifyContent: "space-between" },
+  investmentCol: { flex: 1 },
   investmentLabel: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "600",
+    fontSize: 10,
+    color: Theme.colors.textLight,
+    fontWeight: Theme.typography.weight.extrabold,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   investmentAmount: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
-    marginTop: 4,
-  },
-  investmentMeta: {
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    paddingTop: 12,
-  },
-  investmentMetaText: { fontSize: 12, color: "#64748B" },
-  investmentMetaNote: {
-    fontSize: 11,
-    color: "#F59E0B",
-    fontStyle: "italic",
-    marginTop: 2,
-  },
-
-  // Budget
-  budgetRow: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  budgetInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  budgetName: { fontSize: 14, fontWeight: "600", color: "#1E293B" },
-  budgetDetail: { fontSize: 12, color: "#64748B" },
-  budgetBarBg: { height: 6, backgroundColor: "#F1F5F9", borderRadius: 3 },
-  budgetBarFill: { height: 6, backgroundColor: "#6C63FF", borderRadius: 3 },
-  budgetPercent: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
-    textAlign: "right",
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
     marginTop: 6,
   },
+  investmentMeta: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border,
+    paddingTop: 16,
+  },
+  investmentMetaText: { fontSize: 13, color: Theme.colors.textMuted, fontWeight: '500' },
+  investmentMetaNote: {
+    fontSize: 11,
+    color: Theme.colors.warning,
+    fontWeight: Theme.typography.weight.bold,
+    marginTop: 4,
+  },
 
-  // Transaction card
+  // Transactions
   txnCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
+    backgroundColor: Theme.colors.surface,
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.soft,
   },
   txnIcon: {
-    fontSize: 22,
-    marginRight: 12,
-    width: 40,
-    height: 40,
-    backgroundColor: "#F8F9FE",
-    borderRadius: 10,
+    fontSize: 24,
+    marginRight: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: Theme.colors.background,
+    borderRadius: 14,
     textAlign: "center",
-    lineHeight: 40,
+    lineHeight: 48,
   },
   txnIconContainer: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#F8F9FE",
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    backgroundColor: Theme.colors.background,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
-  txnCategory: { fontSize: 14, fontWeight: "600", color: "#1E293B" },
-  txnNote: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
-  txnAmount: { fontSize: 15, fontWeight: "700", color: "#DC2626" },
+  txnCategory: { 
+    fontSize: 15, 
+    fontWeight: Theme.typography.weight.bold, 
+    color: Theme.colors.text 
+  },
+  txnNote: { 
+    fontSize: 12, 
+    color: Theme.colors.textLight, 
+    marginTop: 4,
+    fontWeight: Theme.typography.weight.medium,
+  },
+  txnAmount: { 
+    fontSize: 16, 
+    fontWeight: Theme.typography.weight.extrabold, 
+    color: Theme.colors.error 
+  },
   txnCredit: {
-    fontSize: 10,
-    color: "#F59E0B",
-    fontWeight: "600",
-    marginTop: 2,
+    fontSize: 11,
+    color: Theme.colors.warning,
+    fontWeight: Theme.typography.weight.bold,
+    marginTop: 4,
   },
 
   emptyCard: {
-    backgroundColor: "#FFFFFF",
-    padding: 30,
-    borderRadius: 20,
+    backgroundColor: Theme.colors.surface,
+    padding: 40,
+    borderRadius: 28,
     alignItems: "center",
     borderStyle: "dashed",
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderWidth: 2,
+    borderColor: Theme.colors.border,
   },
   emptyTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
-    marginTop: 12,
+    fontSize: 17,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.text,
+    marginTop: 16,
   },
-  emptyText: { fontSize: 13, color: "#94A3B8", marginTop: 4 },
+  emptyText: { fontSize: 14, color: Theme.colors.textLight, marginTop: 8, textAlign: 'center' },
 
-  // Modal Styles
+  // Modals
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   budgetModalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 32,
+    padding: 28,
     width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    ...Theme.shadows.premium,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    marginBottom: 20,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
+    marginBottom: 24,
     textAlign: "center",
   },
   inputContainer: {
     marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "700",
-    marginBottom: 10,
+    fontSize: 11,
+    color: Theme.colors.textLight,
+    fontWeight: Theme.typography.weight.extrabold,
+    marginBottom: 12,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   amountInputGroup: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8F9FE",
-    borderRadius: 16,
+    backgroundColor: Theme.colors.background,
+    borderRadius: 18,
     paddingHorizontal: 16,
-    height: 60,
+    height: 64,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: Theme.colors.border,
   },
   currencyPrefix: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#6C63FF",
+    fontSize: 22,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.primary,
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
     fontSize: 24,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
   },
   modalActions: {
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
   },
   modalBtn: {
-    height: 52,
-    borderRadius: 16,
+    height: 58,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
   modalBtnDelete: {
-    width: 52,
-    backgroundColor: "#FEE2E2",
+    width: 58,
+    backgroundColor: Theme.colors.errorBackground,
+    borderWidth: 1,
+    borderColor: Theme.colors.errorLight,
   },
   modalBtnCancel: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
   modalBtnApply: {
     flex: 2,
-    backgroundColor: "#6C63FF",
+    backgroundColor: Theme.colors.primary,
   },
   modalBtnCancelText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#64748B",
+    fontSize: 14,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.textMuted,
   },
   modalBtnApplyText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.surface,
   },
 });
 

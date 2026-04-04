@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView, Platform,
     ScrollView,
     StyleSheet,
@@ -9,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resetPassword } from '../../services/authService';
+import { Theme } from '../../theme/theme';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -37,7 +40,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.successContent}>
           <View style={styles.successIcon}>
-            <Ionicons name="mail" size={48} color="#6C63FF" />
+            <Ionicons name="mail" size={48} color={Theme.colors.primary} />
           </View>
           <Text style={styles.successTitle}>Check Your Email</Text>
           <Text style={styles.successText}>
@@ -69,7 +72,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
+            <Ionicons name="arrow-back" size={24} color={Theme.colors.text} />
           </TouchableOpacity>
 
           <Text style={styles.title}>Reset Password</Text>
@@ -78,13 +81,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
           </Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={20} color={Theme.colors.textLight} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={Theme.colors.textLight}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -94,12 +97,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
           </View>
 
           <TouchableOpacity
+            activeOpacity={0.8}
             style={[styles.resetBtn, loading && styles.btnDisabled]}
             onPress={handleReset}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={Theme.colors.surface} />
             ) : (
               <Text style={styles.resetBtnText}>Send Reset Link</Text>
             )}
@@ -113,47 +117,104 @@ const ForgotPasswordScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 8 },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  scrollContent: { 
+    paddingHorizontal: Theme.spacing.lg + Theme.spacing.xs, 
+    paddingTop: Theme.spacing.xs 
+  },
 
   backBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 24,
+    width: 44, height: 44, borderRadius: Theme.radius.full, 
+    backgroundColor: Theme.colors.border + '40', 
+    justifyContent: 'center', alignItems: 'center', 
+    marginBottom: Theme.spacing.lg,
   },
 
-  title: { fontSize: 26, fontWeight: '700', color: '#1A1A2E' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 8, marginBottom: 32, lineHeight: 20 },
+  title: { 
+    fontSize: Theme.typography.size.xxl + 2, 
+    fontWeight: Theme.typography.weight.extrabold, 
+    color: Theme.colors.text, 
+    letterSpacing: -0.8 
+  },
+  subtitle: { 
+    fontSize: Theme.typography.size.base - 1, 
+    color: Theme.colors.textMuted, 
+    marginTop: Theme.spacing.xs, 
+    marginBottom: Theme.spacing.xl, 
+    lineHeight: 22 
+  },
 
-  inputGroup: { marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '500', color: '#1A1A2E', marginBottom: 6 },
+  inputGroup: { marginBottom: Theme.spacing.xl },
+  label: { 
+    fontSize: Theme.typography.size.sm - 1, 
+    fontWeight: Theme.typography.weight.semibold, 
+    color: Theme.colors.text, 
+    marginBottom: Theme.spacing.sm 
+  },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#E5E7EB',
-    paddingHorizontal: 14, height: 52,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.radius.lg, 
+    borderWidth: 1.5, 
+    borderColor: Theme.colors.border,
+    paddingHorizontal: Theme.spacing.md, 
+    height: 58,
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: '#1A1A2E' },
+  inputIcon: { marginRight: Theme.spacing.sm + Theme.spacing.xs },
+  input: { 
+    flex: 1, 
+    fontSize: Theme.typography.size.base, 
+    color: Theme.colors.text, 
+    fontWeight: Theme.typography.weight.medium 
+  },
 
   resetBtn: {
-    backgroundColor: '#6C63FF', height: 52, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: Theme.colors.primary, 
+    height: 58, 
+    borderRadius: Theme.radius.lg,
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
-  resetBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  resetBtnText: { 
+    color: Theme.colors.surface, 
+    fontSize: Theme.typography.size.lg - 1, 
+    fontWeight: Theme.typography.weight.bold 
+  },
   btnDisabled: { opacity: 0.6 },
 
   // Success State
-  successContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+  successContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Theme.spacing.xl },
   successIcon: {
-    width: 96, height: 96, borderRadius: 48, backgroundColor: '#F0EFFF',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 24,
+    width: 96, height: 96, borderRadius: Theme.radius.full, 
+    backgroundColor: Theme.colors.primary + '15',
+    justifyContent: 'center', alignItems: 'center', 
+    marginBottom: Theme.spacing.lg,
   },
-  successTitle: { fontSize: 22, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
-  successText: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  successTitle: { 
+    fontSize: Theme.typography.size.xxl, 
+    fontWeight: Theme.typography.weight.extrabold, 
+    color: Theme.colors.text, 
+    marginBottom: Theme.spacing.sm 
+  },
+  successText: { 
+    fontSize: Theme.typography.size.base - 1, 
+    color: Theme.colors.textMuted, 
+    textAlign: 'center', 
+    lineHeight: 22 
+  },
   backToLoginBtn: {
-    backgroundColor: '#6C63FF', paddingVertical: 14, paddingHorizontal: 32,
-    borderRadius: 12, marginTop: 32,
+    backgroundColor: Theme.colors.primary, 
+    paddingVertical: Theme.spacing.md, 
+    paddingHorizontal: Theme.spacing.xl,
+    borderRadius: Theme.radius.lg, 
+    marginTop: Theme.spacing.xl,
   },
-  backToLoginText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  backToLoginText: { 
+    color: Theme.colors.surface, 
+    fontSize: Theme.typography.size.base, 
+    fontWeight: Theme.typography.weight.bold 
+  },
 });
 
 export default ForgotPasswordScreen;

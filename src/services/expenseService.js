@@ -318,10 +318,6 @@ export const getExpenses = async (filters = {}) => {
       if (filters.endDate) {
         constraints.push(where('date', '<=', Timestamp.fromDate(new Date(filters.endDate))));
       }
-      if (filters.categoryId) {
-        constraints.push(where('categoryId', '==', filters.categoryId));
-      }
-
       constraints.push(orderBy('date', 'desc'));
 
       const q = query(
@@ -341,28 +337,33 @@ export const getExpenses = async (filters = {}) => {
         };
       });
 
-      // Apply client-side filters
+      // Apply client-side filters on ALL fetched data
+      let filteredExpenses = expenses;
+      
+      if (filters.categoryId) {
+        filteredExpenses = filteredExpenses.filter((e) => e.categoryId === filters.categoryId);
+      }
       if (filters.paymentMode) {
-        expenses = expenses.filter((e) => e.paymentMode === filters.paymentMode);
+        filteredExpenses = filteredExpenses.filter((e) => e.paymentMode === filters.paymentMode);
       }
       if (filters.accountId) {
-        expenses = expenses.filter((e) => e.accountId === filters.accountId);
+        filteredExpenses = filteredExpenses.filter((e) => e.accountId === filters.accountId);
       }
       if (filters.searchText) {
         const search = filters.searchText.toLowerCase();
-        expenses = expenses.filter(
+        filteredExpenses = filteredExpenses.filter(
           (e) =>
             e.note?.toLowerCase().includes(search) ||
             e.categoryName?.toLowerCase().includes(search)
         );
       }
 
-      // Save full unfiltered result to cache for offline use
+      // Save full unfiltered result to cache for offline use (only if no specific filters that restrict fetch)
       if (!filters.startDate && !filters.endDate && !filters.categoryId) {
         await saveToCache(COLLECTIONS.EXPENSES, expenses);
       }
 
-      return { success: true, expenses, fromCache: false };
+      return { success: true, expenses: filteredExpenses, fromCache: false };
 
     } else {
       // ── OFFLINE: serve from cache ──────────────────

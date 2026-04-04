@@ -2,141 +2,103 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useState } from "react";
+import * as Haptics from 'expo-haptics';
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { BarChart } from "react-native-chart-kit";
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Analytics } from "../../config/firebase";
+import { getAccounts, calculateTotals } from "../../services/accountService";
+import { getAllCategories } from "../../services/categoryService";
 import { deleteExpense, getExpenses } from "../../services/expenseService";
 import { deleteIncome, getIncomes } from "../../services/incomeService";
 import useAuthStore from "../../store/useAuthStore";
+import { Theme } from "../../theme/theme";
 import { formatCurrency } from "../../utils/format";
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const FILTER_OPTIONS = [
   { id: "all", label: "All" },
   { id: "today", label: "Today" },
-  { id: "week", label: "This Week" },
-  { id: "month", label: "This Month" },
-  { id: "custom", label: "Custom" },
+  { id: "week", label: "Week" },
+  { id: "month", label: "Month" },
 ];
 
 const ExpenseListScreen = ({ navigation }) => {
   const isStealthMode = useAuthStore((s) => s.isStealthMode);
   const [transactions, setTransactions] = useState([]);
+  const [chartTxns, setChartTxns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState("month");
-  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("today");
   const [summary, setSummary] = useState({ totalExpense: 0, totalIncome: 0 });
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeRangeLabel, setActiveRangeLabel] = useState("This Month");
-  // Custom Range State
-  const [customRange, setCustomRange] = useState({
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    end: new Date(),
-  });
-  const [showRangeModal, setShowRangeModal] = useState(false);
-  const [pickerTarget, setPickerTarget] = useState(null); // 'start' or 'end'
+  const [accountTotals, setAccountTotals] = useState({ totalAssets: 0, totalDebts: 0 });
+  
+  // Advanced Filter State
+  const [showConfig, setShowConfig] = useState(false);
   const [categoryId, setCategoryId] = useState(null);
   const [categoryName, setCategoryName] = useState(null);
-
-  // FIX: Don't mutate Date — create fresh instances each time
-  const getDateRange = (filterType, baseDate = new Date()) => {
-    switch (filterType) {
-      case "today": {
-        const start = new Date(baseDate);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(baseDate);
-        end.setHours(23, 59, 59, 999);
-        return {
-          startDate: start,
-          endDate: end,
-          label:
-            baseDate.toDateString() === new Date().toDateString()
-              ? "Today"
-              : baseDate.toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                }),
-        };
-      }
-      case "week": {
-        const end = new Date(baseDate);
-        end.setHours(23, 59, 59, 999);
-        const start = new Date(baseDate);
-        start.setDate(start.getDate() - 7);
-        start.setHours(0, 0, 0, 0);
-        return { startDate: start, endDate: end, label: "Last 7 Days" };
-      }
-      case "month": {
-        const start = new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth(),
-          1,
-          0,
-          0,
-          0,
-          0,
-        );
-        const end = new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth() + 1,
-          0,
-          23,
-          59,
-          59,
-          999,
-        );
-        const isCurrentMonth =
-          baseDate.getMonth() === new Date().getMonth() &&
-          baseDate.getFullYear() === new Date().getFullYear();
-        return {
-          startDate: start,
-          endDate: end,
-          label: isCurrentMonth
-            ? "This Month"
-            : baseDate.toLocaleDateString("en-IN", {
-                month: "long",
-                year: "numeric",
-              }),
-        };
-      }
-      case "custom": {
-        const start = new Date(customRange.start);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(customRange.end);
-        end.setHours(23, 59, 59, 999);
-        const label = `${start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} - ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`;
-        return { startDate: start, endDate: end, label };
-      }
-      default:
-        return { label: "All Time" };
-    }
-  };
+  const [paymentMode, setPaymentMode] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   const fetchTransactions = async () => {
     try {
-      const { startDate, endDate, label } = getDateRange(filter, selectedDate);
-      setActiveRangeLabel(label);
       const filters = {};
-      if (startDate) filters.startDate = startDate;
-      if (endDate) filters.endDate = endDate;
-      if (search.trim()) filters.searchText = search.trim();
-      if (categoryId) filters.categoryId = categoryId;
+      const now = new Date();
+      
+      // Basic Time Filters
+      if (filter === 'today') {
+        const start = new Date(now);
+        start.setHours(0,0,0,0);
+        filters.startDate = start.toISOString();
+        const end = new Date(now);
+        end.setHours(23,59,59,999);
+        filters.endDate = end.toISOString();
+      } else if (filter === 'week') {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - 7);
+        weekStart.setHours(0,0,0,0);
+        filters.startDate = weekStart.toISOString();
+      } else if (filter === 'month') {
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        filters.startDate = monthStart.toISOString();
+      }
 
-      const [expResult, incResult] = await Promise.all([
+      // Advanced Overrides
+      if (startDate) filters.startDate = startDate.toISOString();
+      if (endDate) filters.endDate = endDate.toISOString();
+      if (categoryId) filters.categoryId = categoryId;
+      if (paymentMode) filters.paymentMode = paymentMode;
+
+      // Always fetch last 7 days for CHART
+      const chartStart = new Date(now);
+      chartStart.setDate(now.getDate() - 6);
+      chartStart.setHours(0,0,0,0);
+      const chartFilters = { startDate: chartStart.toISOString() };
+
+      const [expResult, incResult, chartExp, chartInc, accountsResult, categoriesResult] = await Promise.all([
         getExpenses(filters),
         getIncomes(filters),
+        getExpenses(chartFilters),
+        getIncomes(chartFilters),
+        getAccounts(),
+        getAllCategories()
       ]);
 
       let allTxns = [];
@@ -155,9 +117,21 @@ const ExpenseListScreen = ({ navigation }) => {
         totalIn = incs.reduce((s, i) => s + (i.amount || 0), 0);
       }
 
-      // Sort by date desc
-      allTxns.sort((a, b) => new Date(b.date) - new Date(a.date));
+      // Prepare Chart Data
+      let cTxns = [];
+      if (chartExp.success) cTxns = [...cTxns, ...chartExp.expenses.map(e => ({ ...e, type: 'expense' }))];
+      if (chartInc.success) cTxns = [...cTxns, ...chartInc.incomes.map(i => ({ ...i, type: 'income' }))];
+      setChartTxns(cTxns);
 
+      if (accountsResult.success) {
+        setAccountTotals(calculateTotals(accountsResult.accounts));
+      }
+
+      if (categoriesResult.success) {
+        setCategories(categoriesResult.categories);
+      }
+
+      allTxns.sort((a, b) => new Date(b.date) - new Date(a.date));
       setTransactions(allTxns);
       setSummary({ totalExpense: totalEx, totalIncome: totalIn });
     } catch (error) {
@@ -167,700 +141,393 @@ const ExpenseListScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // FIX: Always refetch fresh data when screen is focused
   useFocusEffect(
     useCallback(() => {
-      Analytics.screenView("TransactionList");
-      // Check for navigation params
-      const routes = navigation.getState()?.routes;
-      const params = routes?.find((r) => r.name === "Transactions")?.params;
-
-      if (params?.categoryId) {
-        setCategoryId(params.categoryId);
-        setCategoryName(params.categoryName || "Category");
-        if (params.searchText) setSearch(params.searchText);
-
-        if (params.startDate && params.endDate) {
-          setCustomRange({
-            start: new Date(params.startDate),
-            end: new Date(params.endDate),
-          });
-          setFilter("custom");
-        } else {
-          setFilter("all");
-        }
-      }
-
-      setLoading(true);
       fetchTransactions();
-    }, [filter, search, selectedDate, customRange, categoryId, navigation]),
+    }, [filter, categoryId, paymentMode, startDate, endDate])
   );
 
-  const onDateChange = (event, date) => {
-    setPickerTarget(null);
-    if (date) {
-      if (pickerTarget === "start") {
-        setCustomRange((prev) => ({ ...prev, start: date }));
-      } else if (pickerTarget === "end") {
-        const finalEnd = date < customRange.start ? customRange.start : date;
-        setCustomRange((prev) => ({ ...prev, end: finalEnd }));
-      }
-    }
-  };
-
-  const handleApplyRange = () => {
-    setShowRangeModal(false);
-    setFilter("custom");
-  };
-
-  const handleCalendarPress = () => {
-    setShowRangeModal(true);
+  const clearFilters = () => {
+    setCategoryId(null);
+    setCategoryName(null);
+    setPaymentMode(null);
+    setStartDate(null);
+    setEndDate(null);
+    setShowConfig(false);
   };
 
   const handleDelete = (tx) => {
-    const isIncome = tx.type === "income";
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert(
-      "Delete",
-      `Delete this ${isIncome ? tx.sourceName : tx.categoryName} ${isIncome ? "income" : "expense"} of ₹${tx.amount}?`,
+      "Delete Transaction",
+      `Are you sure you want to delete this ${tx.type}?`,
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const result = isIncome
-              ? await deleteIncome(tx.id, tx)
-              : await deleteExpense(tx.id, tx);
-            if (result.success) {
-              setTransactions((prev) => prev.filter((e) => e.id !== tx.id));
-              setSummary((prev) => ({
-                ...prev,
-                [isIncome ? "totalIncome" : "totalExpense"]:
-                  prev[isIncome ? "totalIncome" : "totalExpense"] - tx.amount,
-              }));
-            } else {
-              Alert.alert("Error", result.error);
-            }
-          },
-        },
-      ],
+        { text: "Delete", style: "destructive", onPress: async () => {
+             const res = tx.type === "income" ? await deleteIncome(tx.id, tx) : await deleteExpense(tx.id, tx);
+             if (res.success) fetchTransactions();
+        }}
+      ]
     );
   };
 
-  // FIX: Handle ISO strings properly
-  const formatDate = (d) => {
-    if (!d) return "";
-    const date =
-      typeof d === "string" ? new Date(d) : d instanceof Date ? d : new Date(d);
-
-    if (isNaN(date.getTime())) return "";
-
+  const formatDate = (dateString) => {
+    const d = new Date(dateString);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) return "Today";
-    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-    return date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    if (d.toDateString() === today.toDateString()) return "Today";
+    if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-IN", { day: 'numeric', month: 'short' });
   };
 
-  // Group by date
-  const grouped = {};
-  transactions.forEach((tx) => {
-    const key = formatDate(tx.date);
-    if (!key) return; // skip invalid dates
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(tx);
-  });
+  const groupedTransactions = useMemo(() => {
+    const groups = {};
+    transactions.forEach(tx => {
+      const date = new Date(tx.date).toDateString();
+      const label = formatDate(date);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(tx);
+    });
+    return Object.entries(groups);
+  }, [transactions]);
 
-  const balance = summary.totalIncome - summary.totalExpense;
+  const chartData = useMemo(() => {
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d;
+    });
+    const labels = last7Days.map(d => d.toLocaleDateString('en-IN', { weekday: 'narrow' }));
+    const spendData = last7Days.map(d => chartTxns.filter(tx => tx.type === 'expense' && new Date(tx.date).toDateString() === d.toDateString()).reduce((sum, tx) => sum + tx.amount, 0));
+    const incomeData = last7Days.map(d => chartTxns.filter(tx => tx.type === 'income' && new Date(tx.date).toDateString() === d.toDateString()).reduce((sum, tx) => sum + tx.amount, 0));
+    return {
+      labels,
+      datasets: [
+        { data: spendData, color: (opacity = 1) => Theme.colors.error },
+        { data: incomeData, color: (opacity = 1) => Theme.colors.success },
+      ],
+    };
+  }, [chartTxns]);
+
+  const { filteredInc, filteredExp } = useMemo(() => {
+    let inc = 0;
+    let exp = 0;
+    transactions.forEach(t => {
+      if (t.type === 'income') inc += (t.amount || 0);
+      else exp += (t.amount || 0);
+    });
+    return { filteredInc: inc, filteredExp: exp };
+  }, [transactions]);
+
+  const topCategory = useMemo(() => {
+    const expenses = transactions.filter(t => t.type === 'expense');
+    if (expenses.length === 0) return null;
+    const cats = {};
+    expenses.forEach(t => cats[t.categoryName] = (cats[t.categoryName] || 0) + t.amount);
+    const sorted = Object.entries(cats).sort((a,b) => b[1] - a[1]);
+    return sorted[0] ? { name: sorted[0][0], amount: sorted[0][1] } : null;
+  }, [transactions]);
+
+  const renderIcon = (tx) => {
+    const icon = tx.type === 'income' ? (tx.sourceIcon || 'wallet-outline') : (tx.categoryIcon || 'cart-outline');
+    if (icon && icon.length > 2 && !/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(icon)) {
+        return <Ionicons name={icon} size={20} color={tx.type === 'income' ? Theme.colors.success : Theme.colors.error} />;
+    }
+    return <Text style={{ fontSize: 18 }}>{icon || '💰'}</Text>;
+  };
+
+  const isFilterActive = categoryId || paymentMode || startDate || endDate;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Transactions</Text>
-          <Text style={styles.rangeLabel}>{activeRangeLabel}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.calendarBtn}
-          onPress={handleCalendarPress}
-        >
-          <Ionicons name="calendar" size={20} color="#6C63FF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Custom Range Selection Modal */}
-      <Modal
-        visible={showRangeModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowRangeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.rangeModalContent}>
-            <Text style={styles.modalTitle}>Select Custom Range</Text>
-
-            <View style={styles.rangePickersRow}>
-              <TouchableOpacity
-                style={styles.rangePickerBtn}
-                onPress={() => setPickerTarget("start")}
-              >
-                <Text style={styles.rangePickerLabel}>Start Date</Text>
-                <Text style={styles.rangePickerValue}>
-                  {customRange.start.toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.rangePickerArrow}>
-                <Ionicons name="arrow-forward" size={16} color="#94A3B8" />
+          <Text style={styles.title}>History</Text>
+          <View style={styles.headerChips}>
+              <View style={styles.summaryBadge}>
+                <View style={[styles.dot, { backgroundColor: Theme.colors.success }]} />
+                <Text style={styles.summaryTotal}>{formatCurrency(accountTotals.totalAssets, isStealthMode)}</Text>
               </View>
-
-              <TouchableOpacity
-                style={styles.rangePickerBtn}
-                onPress={() => setPickerTarget("end")}
-              >
-                <Text style={styles.rangePickerLabel}>End Date</Text>
-                <Text style={styles.rangePickerValue}>
-                  {customRange.end.toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel]}
-                onPress={() => setShowRangeModal(false)}
-              >
-                <Text style={styles.modalBtnCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnApply]}
-                onPress={handleApplyRange}
-              >
-                <Text style={styles.modalBtnApplyText}>Apply Range</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={[styles.summaryBadge, { marginLeft: 6 }]}>
+                <View style={[styles.dot, { backgroundColor: Theme.colors.error }]} />
+                <Text style={styles.summaryTotal}>{formatCurrency(accountTotals.totalDebts, isStealthMode)}</Text>
+              </View>
           </View>
         </View>
-      </Modal>
-
-      {pickerTarget && (
-        <DateTimePicker
-          value={pickerTarget === "start" ? customRange.start : customRange.end}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-          maximumDate={new Date()}
-        />
-      )}
-
-      {/* Search */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#9CA3AF" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search transactions..."
-            placeholderTextColor="#9CA3AF"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+        <View style={styles.headerActions}>
+            {isFilterActive && (
+                <TouchableOpacity onPress={clearFilters} style={styles.clearBtn}>
+                    <Ionicons name="close-circle" size={24} color={Theme.colors.error} />
+                </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.configBtn} onPress={() => setShowConfig(true)}>
+                <Ionicons name="options-outline" size={22} color={Theme.colors.text} />
             </TouchableOpacity>
-          )}
         </View>
       </View>
 
-      {/* Filters */}
-      <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterRow}
-          contentContainerStyle={styles.filterContainer}
-        >
-          {FILTER_OPTIONS.map((f) => (
-            <TouchableOpacity
-              key={f.id}
-              style={[
-                styles.filterChip,
-                filter === f.id && styles.filterChipActive,
-              ]}
-              onPress={() => setFilter(f.id)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filter === f.id && { color: "#FFF" },
-                ]}
-              >
-                {f.label}
+      <Animated.View entering={FadeInDown.springify()} style={styles.filteredSummaryCard}>
+           <View style={styles.summaryTop}>
+              <Text style={styles.filteredSummaryLabel}>{isFilterActive ? 'Results Total' : 'Period Summary'}</Text>
+              <Text style={styles.filteredSummaryValue}>
+                {formatCurrency(filteredInc - filteredExp, isStealthMode)}
               </Text>
+           </View>
+           
+           <View style={styles.summaryStats}>
+              <View style={styles.statBox}>
+                 <Text style={[styles.statValue, { color: Theme.colors.success }]}>+{formatCurrency(filteredInc, isStealthMode)}</Text>
+                 <Text style={styles.statLabel}>Income</Text>
+              </View>
+              <View style={styles.statBoxRight}>
+                 <Text style={[styles.statValue, { color: Theme.colors.error }]}>-{formatCurrency(filteredExp, isStealthMode)}</Text>
+                 <Text style={styles.statLabel}>Spent</Text>
+              </View>
+           </View>
+
+           {isFilterActive && (
+              <View style={styles.activeFiltersList}>
+                 <Ionicons name="filter" size={12} color={Theme.colors.primary} />
+                 <Text style={styles.activeFiltersText}>
+                   Active: {[
+                     categoryName && `Category: ${categoryName}`,
+                     paymentMode && `Pay: ${paymentMode.replace('_', ' ')}`,
+                     startDate && `Since: ${startDate.toLocaleDateString()}`
+                   ].filter(Boolean).join(' • ')}
+                 </Text>
+              </View>
+           )}
+      </Animated.View>
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchTransactions(); }} />}
+      >
+        <View style={styles.actionGrid}>
+          <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={() => navigation.navigate('AddExpenseModal')}>
+            <LinearGradient colors={['#FF6B6B', '#EE5253']} style={styles.actionGradient}>
+              <View style={styles.actionIcon}><Ionicons name="remove-circle-outline" size={22} color="#FFF" /></View>
+              <Text style={styles.actionTitle}>Expense</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={() => navigation.navigate('AddIncomeModal')}>
+            <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
+              <View style={styles.actionIcon}><Ionicons name="add-circle-outline" size={22} color="#FFF" /></View>
+              <Text style={styles.actionTitle}>Income</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.filterRow}>
+          {FILTER_OPTIONS.map(opt => (
+            <TouchableOpacity 
+              key={opt.id} 
+              style={[styles.filterChip, filter === opt.id && styles.filterChipActive]}
+              onPress={() => setFilter(opt.id)}
+            >
+              <Text style={[styles.filterText, filter === opt.id && styles.filterTextActive]}>{opt.label}</Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
 
-        {categoryId && (
-          <View style={styles.catFilterContainer}>
-            <View style={styles.catChip}>
-              <Ionicons name="pricetag" size={14} color="#6C63FF" />
-              <Text style={styles.catChipText}>{categoryName}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setCategoryId(null);
-                  setCategoryName(null);
-                }}
-              >
-                <Ionicons name="close-circle" size={16} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.catFilterNote}>Filtering by category</Text>
-          </View>
+        {topCategory && (
+            <Animated.View entering={FadeInDown.delay(200)} style={styles.insightCard}>
+                 <View style={styles.insightIcon}><Ionicons name="analytics" size={18} color={Theme.colors.primary} /></View>
+                 <View style={{ flex: 1 }}>
+                    <Text style={styles.insightLabel}>Highest Spend</Text>
+                    <Text style={styles.insightValue}>{topCategory.name} • {formatCurrency(topCategory.amount, isStealthMode)}</Text>
+                 </View>
+                 <TouchableOpacity onPress={() => navigation.navigate('AnalyticsMain')}>
+                    <Ionicons name="chevron-forward" size={18} color={Theme.colors.textMuted} />
+                 </TouchableOpacity>
+            </Animated.View>
         )}
-      </View>
 
-      {/* List */}
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              fetchTransactions();
-            }}
-            colors={["#6C63FF"]}
-          />
-        }
-      >
-        {/* Summary Card */}
-        {!loading && transactions.length > 0 && (
-          <LinearGradient
-            colors={["#6C63FF", "#4F46E5"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.summaryBanner}
-          >
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Income</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(summary.totalIncome, isStealthMode)}
-              </Text>
+        {loading ? <ActivityIndicator size="large" color={Theme.colors.primary} style={{ marginTop: 40 }} /> :
+         transactions.length === 0 ? <View style={styles.emptyState}><Ionicons name="receipt-outline" size={64} color={Theme.colors.border} /><Text style={styles.emptyText}>No records found</Text></View> :
+         groupedTransactions.map(([dateLabel, items]) => (
+            <View key={dateLabel} style={styles.dateGroup}>
+                <View style={styles.dateHeader}><Text style={styles.dateLabel}>{dateLabel}</Text><View style={styles.dateLine} /></View>
+                {items.map((tx) => (
+                    <TouchableOpacity key={tx.id} style={styles.txnCard} onPress={() => navigation.navigate('ExpenseDetail', { [tx.type === 'income' ? 'income' : 'expense']: tx })} onLongPress={() => handleDelete(tx)}>
+                        <View style={[styles.txnIcon, { backgroundColor: tx.type === 'income' ? Theme.colors.success + '15' : Theme.colors.error + '15' }]}>{renderIcon(tx)}</View>
+                        <View style={styles.txnMain}><Text style={styles.txnTitle} numberOfLines={1}>{tx.type === 'income' ? tx.sourceName : tx.categoryName}</Text><Text style={styles.txnSub}>{tx.note || (tx.type === 'income' ? 'Income' : tx.paymentMode)} • {tx.accountName}</Text></View>
+                        <View style={styles.txnRight}><Text style={[styles.txnAmount, { color: tx.type === 'income' ? Theme.colors.success : Theme.colors.text }]}>{tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount, isStealthMode)}</Text><Text style={styles.txnTime}>{new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text></View>
+                    </TouchableOpacity>
+                ))}
             </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Expense</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(summary.totalExpense, isStealthMode)}
-              </Text>
-            </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Balance</Text>
-              <Text style={[styles.summaryValue, { fontWeight: "800" }]}>
-                {balance < 0 ? "-" : "+"}
-                {formatCurrency(Math.abs(balance), isStealthMode)}
-              </Text>
-            </View>
-          </LinearGradient>
+         ))}
+
+        {/* Weekly Chart - Always Visible */}
+        {!loading && (
+            <Animated.View entering={FadeInUp.delay(500)} style={styles.chartBlock}>
+                <Text style={styles.chartTitle}>Weekly Velocity</Text>
+                <Text style={styles.chartSub}>7-day flow analysis</Text>
+                <BarChart
+                   data={chartData} width={SCREEN_WIDTH - 40} height={180} yAxisLabel="₹" fromZero
+                   chartConfig={{ backgroundColor: '#FFF', backgroundGradientFrom: '#FFF', backgroundGradientTo: '#FFF', color: (opacity = 1) => `rgba(108, 99, 255, ${opacity})`, labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`, barPercentage: 0.5, propsForLabels: { fontSize: 8 }, decimalPlaces: 0 }}
+                   style={styles.chart} showValuesOnTopOfBars
+                />
+            </Animated.View>
         )}
-        {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#6C63FF"
-            style={{ marginTop: 40 }}
-          />
-        ) : transactions.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="receipt-outline" size={56} color="#D1D5DB" />
-            <Text style={styles.emptyTitle}>No transactions found</Text>
-            <Text style={styles.emptyText}>
-              {search ? "Try a different search" : "Tap + to add a transaction"}
-            </Text>
-          </View>
-        ) : (
-          Object.entries(grouped).map(([dateLabel, items], index) => (
-            <View key={dateLabel}>
-              <View
-                style={[styles.dateHeader, index === 0 && { marginTop: 8 }]}
-              >
-                <Text style={styles.dateLabel}>{dateLabel}</Text>
-                <Text style={styles.dateTotal}>
-                  {(() => {
-                    const dayEx = items
-                      .filter((i) => i.type === "expense")
-                      .reduce((s, e) => s + e.amount, 0);
-                    const dayIn = items
-                      .filter((i) => i.type === "income")
-                      .reduce((s, i) => s + i.amount, 0);
-                    const dayBal = dayIn - dayEx;
-                    return (
-                      <Text
-                        style={{ color: dayBal < 0 ? "#EF4444" : "#10B981" }}
-                      >
-                        {dayBal < 0 ? "-" : "+"}
-                        {formatCurrency(Math.abs(dayBal), isStealthMode)}
-                      </Text>
-                    );
-                  })()}
-                </Text>
-              </View>
-              {items.map((tx) => (
-                <TouchableOpacity
-                  key={tx.id}
-                  style={styles.txnCard}
-                  onPress={() => {
-                    navigation.navigate("ExpenseDetail", {
-                      [tx.type === "income" ? "income" : "expense"]: tx,
-                    });
-                  }}
-                  onLongPress={() => handleDelete(tx)}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.txnIconContainer,
-                      {
-                        backgroundColor:
-                          tx.type === "income" ? "#D1FAE5" : "#FEE2E2",
-                      },
-                    ]}
-                  >
-                    {tx.type === "income" ? (
-                      tx.sourceIcon && tx.sourceIcon.length > 2 ? (
-                        <Ionicons
-                          name={tx.sourceIcon}
-                          size={20}
-                          color="#059669"
-                        />
-                      ) : (
-                        <Text style={styles.txnIcon}>
-                          {tx.sourceIcon || "💰"}
-                        </Text>
-                      )
-                    ) : tx.categoryIcon && tx.categoryIcon.length > 2 ? (
-                      <Ionicons
-                        name={tx.categoryIcon}
-                        size={20}
-                        color="#DC2626"
-                      />
-                    ) : (
-                      <Text style={styles.txnIcon}>
-                        {tx.categoryIcon || "📦"}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.txnCategory} numberOfLines={1}>
-                      {tx.type === "income" ? tx.sourceName : tx.categoryName}
-                    </Text>
-                    <Text style={styles.txnNote} numberOfLines={1}>
-                      {tx.note ||
-                        (tx.type === "income" ? "Income" : tx.paymentMode)}
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text
-                      style={[
-                        styles.txnAmount,
-                        tx.type === "income"
-                          ? { color: "#059669" }
-                          : { color: "#DC2626" },
-                      ]}
-                    >
-                      {tx.type === "income" ? "+" : "-"}
-                      {formatCurrency(tx.amount, isStealthMode)}
-                    </Text>
-                    <Text style={styles.txnAccount}>{tx.accountName}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))
-        )}
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Advanced Filter Modal */}
+      <Modal visible={showConfig} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}><Text style={styles.modalTitle}>Advanced Filters</Text><TouchableOpacity onPress={() => setShowConfig(false)}><Ionicons name="close" size={24} color={Theme.colors.text} /></TouchableOpacity></View>
+                  
+                  <View style={styles.filterSection}>
+                      <Text style={styles.sectionTitle}>Filter by Category</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modalScroll}>
+                          <TouchableOpacity style={[styles.modalChip, !categoryId && styles.modalChipActive]} onPress={() => { setCategoryId(null); setCategoryName(null); }}>
+                              <Text style={[styles.modalChipText, !categoryId && styles.modalChipTextActive]}>All</Text>
+                          </TouchableOpacity>
+                          {categories.map(cat => (
+                              <TouchableOpacity key={cat.id} style={[styles.modalChip, categoryId === cat.id && styles.modalChipActive]} onPress={() => { setCategoryId(cat.id); setCategoryName(cat.name); }}>
+                                  <Text style={[styles.modalChipText, categoryId === cat.id && styles.modalChipTextActive]}>{cat.name}</Text>
+                              </TouchableOpacity>
+                          ))}
+                      </ScrollView>
+
+                      <Text style={styles.sectionTitle}>Payment Type</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modalScroll}>
+                          {['UPI', 'CASH', 'DEBIT_CARD', 'CREDIT_CARD'].map(mode => (
+                              <TouchableOpacity key={mode} style={[styles.modalChip, paymentMode === mode && styles.modalChipActive]} onPress={() => setPaymentMode(paymentMode === mode ? null : mode)}>
+                                  <Text style={[styles.modalChipText, paymentMode === mode && styles.modalChipTextActive]}>{mode.replace('_', ' ')}</Text>
+                              </TouchableOpacity>
+                          ))}
+                      </ScrollView>
+
+                      <Text style={styles.sectionTitle}>Custom Date Range</Text>
+                      <View style={styles.dateRow}>
+                          <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
+                              <Ionicons name="calendar-outline" size={16} color={Theme.colors.primary} />
+                              <Text style={styles.dateBtnText}>{startDate ? startDate.toLocaleDateString() : 'Start Date'}</Text>
+                          </TouchableOpacity>
+                      </View>
+                  </View>
+
+                  <TouchableOpacity style={styles.applyBtn} onPress={() => setShowConfig(false)}>
+                      <Text style={styles.applyBtnText}>Apply Filters</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.clearAllBtn} onPress={clearFilters}>
+                      <Text style={styles.clearAllText}>Clear All</Text>
+                  </TouchableOpacity>
+              </View>
+          </View>
+      </Modal>
+
+      {showDatePicker && (
+          <DateTimePicker
+            value={startDate || new Date()} mode="date" display="default"
+            onChange={(e, date) => { setShowDatePicker(false); if (date) setStartDate(date); }}
+          />
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    letterSpacing: -0.5,
-  },
-  rangeLabel: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontWeight: "600",
-    marginTop: -2,
-  },
-  calendarBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#F0EFFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  searchRow: { paddingHorizontal: 20, paddingVertical: 8 },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  searchInput: { flex: 1, fontSize: 14, color: "#1A1A2E", marginLeft: 8 },
-
-  filterRow: { marginBottom: 8, height: 48 },
-  filterContainer: {
-    paddingHorizontal: 20,
-    paddingRight: 40,
-    alignItems: "center",
-  },
-  filterChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    marginRight: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    height: 40,
-  },
-  filterChipActive: {
-    backgroundColor: "#6C63FF",
-    borderColor: "#6C63FF",
-    elevation: 4,
-    shadowColor: "#6C63FF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  filterText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
-
-  content: { paddingHorizontal: 20, paddingBottom: 120 },
-
-  summaryBanner: {
-    flexDirection: "row",
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerChips: { flexDirection: 'row', marginTop: 4 },
+  title: { fontSize: 24, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text, letterSpacing: -0.8 },
+  summaryBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.surface, paddingHorizontal: 10, paddingVertical: 5, borderRadius: Theme.radius.md, ...Theme.shadows.soft },
+  dot: { width: 4, height: 4, borderRadius: 2, marginRight: 5 },
+  summaryTotal: { fontSize: 11, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  clearBtn: { marginRight: 10 },
+  configBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: Theme.colors.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border + '50', ...Theme.shadows.soft },
+  scrollContent: { paddingHorizontal: 20 },
+  actionGrid: { flexDirection: 'row', gap: 10, marginVertical: 12 },
+  actionCard: { flex: 1, height: 80, borderRadius: 20, overflow: 'hidden', ...Theme.shadows.card },
+  actionGradient: { flex: 1, padding: 14, justifyContent: 'center' },
+  actionIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  actionTitle: { color: '#FFF', fontSize: 13, fontWeight: Theme.typography.weight.extrabold },
+  filterRow: { flexDirection: 'row', marginBottom: 15, gap: 6 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border + '20' },
+  filterChipActive: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
+  filterText: { fontSize: 12, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
+  filterTextActive: { color: '#FFF' },
+  insightCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.surface, padding: 12, borderRadius: 18, marginBottom: 15, ...Theme.shadows.soft },
+  insightIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: Theme.colors.primary + '10', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  insightLabel: { fontSize: 9, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.textLight, textTransform: 'uppercase' },
+  insightValue: { fontSize: 12, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text, marginTop: 1 },
+  dateGroup: { marginBottom: 12 },
+  dateHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  dateLabel: { fontSize: 11, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.textLight, letterSpacing: 0.5, marginRight: 8 },
+  dateLine: { flex: 1, height: 1, backgroundColor: Theme.colors.border + '30' },
+  txnCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.surface, padding: 12, borderRadius: 16, marginBottom: 8, ...Theme.shadows.soft },
+  txnIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  txnMain: { flex: 1 },
+  txnTitle: { fontSize: 14, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
+  txnSub: { fontSize: 10, color: Theme.colors.textLight, marginTop: 1 },
+  txnRight: { alignItems: 'flex-end' },
+  txnAmount: { fontSize: 14, fontWeight: Theme.typography.weight.extrabold },
+  txnTime: { fontSize: 9, color: Theme.colors.textLight, marginTop: 1 },
+  emptyState: { paddingVertical: 40, alignItems: 'center' },
+  emptyText: { marginTop: 10, color: Theme.colors.textLight, fontWeight: Theme.typography.weight.bold },
+  chartBlock: { backgroundColor: Theme.colors.surface, padding: 16, borderRadius: 24, marginTop: 10, ...Theme.shadows.soft },
+  chartTitle: { fontSize: 15, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
+  chartSub: { fontSize: 10, color: Theme.colors.textLight, marginBottom: 12 },
+  chart: { marginLeft: -15 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 18, fontWeight: '900', color: '#1A1A2E' },
+  filterSection: { marginBottom: 20 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#64748B', marginBottom: 12, marginTop: 15 },
+  modalScroll: { marginBottom: 5 },
+  modalChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#F1F5F9', marginRight: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  modalChipActive: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
+  modalChipText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
+  modalChipTextActive: { color: '#FFF' },
+  dateRow: { flexDirection: 'row', gap: 10 },
+  dateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' },
+  dateBtnText: { fontSize: 13, fontWeight: '700', color: '#1E293B', marginLeft: 8 },
+  applyBtn: { backgroundColor: Theme.colors.primary, padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 10 },
+  applyBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  clearAllBtn: { padding: 12, alignItems: 'center', marginTop: 5 },
+  clearAllText: { fontSize: 14, color: Theme.colors.error, fontWeight: '700' },
+  filteredSummaryCard: {
+    backgroundColor: Theme.colors.surface,
     padding: 16,
-    borderRadius: 16,
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  summaryItem: { flex: 1, alignItems: "center" },
-  summaryLabel: {
-    fontSize: 11,
-    color: "rgba(255,255,255,0.7)",
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  summaryValue: {
-    fontSize: 16,
-    color: "#FFFFFF",
-    fontWeight: "700",
-    marginTop: 4,
-  },
-  summaryDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: "rgba(255,255,255,0.2)",
-  },
-
-  dateHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  dateLabel: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
-  dateTotal: { fontSize: 13, fontWeight: "600" },
-
-  txnCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  txnIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  txnIcon: { fontSize: 24 },
-  txnCategory: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
-    marginBottom: 2,
-  },
-  txnNote: { fontSize: 12, color: "#94A3B8" },
-  txnAmount: { fontSize: 16, fontWeight: "700", marginBottom: 2 },
-  txnAccount: { fontSize: 10, color: "#94A3B8", fontWeight: "500" },
-
-  emptyText: { fontSize: 14, color: "#9CA3AF", marginTop: 4 },
-
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  rangeModalContent: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 24,
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  rangePickersRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 28,
-  },
-  rangePickerBtn: {
-    flex: 1,
-    backgroundColor: "#F8F9FE",
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: Theme.colors.primary + '15',
+    ...Theme.shadows.card,
   },
-  rangePickerLabel: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "700",
-    textTransform: "uppercase",
-    marginBottom: 4,
+  summaryTop: { alignItems: 'center', marginBottom: 15 },
+  filteredSummaryLabel: { fontSize: 10, fontWeight: '900', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.8 },
+  filteredSummaryValue: { fontSize: 28, fontWeight: '900', color: Theme.colors.text, marginTop: 2 },
+  summaryStats: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9'
   },
-  rangePickerValue: {
-    fontSize: 14,
-    color: "#1E293B",
-    fontWeight: "700",
+  statBox: { flex: 1, alignItems: 'flex-start' },
+  statBoxRight: { flex: 1, alignItems: 'flex-end' },
+  statValue: { fontSize: 14, fontWeight: '800' },
+  statLabel: { fontSize: 10, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', marginTop: 1 },
+  activeFiltersList: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 15, 
+    paddingTop: 12, 
+    borderTopWidth: 1, 
+    borderTopColor: '#F1F5F9',
+    gap: 5
   },
-  rangePickerArrow: {
-    paddingHorizontal: 10,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  modalBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBtnCancel: {
-    backgroundColor: "#F1F5F9",
-  },
-  modalBtnCancelText: {
-    color: "#64748B",
-    fontWeight: "700",
-  },
-  modalBtnApply: {
-    backgroundColor: "#6C63FF",
-  },
-  modalBtnApplyText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
-
-  catFilterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    gap: 10,
-  },
-  catChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0EFFF",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: "#6C63FF40",
-  },
-  catChipText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#6C63FF",
-  },
-  catFilterNote: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontStyle: "italic",
-  },
+  activeFiltersText: { fontSize: 10, fontWeight: '700', color: Theme.colors.primary, opacity: 0.8 }
 });
 
 export default ExpenseListScreen;

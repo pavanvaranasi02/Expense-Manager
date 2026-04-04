@@ -1,4 +1,4 @@
-# 💰 ExpenseManager
+# 💰 KOSH
 
 A premium personal finance management suite built with **React Native** and **Expo**, powered by a robust **Firebase** backend. Take command of your financial journey with real-time tracking, intelligent budgeting, and an advanced investment portfolio tracker — all wrapped in a sleek, intuitive interface.
 

@@ -16,7 +16,9 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  Dimensions,
 } from "react-native";
+import { PieChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAccounts } from "../../services/accountService";
 import { addExpense } from "../../services/expenseService";
@@ -699,7 +701,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('ProfileMain')}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
@@ -843,43 +845,50 @@ const PortfolioScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Type Breakdown */}
+            {/* Type Breakdown Chart */}
             {totals?.byType?.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>By Type</Text>
-                {totals.byType.map((t) => {
-                  const percent =
-                    totals.totalCurrentValue > 0
-                      ? (t.currentValue / totals.totalCurrentValue) * 100
-                      : 0;
-                  return (
-                    <View key={t.type} style={styles.typeRow}>
-                      <Text style={styles.typeIcon}>{t.typeIcon}</Text>
-                      <View style={{ flex: 1 }}>
-                        <View style={styles.typeNameRow}>
-                          <Text style={styles.typeName} numberOfLines={1}>
-                            {t.typeName}
-                          </Text>
-                          <Text style={styles.typeAmount}>
-                            ₹{t.currentValue.toLocaleString("en-IN")}
-                          </Text>
-                        </View>
-                        <View style={styles.typeBarBg}>
-                          <View
-                            style={[
-                              styles.typeBarFill,
-                              { width: `${Math.min(percent, 100)}%` },
-                            ]}
-                          />
-                        </View>
+              <View style={styles.chartSection}>
+                <Text style={styles.sectionTitle}>Asset Allocation</Text>
+                <View style={styles.chartCard}>
+                  <PieChart
+                    data={totals.byType.map((t, idx) => ({
+                      name: t.typeName,
+                      population: t.currentValue,
+                      color: INVESTMENT_TYPES.find(it => it.id === t.type)?.color || "#6C63FF",
+                      legendFontColor: "#4B5563",
+                      legendFontSize: 11
+                    }))}
+                    width={Dimensions.get("window").width - 80}
+                    height={180}
+                    chartConfig={{
+                      color: (opacity = 1) => `rgba(108, 99, 255, ${opacity})`,
+                    }}
+                    accessor={"population"}
+                    backgroundColor={"transparent"}
+                    paddingLeft={"15"}
+                    center={[0, 0]}
+                    absolute={false}
+                    hasLegend={true}
+                  />
+                  
+                  {/* Custom Legend/Details for better spacing if needed, but PieChart legend is fine for now */}
+                </View>
+
+                {/* Optional: Keep a mini list below or just the chart */}
+                <View style={styles.typeStatsGrid}>
+                  {totals.byType.map((t) => {
+                    const percent = totals.totalCurrentValue > 0 ? (t.currentValue / totals.totalCurrentValue) * 100 : 0;
+                    const typeColor = INVESTMENT_TYPES.find(it => it.id === t.type)?.color || "#6C63FF";
+                    return (
+                      <View key={t.type} style={styles.typeStatChip}>
+                        <View style={[styles.typeStatDot, { backgroundColor: typeColor }]} />
+                        <Text style={styles.typeStatName}>{t.typeName}</Text>
+                        <Text style={styles.typeStatPercent}>{Math.round(percent)}%</Text>
                       </View>
-                      <Text style={styles.typePercent}>
-                        {Math.round(percent)}%
-                      </Text>
-                    </View>
-                  );
-                })}
-              </>
+                    );
+                  })}
+                </View>
+              </View>
             )}
 
             {/* All Investments */}
@@ -2935,6 +2944,58 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 2,
     maxWidth: 120,
+  },
+
+  // Chart Styles
+  chartSection: { marginTop: 20 },
+  chartCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    borderRadius: 24,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+  },
+  typeStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
+    marginTop: 12,
+    gap: 8,
+    marginBottom: 20,
+  },
+  typeStatChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  typeStatDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  typeStatName: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+    marginRight: 4,
+  },
+  typeStatPercent: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#1E293B',
   },
 });
 

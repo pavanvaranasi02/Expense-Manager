@@ -8,12 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { LineChart } from "react-native-chart-kit";
+import { LineChart, BarChart, PieChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getDashboardData } from "../../services/expenseService";
 import useAuthStore from "../../store/useAuthStore";
 import { formatCurrency } from "../../utils/format";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const MONTHS = [
   "Jan",
@@ -186,6 +187,42 @@ const AnalyticsScreen = ({ navigation }) => {
     setLoading(false);
   };
 
+  const getPieData = () => {
+    const colors = [
+      "#6366F1", // Indigo
+      "#10B981", // Emerald
+      "#F59E0B", // Amber
+      "#EC4899", // Pink
+      "#3B82F6", // Blue
+      "#EF4444", // Red
+      "#8B5CF6", // Violet
+    ];
+    
+    return categoryData.slice(0, 5).map((cat, idx) => ({
+      name: cat.name,
+      population: cat.total,
+      color: colors[idx % colors.length],
+      legendFontColor: "#64748B",
+      legendFontSize: 11,
+    }));
+  };
+
+  const getComparisonData = () => {
+    return {
+      labels: analyticsData.map((d) => d.month),
+      datasets: [
+        {
+          data: analyticsData.map((d) => d.income),
+          color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
+        },
+        {
+          data: analyticsData.map((d) => d.expense),
+          color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`,
+        },
+      ],
+    };
+  };
+
   const chartData = {
     labels: analyticsData.map((d) => d.month),
     datasets: [
@@ -216,6 +253,7 @@ const AnalyticsScreen = ({ navigation }) => {
                 period.id === p.id && styles.periodBtnActive,
               ]}
               onPress={() => setPeriod(p)}
+              activeOpacity={0.7}
             >
               <Text
                 style={[
@@ -225,6 +263,9 @@ const AnalyticsScreen = ({ navigation }) => {
               >
                 {p.label}
               </Text>
+              {period.id === p.id && (
+                <View style={styles.periodDot} />
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -261,35 +302,59 @@ const AnalyticsScreen = ({ navigation }) => {
               </Text>
             </View>
 
-            <View style={styles.summaryGrid}>
-              {personality && (
-                <View style={styles.personalityCard}>
-                  <View
-                    style={[
-                      styles.personaHead,
-                      { backgroundColor: personality.color },
-                    ]}
-                  >
+            <View style={styles.insightHeader}>
+              <Text style={styles.insightTitle}>Financial Health Insight</Text>
+              <Ionicons name="sparkles" size={16} color="#6C63FF" />
+            </View>
+
+            {personality && (
+              <LinearGradient
+                colors={['#FFFFFF', '#F8FAFC']}
+                style={styles.personalityCard}
+              >
+                <LinearGradient
+                  colors={[personality.color, personality.color + 'DD']}
+                  style={styles.personaHead}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.personaIconContainer}>
                     <Text style={styles.personaEmoji}>{personality.icon}</Text>
-                    <Text style={styles.personaTitle}>{personality.name}</Text>
                   </View>
-                  <Text style={styles.personaDesc}>{personality.desc}</Text>
-                </View>
-              )}
+                  <View>
+                    <Text style={styles.personaTitle}>{personality.name}</Text>
+                    <Text style={styles.personaBadge}>CURATED PROFILE</Text>
+                  </View>
+                </LinearGradient>
+                <Text style={styles.personaDesc}>{personality.desc}</Text>
+              </LinearGradient>
+            )}
+
+            <View style={styles.summaryGrid}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summarySub}>Avg Monthly Savings</Text>
-                <Text style={[styles.summaryVal, { color: "#10B981" }]}>
-                  {formatCurrency(
-                    Math.round(summary.savings / period.months),
-                    isStealthMode,
-                  )}
-                </Text>
+                <View style={[styles.summaryIcon, { backgroundColor: '#10B98120' }]}>
+                  <Ionicons name="wallet-outline" size={18} color="#10B981" />
+                </View>
+                <View>
+                  <Text style={styles.summarySub}>Avg Monthly Savings</Text>
+                  <Text style={[styles.summaryVal, { color: "#10B981" }]}>
+                    {formatCurrency(
+                      Math.round(summary.savings / period.months),
+                      isStealthMode,
+                    )}
+                  </Text>
+                </View>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={styles.summarySub}>Top Category</Text>
-                <Text style={styles.summaryVal}>
-                  {topCategory?.name || "N/A"}
-                </Text>
+                <View style={[styles.summaryIcon, { backgroundColor: '#F59E0B20' }]}>
+                  <Ionicons name="star-outline" size={18} color="#F59E0B" />
+                </View>
+                <View>
+                  <Text style={styles.summarySub}>Top Category</Text>
+                  <Text style={styles.summaryVal} numberOfLines={1}>
+                    {topCategory?.name || "N/A"}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -307,6 +372,56 @@ const AnalyticsScreen = ({ navigation }) => {
                 yAxisLabel={isStealthMode ? "" : "₹"}
                 hidePointsAtIndex={[]}
                 formatYLabel={(val) => (isStealthMode ? "****" : val)}
+              />
+              <View style={styles.legendContainer}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: "#10B981" }]} />
+                  <Text style={styles.legendText}>Income</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: "#EF4444" }]} />
+                  <Text style={styles.legendText}>Expense</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Category Pie Chart */}
+            <Text style={styles.sectionTitle}>Expense Allocation</Text>
+            <View style={styles.chartCard}>
+              {categoryData.length > 0 ? (
+                <PieChart
+                  data={getPieData()}
+                  width={SCREEN_WIDTH - 40}
+                  height={220}
+                  chartConfig={chartConfig}
+                  accessor={"population"}
+                  backgroundColor={"transparent"}
+                  paddingLeft={"15"}
+                  center={[10, 0]}
+                  absolute
+                />
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No data available for this period</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Monthly Comparison Bar Chart */}
+            <Text style={styles.sectionTitle}>Monthly Comparison</Text>
+            <View style={styles.chartCard}>
+              <BarChart
+                data={getComparisonData()}
+                width={SCREEN_WIDTH - 40}
+                height={220}
+                chartConfig={{
+                  ...chartConfig,
+                  barPercentage: 0.7,
+                }}
+                style={styles.chart}
+                fromZero
+                yAxisLabel={isStealthMode ? "" : "₹"}
+                showValuesOnTopOfBars
               />
             </View>
 
@@ -426,228 +541,341 @@ const chartConfig = {
   color: (opacity = 1) => `rgba(108, 99, 255, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`,
   style: { borderRadius: 16 },
-  propsForDots: { r: "4", strokeWidth: "2", stroke: "#6C63FF" },
-  propsForLabels: { fontSize: 10 },
+  propsForDots: { r: "5", strokeWidth: "3", stroke: "#FFFFFF" },
+  propsForLabels: { fontSize: 10, fontWeight: "600" },
   fillShadowGradientFrom: "#6C63FF",
   fillShadowGradientTo: "#FFF",
-  fillShadowGradientOpacity: 0.1,
+  fillShadowGradientOpacity: 0.2,
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  title: { fontSize: 22, fontWeight: "800", color: "#1A1A2E" },
+  title: { fontSize: 24, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
   periodSelector: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 12,
-    padding: 4,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 14,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
   },
-  periodBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  periodBtn: { 
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 11,
+    alignItems: 'center',
+  },
   periodBtnActive: {
     backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  periodBtnText: { fontSize: 11, fontWeight: "700", color: "#64748B" },
-  periodBtnTextActive: { color: "#6C63FF" },
+  periodBtnText: { fontSize: 12, fontWeight: "700", color: "#60A5FA" },
+  periodBtnTextActive: { color: "#2563EB" },
+  periodDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#2563EB",
+    marginTop: 2,
+  },
 
-  content: { padding: 20, paddingBottom: 100 },
+  content: { padding: 24, paddingBottom: 120 },
+
+  insightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  insightTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
 
   personalityCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: "hidden",
-    padding: 4,
-    marginBottom: 12,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    marginBottom: 20,
+    elevation: 8,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   personaHead: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
   },
-  personaEmoji: { fontSize: 24, marginRight: 12 },
+  personaIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  personaEmoji: { fontSize: 26 },
   personaTitle: {
     color: "#FFFFFF",
+    fontWeight: "900",
+    fontSize: 20,
+    letterSpacing: 0.2,
+  },
+  personaBadge: {
+    fontSize: 9,
+    color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "800",
-    fontSize: 18,
-    letterSpacing: 0.5,
+    marginTop: 2,
+    letterSpacing: 1,
   },
   personaDesc: {
-    fontSize: 12,
-    color: "#64748B",
+    fontSize: 13,
+    color: "#4B5563",
     fontWeight: "600",
-    padding: 12,
-    lineHeight: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    lineHeight: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
 
   summaryGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 20,
+    gap: 16,
+    marginBottom: 28,
   },
   summaryItem: {
     flex: 1,
     backgroundColor: "#FFFFFF",
     padding: 16,
-    borderRadius: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-  },
-  summarySub: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  summaryVal: { fontSize: 16, fontWeight: "800", color: "#1A1A2E" },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    marginBottom: 12,
-  },
-  chartCard: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 20,
-    padding: 10,
-    marginBottom: 24,
-    alignItems: "center",
-    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 12,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  chart: { borderRadius: 16 },
+  summaryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summarySub: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    fontWeight: "700",
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  summaryVal: { fontSize: 15, fontWeight: "800", color: "#111827" },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 16,
+    letterSpacing: -0.2,
+  },
+  chartCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 28,
+    padding: 16,
+    marginBottom: 28,
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  chart: { borderRadius: 20 },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    width: '100%',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+
+  emptyContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#9CA3AF',
+    fontWeight: '600',
+  },
 
   categoryHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  totalRange: { fontSize: 13, fontWeight: "700", color: "#6C63FF" },
+  totalRange: { 
+    fontSize: 12, 
+    fontWeight: "800", 
+    color: "#FFFFFF",
+    backgroundColor: '#6366F1',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    elevation: 2,
+    borderRadius: 28,
+    padding: 24,
+    marginBottom: 28,
+    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
 
-  catRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  catIcon: { fontSize: 20, marginRight: 12 },
+  catRow: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
   catIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#F0EFFF",
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#EEF2FF",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
+  catIcon: { fontSize: 22, marginRight: 16 },
   catInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  catName: { fontSize: 14, fontWeight: "600", color: "#1E293B" },
-  catAmount: { fontSize: 13, fontWeight: "700", color: "#475569" },
+  catName: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
+  catAmount: { fontSize: 13, fontWeight: "800", color: "#374151" },
   progressBar: {
-    height: 6,
-    backgroundColor: "#F1F5F9",
-    borderRadius: 3,
+    height: 8,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 4,
     flex: 1,
+    overflow: 'hidden',
   },
-  progressFill: { height: 6, backgroundColor: "#6C63FF", borderRadius: 3 },
+  progressFill: { height: 8, backgroundColor: "#6366F1", borderRadius: 4 },
   catPercent: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#94A3B8",
-    marginLeft: 10,
-    width: 30,
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#9CA3AF",
+    marginLeft: 12,
+    width: 36,
     textAlign: "right",
   },
 
-  paymentContainer: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  paymentItem: { width: "30%", alignItems: "center", marginBottom: 8 },
+  paymentContainer: { flexDirection: "row", flexWrap: "wrap", justifyContent: 'space-between' },
+  paymentItem: { width: "30%", alignItems: "center", marginBottom: 12 },
   paymentCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#F8F9FE",
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "#F9FAFB",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  paymentEmoji: { fontSize: 20 },
+  paymentEmoji: { fontSize: 24 },
   paymentLabel: {
     fontSize: 10,
-    fontWeight: "600",
-    color: "#64748B",
+    fontWeight: "700",
+    color: "#6B7280",
     textAlign: "center",
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   paymentVal: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    marginTop: 2,
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#111827",
+    marginTop: 4,
   },
 
-  // Period Label
   periodLabelContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 24,
     alignItems: "center",
-    backgroundColor: "#F8F9FE",
-    paddingVertical: 12,
-    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 14,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E7EB",
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
   periodDataRange: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#1A1A2E",
-    marginBottom: 2,
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 4,
   },
   periodDataSubtitle: {
-    fontSize: 10,
-    color: "#94A3B8",
+    fontSize: 11,
+    color: "#9CA3AF",
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
   },
 });
 

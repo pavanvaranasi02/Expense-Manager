@@ -1,5 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,10 +19,12 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAccounts } from '../../services/accountService';
 import { getAllCategories } from '../../services/categoryService';
 import { addExpense, updateExpense } from '../../services/expenseService';
+import { Theme } from '../../theme/theme';
 
 const PAYMENT_MODES = [
   { id: 'UPI', label: 'UPI', icon: '📱' },
@@ -36,7 +41,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
 
   const [amount, setAmount] = useState(editData?.amount?.toString() || '');
   const [note, setNote] = useState(editData?.note || '');
-  const [date, setDate] = useState(editData?.date || new Date());
+  const [date, setDate] = useState(editData?.date ? new Date(editData.date) : new Date());
   const [selectedCategory, setSelectedCategory] = useState(
     editData
       ? {
@@ -47,7 +52,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
       : null
   );
   const [selectedAccount, setSelectedAccount] = useState(
-    editData ? { id: editData.accountId, name: editData.accountName } : null
+    editData ? { id: editData.accountId, name: editData.accountName, type: editData.accountType } : null
   );
   const [paymentMode, setPaymentMode] = useState(editData?.paymentMode || 'UPI');
 
@@ -81,6 +86,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
   };
 
   const handleAccountSelect = (account) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAccount(account);
     if (account.type === 'CREDIT_CARD') setPaymentMode('CREDIT_CARD');
     else if (account.type === 'CASH') setPaymentMode('CASH');
@@ -88,34 +94,34 @@ const AddExpenseScreen = ({ navigation, route }) => {
     setShowAccountModal(false);
   };
 
-  const getDateText = () => {
-    const d = new Date(date);
+  const getFormattedDate = useCallback(() => {
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (d.toDateString() === today.toDateString()) return 'Today';
-    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return d.toLocaleDateString('en-IN', {
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
-  };
+  }, [date]);
 
-  const setQuickDate = (type) => {
-    const d = new Date();
-    if (type === 'yesterday') d.setDate(d.getDate() - 1);
-    setDate(d);
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) setDate(selectedDate);
   };
 
   const validate = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Required', 'Please enter amount');
+      Alert.alert('Required', 'Please enter a valid amount');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return false;
     }
     if (!selectedCategory) {
       Alert.alert('Required', 'Please select a category');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return false;
     }
     return true;
@@ -124,17 +130,19 @@ const AddExpenseScreen = ({ navigation, route }) => {
   const handleSave = async () => {
     if (!validate()) return;
     setLoading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const expenseData = {
-      amount,
+      amount: parseFloat(amount),
       categoryId: selectedCategory.id,
       categoryName: selectedCategory.name,
       categoryIcon: selectedCategory.icon,
       accountId: selectedAccount?.id || null,
       accountName: selectedAccount?.name || 'Unknown',
+      accountType: selectedAccount?.type || null,
       paymentMode,
-      note,
-      date,
+      note: note.trim(),
+      date: date.toISOString(),
     };
 
     let result;
@@ -145,52 +153,56 @@ const AddExpenseScreen = ({ navigation, route }) => {
     }
 
     if (result.success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } else {
       Alert.alert('Error', result.error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
     setLoading(false);
   };
 
-  const creditWarning = selectedAccount?.type === 'CREDIT_CARD' && amount;
-  const creditUsageAfter =
-    (selectedAccount?.currentUsage || 0) + (parseFloat(amount) || 0);
-  const creditPercent = selectedAccount?.creditLimit
-    ? Math.round((creditUsageAfter / selectedAccount.creditLimit) * 100)
-    : 0;
+  const currentMode = PAYMENT_MODES.find(m => m.id === paymentMode) || PAYMENT_MODES[0];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            navigation.goBack();
+          }}
           style={styles.closeBtn}
         >
-          <Ionicons name="close" size={24} color="#1A1A2E" />
+          <Ionicons name="close" size={24} color={Theme.colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {isEdit ? 'Edit Expense' : 'Add Expense'}
+          {isEdit ? 'Edit Transaction' : 'Add Expense'}
         </Text>
         <TouchableOpacity
-          style={[styles.saveBtn, loading && { opacity: 0.5 }]}
+          style={[styles.saveBtnWrapper, loading && { opacity: 0.6 }]}
           onPress={handleSave}
           disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <Text style={styles.saveBtnText}>
-              {isEdit ? 'Update' : 'Save'}
-            </Text>
-          )}
+          <LinearGradient
+            colors={[Theme.colors.primary, Theme.colors.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveBtn}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.saveBtnText}>{isEdit ? 'Update' : 'Save'}</Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
@@ -198,229 +210,213 @@ const AddExpenseScreen = ({ navigation, route }) => {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Amount */}
-            <View style={styles.amountSection}>
-              <Text style={styles.amountLabel}>Amount</Text>
+            {/* Amount Section */}
+            <Animated.View entering={FadeInDown.delay(100)} style={styles.amountSection}>
+              <Text style={styles.amountLabel}>You spent</Text>
               <View style={styles.amountRow}>
                 <Text style={styles.rupee}>₹</Text>
                 <TextInput
                   style={styles.amountInput}
                   placeholder="0"
-                  placeholderTextColor="#D1D5DB"
+                  placeholderTextColor={Theme.colors.textLight}
                   value={amount}
-                  onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
+                  onChangeText={(v) => {
+                    setAmount(v.replace(/[^0-9.]/g, ''));
+                  }}
                   keyboardType="numeric"
                   autoFocus={!isEdit}
                 />
               </View>
-            </View>
+            </Animated.View>
 
-            {/* Credit Card Warning */}
-            {creditWarning && creditPercent > 70 && (
-              <View
-                style={[
-                  styles.warningBanner,
-                  creditPercent > 90 && { backgroundColor: '#FEE2E2' },
-                ]}
+            {/* Form Fields */}
+            <Animated.View entering={FadeInUp.delay(300)}>
+              {/* Category selector */}
+              <Text style={styles.fieldLabel}>Category</Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowCategoryModal(true);
+                }}
               >
-                <Ionicons
-                  name={creditPercent > 90 ? 'alert-circle' : 'warning'}
-                  size={18}
-                  color={creditPercent > 90 ? '#EF4444' : '#F59E0B'}
-                />
-                <Text
-                  style={[
-                    styles.warningText,
-                    creditPercent > 90 && { color: '#991B1B' },
-                  ]}
-                >
-                  {creditPercent}% credit used after this. Available: ₹
-                  {(
-                    (selectedAccount?.creditLimit || 0) - creditUsageAfter
-                  ).toLocaleString('en-IN')}
-                </Text>
-              </View>
-            )}
-
-            {/* Category */}
-            <Text style={styles.fieldLabel}>Category *</Text>
-            <TouchableOpacity
-              style={styles.selector}
-              onPress={() => setShowCategoryModal(true)}
-            >
-              {selectedCategory ? (
-                <View style={styles.selectorContent}>
-                  <Text style={styles.selectorIcon}>
-                    {selectedCategory.icon}
-                  </Text>
-                  <Text style={styles.selectorText}>
-                    {selectedCategory.name}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.selectorPlaceholder}>Select category</Text>
-              )}
-              <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Account */}
-            <Text style={styles.fieldLabel}>Account</Text>
-            <TouchableOpacity
-              style={styles.selector}
-              onPress={() => setShowAccountModal(true)}
-            >
-              {selectedAccount ? (
-                <View style={styles.selectorContent}>
-                  <Text style={styles.selectorIcon}>
-                    {selectedAccount.type === 'BANK'
-                      ? '🏦'
-                      : selectedAccount.type === 'CREDIT_CARD'
-                      ? '💳'
-                      : '💵'}
-                  </Text>
-                  <View>
-                    <Text style={styles.selectorText}>
-                      {selectedAccount.name}
-                    </Text>
-                    <Text style={styles.selectorSub}>
-                      {selectedAccount.type === 'CREDIT_CARD'
-                        ? `Available: ₹${(
-                            (selectedAccount.creditLimit || 0) -
-                            (selectedAccount.currentUsage || 0)
-                          ).toLocaleString('en-IN')}`
-                        : `Balance: ₹${(
-                            selectedAccount.balance || 0
-                          ).toLocaleString('en-IN')}`}
-                    </Text>
+                {selectedCategory ? (
+                  <View style={styles.selectorMain}>
+                    <View style={styles.selectorIconContainer}>
+                      <Text style={styles.selectorEmoji}>{selectedCategory.icon}</Text>
+                    </View>
+                    <Text style={styles.selectorText}>{selectedCategory.name}</Text>
                   </View>
-                </View>
-              ) : (
-                <Text style={styles.selectorPlaceholder}>Select account</Text>
-              )}
-              <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
+                ) : (
+                  <Text style={styles.selectorPlaceholder}>Choose a category...</Text>
+                )}
+                <Ionicons name="chevron-forward" size={20} color={Theme.colors.textLight} />
+              </TouchableOpacity>
 
-            {/* Payment Mode */}
-            <Text style={styles.fieldLabel}>Payment Mode</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 16 }}
-            >
-              {PAYMENT_MODES.map((mode) => (
-                <TouchableOpacity
-                  key={mode.id}
-                  style={[
-                    styles.modeChip,
-                    paymentMode === mode.id && styles.modeChipActive,
-                  ]}
-                  onPress={() => setPaymentMode(mode.id)}
-                >
-                  <Text style={styles.modeIcon}>{mode.icon}</Text>
-                  <Text
+              {/* Account selector */}
+              <Text style={styles.fieldLabel}>Paid From</Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowAccountModal(true);
+                }}
+              >
+                {selectedAccount ? (
+                  <View style={styles.selectorMain}>
+                    <View style={[styles.selectorIconContainer, { backgroundColor: Theme.colors.primaryBackground }]}>
+                      <Ionicons 
+                        name={selectedAccount.type === 'CREDIT_CARD' ? "card" : "wallet"} 
+                        size={18} 
+                        color={Theme.colors.primary} 
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.selectorText}>{selectedAccount.name}</Text>
+                      <Text style={styles.selectorSub}>
+                        {selectedAccount.type === 'CREDIT_CARD' ? 'Credit Card' : 'Direct Account'}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.selectorPlaceholder}>Select an account...</Text>
+                )}
+                <Ionicons name="chevron-forward" size={20} color={Theme.colors.textLight} />
+              </TouchableOpacity>
+
+              {/* Payment Mode */}
+              <Text style={styles.fieldLabel}>Payment Mode</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.modeScroll}
+                contentContainerStyle={styles.modeScrollContent}
+              >
+                {PAYMENT_MODES.map((mode) => (
+                  <TouchableOpacity
+                    key={mode.id}
                     style={[
-                      styles.modeLabel,
-                      paymentMode === mode.id && { color: '#FFF' },
+                      styles.modeChip,
+                      paymentMode === mode.id && styles.modeChipActive,
                     ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setPaymentMode(mode.id);
+                    }}
                   >
-                    {mode.label}
+                    <Text style={styles.modeEmoji}>{mode.icon}</Text>
+                    <Text style={[styles.modeLabel, paymentMode === mode.id && styles.modeLabelActive]}>
+                      {mode.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {/* Date */}
+              <Text style={styles.fieldLabel}>Date</Text>
+              <View style={styles.dateLayout}>
+                <TouchableOpacity
+                  style={[styles.dateChip, getFormattedDate() === 'Today' && styles.dateChipActive]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setDate(new Date());
+                  }}
+                >
+                  <Text style={[styles.dateChipText, getFormattedDate() === 'Today' && styles.dateChipTextActive]}>Today</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.dateChip, getFormattedDate() === 'Yesterday' && styles.dateChipActive]}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    const d = new Date();
+                    d.setDate(d.getDate() - 1);
+                    setDate(d);
+                  }}
+                >
+                  <Text style={[styles.dateChipText, getFormattedDate() === 'Yesterday' && styles.dateChipTextActive]}>Yesterday</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.customDateBtn, (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && styles.dateChipActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowDatePicker(true);
+                  }}
+                >
+                  <Ionicons 
+                    name="calendar" 
+                    size={16} 
+                    color={(getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') ? '#FFF' : Theme.colors.primary} 
+                  />
+                  <Text style={[styles.customDateText, (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && { color: '#FFF' }]}>
+                    {getFormattedDate()}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* Date */}
-            <Text style={styles.fieldLabel}>Date</Text>
-            <View style={styles.dateRow}>
-              <TouchableOpacity
-                style={[
-                  styles.dateChip,
-                  getDateText() === 'Today' && styles.dateChipActive,
-                ]}
-                onPress={() => setQuickDate('today')}
-              >
-                <Text
-                  style={[
-                    styles.dateChipText,
-                    getDateText() === 'Today' && { color: '#FFF' },
-                  ]}
-                >
-                  Today
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.dateChip,
-                  getDateText() === 'Yesterday' && styles.dateChipActive,
-                ]}
-                onPress={() => setQuickDate('yesterday')}
-              >
-                <Text
-                  style={[
-                    styles.dateChipText,
-                    getDateText() === 'Yesterday' && { color: '#FFF' },
-                  ]}
-                >
-                  Yesterday
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.dateDisplay}>
-                <Ionicons name="calendar-outline" size={16} color="#6C63FF" />
-                <Text style={styles.dateText}>{getDateText()}</Text>
               </View>
-            </View>
 
-            {/* Note */}
-            <Text style={styles.fieldLabel}>Note (optional)</Text>
-            <TextInput
-              style={styles.noteInput}
-              placeholder="What was this expense for?"
-              placeholderTextColor="#9CA3AF"
-              value={note}
-              onChangeText={setNote}
-              multiline
-              numberOfLines={2}
-            />
+              {/* Description */}
+              <Text style={styles.fieldLabel}>Note (Optional)</Text>
+              <TextInput
+                style={styles.noteBox}
+                placeholder="What was this for? (e.g. Starbucks Coffee)"
+                placeholderTextColor={Theme.colors.textLight}
+                value={note}
+                onChangeText={setNote}
+                multiline
+              />
+            </Animated.View>
 
-            {/* Extra bottom spacing for keyboard */}
-            <View style={{ height: 40 }} />
+            {/* Bottom cushioning */}
+            <View style={{ height: 100 }} />
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
+      {/* Modals & Pickers */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onDateChange}
+          maximumDate={new Date()}
+        />
+      )}
+
       {/* Category Modal */}
       <Modal visible={showCategoryModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Category</Text>
-              <TouchableOpacity
-                onPress={() => setShowCategoryModal(false)}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <Text style={styles.modalTitle}>Choose Category</Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                <Ionicons name="close-circle" size={28} color={Theme.colors.textLight} />
               </TouchableOpacity>
             </View>
             <FlatList
               data={categories}
               numColumns={3}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={styles.catGrid}
+              showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
-                    styles.catGridItem,
-                    selectedCategory?.id === item.id &&
-                      styles.catGridItemActive,
+                    styles.catItem,
+                    selectedCategory?.id === item.id && styles.catItemActive,
                   ]}
                   onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     setSelectedCategory(item);
                     setShowCategoryModal(false);
                   }}
                 >
-                  <Text style={styles.catGridIcon}>{item.icon}</Text>
-                  <Text style={styles.catGridName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
+                  <View style={styles.catIconBox}>
+                    <Text style={styles.catEmoji}>{item.icon}</Text>
+                  </View>
+                  <Text style={styles.catName} numberOfLines={1}>{item.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -430,51 +426,47 @@ const AddExpenseScreen = ({ navigation, route }) => {
 
       {/* Account Modal */}
       <Modal visible={showAccountModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '50%' }]}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Account</Text>
-              <TouchableOpacity
-                onPress={() => setShowAccountModal(false)}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <Text style={styles.modalTitle}>Source Account</Text>
+              <TouchableOpacity onPress={() => setShowAccountModal(false)}>
+                <Ionicons name="close-circle" size={28} color={Theme.colors.textLight} />
               </TouchableOpacity>
             </View>
-            {accounts.map((acc) => (
-              <TouchableOpacity
-                key={acc.id}
-                style={[
-                  styles.accOption,
-                  selectedAccount?.id === acc.id && styles.accOptionActive,
-                ]}
-                onPress={() => handleAccountSelect(acc)}
-              >
-                <Text style={styles.accEmoji}>
-                  {acc.type === 'BANK'
-                    ? '🏦'
-                    : acc.type === 'CREDIT_CARD'
-                    ? '💳'
-                    : '💵'}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.accName}>{acc.name}</Text>
-                  <Text style={styles.accBalance}>
-                    {acc.type === 'CREDIT_CARD'
-                      ? `Used: ₹${(acc.currentUsage || 0).toLocaleString(
-                          'en-IN'
-                        )} / ₹${(acc.creditLimit || 0).toLocaleString('en-IN')}`
-                      : `₹${(acc.balance || 0).toLocaleString('en-IN')}`}
-                  </Text>
-                </View>
-                {selectedAccount?.id === acc.id && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={22}
-                    color="#6C63FF"
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
+            <ScrollView style={styles.accList} showsVerticalScrollIndicator={false}>
+              {accounts.map((acc) => (
+                <TouchableOpacity
+                  key={acc.id}
+                  style={[
+                    styles.accItem,
+                    selectedAccount?.id === acc.id && styles.accItemActive,
+                  ]}
+                  onPress={() => handleAccountSelect(acc)}
+                >
+                  <View style={[styles.accIcon, { backgroundColor: acc.type === 'CREDIT_CARD' ? Theme.colors.errorBackground : Theme.colors.successBackground }]}>
+                    <Ionicons 
+                      name={acc.type === 'CREDIT_CARD' ? "card" : "wallet"} 
+                      size={20} 
+                      color={acc.type === 'CREDIT_CARD' ? Theme.colors.error : Theme.colors.success} 
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.accTitle}>{acc.name}</Text>
+                    <Text style={styles.accLabel}>
+                      {acc.type === 'CREDIT_CARD' ? 'Credit Line' : 'Savings/Cash'}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.accVal}>
+                      ₹{(acc.type === 'CREDIT_CARD' ? (acc.creditLimit - acc.currentUsage) : acc.balance).toLocaleString('en-IN')}
+                    </Text>
+                    <Text style={styles.accDesc}>Available</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -483,190 +475,194 @@ const AddExpenseScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    paddingVertical: 15,
   },
   closeBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    backgroundColor: Theme.colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Theme.shadows.soft,
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  headerTitle: { fontSize: 18, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
+  saveBtnWrapper: { borderRadius: 12, overflow: 'hidden', ...Theme.shadows.elevated },
   saveBtn: {
-    backgroundColor: '#6C63FF',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 10,
-  },
-  saveBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
-
-  amountSection: { alignItems: 'center', paddingVertical: 24 },
-  amountLabel: { fontSize: 14, color: '#6B7280', marginBottom: 8 },
-  amountRow: { flexDirection: 'row', alignItems: 'center' },
-  rupee: { fontSize: 36, fontWeight: '300', color: '#374151' },
-  amountInput: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#1A1A2E',
     minWidth: 80,
+    alignItems: 'center',
+  },
+  saveBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: Theme.typography.weight.bold },
+  
+  content: { paddingHorizontal: 20 },
+
+  // Amount
+  amountSection: { alignItems: 'center', paddingVertical: 40 },
+  amountLabel: { fontSize: 13, color: Theme.colors.textLight, fontWeight: Theme.typography.weight.bold, textTransform: 'uppercase', marginBottom: 12 },
+  amountRow: { flexDirection: 'row', alignItems: 'center' },
+  rupee: { fontSize: 42, color: Theme.colors.text, fontWeight: Theme.typography.weight.normal, marginRight: 10 },
+  amountInput: {
+    fontSize: 64,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.text,
+    minWidth: 100,
     textAlign: 'center',
   },
 
-  warningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  warningText: { fontSize: 13, color: '#92400E', marginLeft: 8, flex: 1 },
-
+  // Form
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
-    marginTop: 8,
+    fontSize: 12,
+    fontWeight: Theme.typography.weight.extrabold,
+    color: Theme.colors.textLight,
+    textTransform: 'uppercase',
+    marginTop: 20,
+    marginBottom: 10,
+    letterSpacing: 1,
   },
-
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    padding: 14,
-    marginBottom: 16,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    ...Theme.shadows.soft,
   },
-  selectorContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  selectorIcon: { fontSize: 22, marginRight: 10 },
-  selectorText: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
-  selectorSub: { fontSize: 12, color: '#6B7280', marginTop: 1 },
-  selectorPlaceholder: { fontSize: 15, color: '#9CA3AF' },
+  selectorMain: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  selectorIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  selectorEmoji: { fontSize: 20 },
+  selectorText: { fontSize: 16, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
+  selectorSub: { fontSize: 12, color: Theme.colors.textLight, marginTop: 2 },
+  selectorPlaceholder: { fontSize: 16, color: Theme.colors.textLight, flex: 1 },
 
+  // Payment Modes
+  modeScroll: { 
+    marginHorizontal: -20, 
+    paddingVertical: 12, // Ensure shadows aren't clipped
+  },
+  modeScrollContent: {
+    paddingHorizontal: 20,
+    paddingRight: 40, // Extra cushioning for the last item
+  },
   modeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    marginRight: 8,
-  },
-  modeChipActive: { backgroundColor: '#6C63FF', borderColor: '#6C63FF' },
-  modeIcon: { fontSize: 16, marginRight: 6 },
-  modeLabel: { fontSize: 13, fontWeight: '500', color: '#374151' },
-
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  dateChip: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surface,
+    marginRight: 10,
+    ...Theme.shadows.soft,
   },
-  dateChipActive: { backgroundColor: '#6C63FF', borderColor: '#6C63FF' },
-  dateChipText: { fontSize: 13, fontWeight: '500', color: '#374151' },
-  dateDisplay: {
+  modeChipActive: { backgroundColor: Theme.colors.primary },
+  modeEmoji: { fontSize: 16, marginRight: 10 },
+  modeLabel: { fontSize: 14, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
+  modeLabelActive: { color: '#FFF' },
+
+  // Date
+  dateLayout: { flexDirection: 'row', gap: 10 },
+  dateChip: {
+    flex: 1,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Theme.shadows.soft,
+  },
+  dateChipActive: { backgroundColor: Theme.colors.primary },
+  dateChipText: { fontSize: 14, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
+  dateChipTextActive: { color: '#FFF' },
+  customDateBtn: {
+    flex: 1.5,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#F0EFFF',
-    borderRadius: 10,
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: Theme.colors.primaryBackground,
+    paddingHorizontal: 10,
   },
-  dateText: {
-    fontSize: 13,
-    color: '#6C63FF',
-    fontWeight: '500',
-    marginLeft: 6,
-  },
+  customDateText: { fontSize: 13, fontWeight: Theme.typography.weight.bold, color: Theme.colors.primary, marginLeft: 8 },
 
-  noteInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    padding: 14,
+  // Note
+  noteBox: {
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 16,
+    padding: 16,
     fontSize: 15,
-    color: '#1A1A2E',
-    minHeight: 80,
+    color: Theme.colors.text,
+    minHeight: 100,
     textAlignVertical: 'top',
+    ...Theme.shadows.soft,
   },
 
   // Modals
-  modalOverlay: {
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: Theme.colors.background,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    maxHeight: '85%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: Theme.colors.border,
+    borderRadius: 10,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
+  
+  catGrid: { paddingBottom: 40 },
+  catItem: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '70%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 15,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 20,
+    margin: 6,
+    ...Theme.shadows.soft,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E' },
+  catItemActive: { backgroundColor: Theme.colors.primaryBackground, borderColor: Theme.colors.primary, borderWidth: 1 },
+  catIconBox: { width: 50, height: 50, borderRadius: 15, backgroundColor: Theme.colors.background, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  catEmoji: { fontSize: 28 },
+  catName: { fontSize: 12, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
 
-  catGridItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 12,
-    margin: 4,
-    borderRadius: 12,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1.5,
-    borderColor: '#F3F4F6',
-  },
-  catGridItemActive: { backgroundColor: '#F0EFFF', borderColor: '#6C63FF' },
-  catGridIcon: { fontSize: 24, marginBottom: 4 },
-  catGridName: { fontSize: 11, color: '#374151', textAlign: 'center' },
-
-  accOption: {
+  accList: { paddingBottom: 30 },
+  accItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
-    backgroundColor: '#F9FAFB',
+    padding: 16,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: 20,
+    marginBottom: 12,
+    ...Theme.shadows.soft,
   },
-  accOptionActive: {
-    backgroundColor: '#F0EFFF',
-    borderWidth: 1,
-    borderColor: '#6C63FF',
-  },
-  accEmoji: { fontSize: 24, marginRight: 12 },
-  accName: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
-  accBalance: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  accItemActive: { borderColor: Theme.colors.primary, borderWidth: 1.5 },
+  accIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  accTitle: { fontSize: 16, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
+  accLabel: { fontSize: 12, color: Theme.colors.textLight, marginTop: 2 },
+  accVal: { fontSize: 15, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
+  accDesc: { fontSize: 10, color: Theme.colors.textLight, textAlign: 'right' },
 });
 
 export default AddExpenseScreen;

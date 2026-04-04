@@ -8,11 +8,19 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StatusBar,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { auth } from "../../config/firebase";
 import { updateUserProfile } from "../../services/authService";
 import useAuthStore from "../../store/useAuthStore";
+import * as Haptics from 'expo-haptics';
+import ModernToggle from "../../components/ModernToggle";
+
+const { width } = Dimensions.get('window');
+
 
 const CURRENCIES = [
   { code: "INR", symbol: "₹", name: "Indian Rupee" },
@@ -33,6 +41,9 @@ const SettingsScreen = ({ navigation }) => {
   const [dailyReminder, setDailyReminder] = useState(true);
   const [budgetAlerts, setBudgetAlerts] = useState(true);
   const [creditCardAlerts, setCreditCardAlerts] = useState(true);
+  const [showTabLabels, setShowTabLabels] = useState(
+    userProfile?.showTabLabels !== false,
+  );
 
   const saveToFirebase = async (key, value) => {
     const userId = auth.currentUser.uid;
@@ -51,160 +62,183 @@ const SettingsScreen = ({ navigation }) => {
     setShowInvestmentsInAssets(value);
     await saveToFirebase("showInvestmentsInAssets", value);
   };
+  
+  const handleLabelToggle = async (value) => {
+    setShowTabLabels(value);
+    await saveToFirebase("showTabLabels", value);
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+          >
+            <Ionicons name="chevron-back" size={24} color="#111827" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <View style={{ width: 44 }} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Currency */}
-        <Text style={styles.sectionTitle}>Currency</Text>
+        {/* Profile Summary Card */}
+        <View style={styles.profileSummary}>
+          <View style={styles.avatarMini}>
+            <Text style={styles.avatarTextMini}>
+              {(userProfile?.name || 'U').charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.profileName}>{userProfile?.name || 'User'}</Text>
+            <Text style={styles.profileEmail}>{userProfile?.email || 'No email'}</Text>
+          </View>
+          <View style={styles.activeBadge}>
+            <View style={styles.activeDot} />
+            <Text style={styles.activeText}>Active</Text>
+          </View>
+        </View>
+
+        {/* Currency Section */}
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
+            <Ionicons name="cash" size={16} color="#6366F1" />
+          </View>
+          <Text style={styles.sectionTitle}>CURRENCY</Text>
+        </View>
+        
         <View style={styles.card}>
-          {CURRENCIES.map((cur, i) => (
-            <TouchableOpacity
-              key={cur.code}
-              style={[
-                styles.settingRow,
-                i < CURRENCIES.length - 1 && styles.borderBottom,
-              ]}
-              onPress={() => handleCurrencyChange(cur.code)}
-            >
-              <Text style={styles.currencySymbol}>{cur.symbol}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>{cur.name}</Text>
-                <Text style={styles.settingSubLabel}>{cur.code}</Text>
-              </View>
-              {currency === cur.code && (
-                <Ionicons name="checkmark-circle" size={22} color="#6C63FF" />
-              )}
-            </TouchableOpacity>
-          ))}
+          <View style={styles.currencyGrid}>
+            {CURRENCIES.map((cur, i) => (
+              <TouchableOpacity
+                key={cur.code}
+                style={[
+                  styles.currencyItem,
+                  currency === cur.code && styles.activeCurrencyItem,
+                ]}
+                onPress={() => handleCurrencyChange(cur.code)}
+              >
+                <Text style={[
+                  styles.currencySymbol,
+                  currency === cur.code && styles.activeCurrencyText
+                ]}>{cur.symbol}</Text>
+                <Text style={[
+                  styles.currencyCode,
+                  currency === cur.code && styles.activeCurrencyText
+                ]}>{cur.code}</Text>
+                {currency === cur.code && (
+                  <View style={styles.checkBadge}>
+                    <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Portfolio Settings */}
-        <Text style={styles.sectionTitle}>Portfolio & Investments</Text>
-        <View style={styles.card}>
-          <View style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>
-                Include Investments in Net Worth
-              </Text>
-              <Text style={styles.settingSubLabel}>
-                {showInvestmentsInAssets
-                  ? "Net Worth = Assets + Investments - Debts"
-                  : "Net Worth = Assets - Debts (Investments shown separately)"}
-              </Text>
-            </View>
-            <Switch
-              value={showInvestmentsInAssets}
-              onValueChange={handleInvestmentToggle}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
-            />
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#ECFDF5' }]}>
+            <Ionicons name="stats-chart" size={16} color="#10B981" />
           </View>
-
-          {showInvestmentsInAssets && (
-            <View style={styles.infoBox}>
-              <Ionicons name="information-circle" size={16} color="#6C63FF" />
-              <Text style={styles.infoText}>
-                Your investment portfolio value will be added to assets in the
-                dashboard Net Worth calculation.
-              </Text>
-            </View>
-          )}
+          <Text style={styles.sectionTitle}>ASSETS & PORTFOLIO</Text>
         </View>
 
-        {/* Privacy */}
-        <Text style={styles.sectionTitle}>Privacy</Text>
         <View style={styles.card}>
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Public Stealth Mode</Text>
-              <Text style={styles.settingSubLabel}>
-                Mask balances and currency values (****)
-              </Text>
+              <Text style={styles.settingLabel}>Net Worth Calculation</Text>
+              <Text style={styles.settingSubLabel}>Include investments in assets</Text>
             </View>
-            <Switch
+            <ModernToggle
+              value={showInvestmentsInAssets}
+              onValueChange={handleInvestmentToggle}
+              activeColor="#10B981"
+            />
+          </View>
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle" size={16} color="#10B981" />
+            <Text style={styles.infoText}>
+              {showInvestmentsInAssets 
+                ? "Net Worth = Assets + Investments - Debts"
+                : "Net Worth = Assets - Debts (Investments excluded)"}
+            </Text>
+          </View>
+        </View>
+
+        {/* UI Preferences Section */}
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#FEF2F2' }]}>
+            <Ionicons name="desktop" size={16} color="#EF4444" />
+          </View>
+          <Text style={styles.sectionTitle}>UI PREFERENCES</Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Navigation Labels</Text>
+              <Text style={styles.settingSubLabel}>Show text labels in bottom navigation</Text>
+            </View>
+            <ModernToggle
+              value={showTabLabels}
+              onValueChange={handleLabelToggle}
+              activeColor="#6366F1"
+            />
+          </View>
+        </View>
+
+        {/* Privacy & Notifications */}
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#FFF7ED' }]}>
+            <Ionicons name="notifications" size={16} color="#F59E0B" />
+          </View>
+          <Text style={styles.sectionTitle}>PREFERENCES</Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Stealth Mode</Text>
+              <Text style={styles.settingSubLabel}>Mask balances and currency values (****)</Text>
+            </View>
+            <ModernToggle
               value={useAuthStore((state) => state.isStealthMode)}
               onValueChange={(val) => {
                 useAuthStore.getState().setStealthMode(val);
                 saveToFirebase("isStealthMode", val);
               }}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
+              activeColor="#F59E0B"
             />
           </View>
-        </View>
-
-        {/* Notifications */}
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.card}>
+          
           <View style={[styles.switchRow, styles.borderBottom]}>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>Push Notifications</Text>
-              <Text style={styles.settingSubLabel}>
-                Receive important alerts
-              </Text>
+              <Text style={styles.settingSubLabel}>Receive smart alerts and tips</Text>
             </View>
-            <Switch
+            <ModernToggle
               value={notifications}
               onValueChange={setNotifications}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
+              activeColor="#6366F1"
             />
           </View>
-          <View style={[styles.switchRow, styles.borderBottom]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Daily Expense Reminder</Text>
-              <Text style={styles.settingSubLabel}>
-                Remind to log expenses at 9 PM
-              </Text>
-            </View>
-            <Switch
-              value={dailyReminder}
-              onValueChange={setDailyReminder}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-          <View style={[styles.switchRow, styles.borderBottom]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Budget Alerts</Text>
-              <Text style={styles.settingSubLabel}>
-                Alert when nearing budget limit
-              </Text>
-            </View>
-            <Switch
-              value={budgetAlerts}
-              onValueChange={setBudgetAlerts}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
+
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Credit Card Bill Alerts</Text>
-              <Text style={styles.settingSubLabel}>
-                Remind before bill due date
-              </Text>
+              <Text style={styles.settingLabel}>Daily Reminder</Text>
+              <Text style={styles.settingSubLabel}>Log your daily expenses at 9 PM</Text>
             </View>
-            <Switch
-              value={creditCardAlerts}
-              onValueChange={setCreditCardAlerts}
-              trackColor={{ true: "#6C63FF", false: "#E5E7EB" }}
-              thumbColor="#FFFFFF"
+            <ModernToggle
+              value={dailyReminder}
+              onValueChange={setDailyReminder}
+              activeColor="#6366F1"
             />
           </View>
         </View>
@@ -227,7 +261,7 @@ const SettingsScreen = ({ navigation }) => {
                     expenses
                   </Text>
                 </View>
-                <Switch
+                <ModernToggle
                   value={
                     userProfile?.settings?.family?.syncFamilyToPersonal ?? true
                   }
@@ -248,8 +282,7 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  trackColor={{ false: "#E2E8F0", true: "#6C63FF" }}
-                  thumbColor="#FFFFFF"
+                  activeColor="#6366F1"
                 />
               </View>
 
@@ -271,7 +304,7 @@ const SettingsScreen = ({ navigation }) => {
                         Update personal expense when family expense is edited
                       </Text>
                     </View>
-                    <Switch
+                    <ModernToggle
                       value={userProfile?.settings?.family?.syncOnEdit ?? true}
                       onValueChange={async (value) => {
                         const userId = useAuthStore.getState().user?.uid;
@@ -290,8 +323,7 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
-                      thumbColor="#FFFFFF"
+                      activeColor="#3B82F6"
                     />
                   </View>
 
@@ -310,7 +342,7 @@ const SettingsScreen = ({ navigation }) => {
                         Delete personal expense when family expense is removed
                       </Text>
                     </View>
-                    <Switch
+                    <ModernToggle
                       value={
                         userProfile?.settings?.family?.syncOnDelete ?? true
                       }
@@ -331,8 +363,7 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      trackColor={{ false: "#E2E8F0", true: "#EF4444" }}
-                      thumbColor="#FFFFFF"
+                      activeColor="#EF4444"
                     />
                   </View>
                 </>
@@ -353,7 +384,7 @@ const SettingsScreen = ({ navigation }) => {
                     Create recurring templates with past start dates
                   </Text>
                 </View>
-                <Switch
+                <ModernToggle
                   value={
                     userProfile?.settings?.family?.allowPastRecurring ?? false
                   }
@@ -374,8 +405,7 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  trackColor={{ false: "#E2E8F0", true: "#10B981" }}
-                  thumbColor="#FFFFFF"
+                  activeColor="#10B981"
                 />
               </View>
 
@@ -395,147 +425,257 @@ const SettingsScreen = ({ navigation }) => {
           </>
         )}
 
-        {/* About */}
-        <Text style={styles.sectionTitle}>About</Text>
+        {/* About Card */}
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#F1F5F9' }]}>
+            <Ionicons name="information-circle" size={16} color="#64748B" />
+          </View>
+          <Text style={styles.sectionTitle}>ABOUT KOSH</Text>
+        </View>
+
         <View style={styles.card}>
           <View style={[styles.aboutRow, styles.borderBottom]}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.aboutValue}>1.0.0</Text>
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaText}>1.0.0 Alpha</Text>
+            </View>
           </View>
-          <View style={styles.aboutRow}>
+          <TouchableOpacity style={styles.aboutRow}>
             <Text style={styles.settingLabel}>User ID</Text>
             <Text style={styles.aboutValue} numberOfLines={1}>
-              {auth.currentUser?.uid?.substring(0, 16)}...
+              {auth.currentUser?.uid?.substring(0, 12)}...
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Danger Zone */}
-        <Text style={styles.sectionTitle}>Danger Zone</Text>
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#FEE2E2' }]}>
+            <Ionicons name="alert-circle" size={16} color="#EF4444" />
+          </View>
+          <Text style={[styles.sectionTitle, { color: '#EF4444' }]}>DANGER ZONE</Text>
+        </View>
+        
         <TouchableOpacity
           style={styles.dangerBtn}
           onPress={() =>
             Alert.alert(
               "Delete Account",
-              "This will permanently delete your account and all data.",
+              "This will permanently delete your account and all data. This action cannot be undone.",
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive" },
+                { text: "Delete Permanently", style: "destructive" },
               ],
             )
           }
         >
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-          <Text style={styles.dangerText}>Delete My Account</Text>
+          <LinearGradient
+            colors={['#FCA5A5', '#EF4444']}
+            style={styles.dangerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Ionicons name="trash" size={18} color="#FFFFFF" />
+            <Text style={styles.dangerText}>Delete My Account</Text>
+          </LinearGradient>
         </TouchableOpacity>
+        
+        <View style={{ height: 60 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F9FAFB",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  headerTitle: { fontSize: 18, fontWeight: "600", color: "#1A1A2E" },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
+  profileSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 20,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  avatarMini: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#6366F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarTextMini: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+  profileName: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  profileEmail: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  activeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 4 },
+  activeText: { fontSize: 10, fontWeight: '800', color: '#10B981', textTransform: 'uppercase' },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 28,
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  sectionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1A1A2E",
-    marginTop: 24,
-    marginBottom: 10,
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#6B7280",
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
     elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
   },
-  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  
+  currencyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 8,
+    gap: 8,
+  },
+  currencyItem: {
+    width: (width - 72) / 2,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
+  },
+  activeCurrencyItem: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#6366F1',
+  },
+  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#111827' },
+  currencyCode: { fontSize: 12, fontWeight: '800', color: '#6B7280', marginTop: 4 },
+  activeCurrencyText: { color: '#6366F1' },
+  checkBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#6366F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-  settingRow: { flexDirection: "row", alignItems: "center", padding: 14 },
-  settingIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  currencySymbol: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#374151",
-    marginRight: 14,
-    width: 30,
-    textAlign: "center",
-  },
-  settingLabel: { fontSize: 15, fontWeight: "500", color: "#1A1A2E" },
+
+  settingRow: { flexDirection: "row", alignItems: "center", padding: 18 },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  settingLabel: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
   settingSubLabel: {
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 2,
-    lineHeight: 16,
+    fontWeight: '500',
   },
 
-  switchRow: { flexDirection: "row", alignItems: "center", padding: 14 },
+  switchRow: { flexDirection: "row", alignItems: "center", padding: 18 },
 
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#F0EFFF",
-    padding: 12,
-    margin: 10,
-    borderRadius: 10,
-    alignItems: "flex-start",
+    backgroundColor: "#EEF2FF",
+    padding: 14,
+    marginHorizontal: 18,
+    marginBottom: 18,
+    borderRadius: 16,
+    alignItems: "center",
   },
   infoText: {
     fontSize: 12,
-    color: "#6C63FF",
-    marginLeft: 8,
+    color: "#6366F1",
+    marginLeft: 10,
     flex: 1,
-    lineHeight: 16,
+    fontWeight: '600',
   },
 
   aboutRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 14,
+    padding: 18,
   },
-  aboutValue: { fontSize: 14, color: "#6B7280", maxWidth: 180 },
+  aboutValue: { fontSize: 13, color: "#6B7280", fontWeight: '600' },
+  betaBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  betaText: { fontSize: 10, fontWeight: '900', color: '#64748B', textTransform: 'uppercase' },
 
   dangerBtn: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  dangerGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FEE2E2",
-    padding: 14,
-    borderRadius: 12,
+    paddingVertical: 18,
   },
   dangerText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#EF4444",
-    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    marginLeft: 10,
+    letterSpacing: 0.5,
   },
 });
 

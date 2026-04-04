@@ -12,8 +12,11 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    StatusBar,
+    Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
     addCustomCategory, deleteCustomCategory,
     getAllCategories
@@ -25,10 +28,12 @@ const EMOJI_OPTIONS = [
   '📦', '🔧', '🎨', '📸', '🌿', '⚡', '💎', '🎯',
 ];
 
+const { width } = Dimensions.get('window');
+
 const COLOR_OPTIONS = [
-  '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6',
-  '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16',
-  '#06B6D4', '#A855F7', '#E11D48', '#0EA5E9',
+  '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+  '#EC4899', '#14B8A6', '#F97316', '#84CC16', '#06B6D4',
+  '#A855F7', '#E11D48', '#0EA5E9', '#64748B'
 ];
 
 const ManageCategoriesScreen = ({ navigation }) => {
@@ -116,40 +121,52 @@ const ManageCategoriesScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Categories</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={24} color="#111827" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Categories</Text>
+            <View style={{ width: 44 }} />
+          </View>
+        </SafeAreaView>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#6366F1" />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Categories</Text>
-        <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addHeaderBtn}>
-          <Ionicons name="add" size={24} color="#6C63FF" />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color="#111827" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Categories</Text>
+          <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addHeaderBtn}>
+            <Ionicons name="add" size={24} color="#6366F1" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Default Categories */}
-          <Text style={styles.sectionTitle}>Default Categories ({defaultCats.length})</Text>
+          {/* Section Header */}
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconBox, { backgroundColor: '#EEF2FF' }]}>
+              <Ionicons name="grid" size={14} color="#6366F1" />
+            </View>
+            <Text style={styles.sectionTitle}>DEFAULT CATEGORIES ({defaultCats.length})</Text>
+          </View>
+
           <View style={styles.categoriesGrid}>
             {defaultCats.map((cat) => (
               <View key={cat.id} style={styles.categoryChip}>
@@ -161,15 +178,21 @@ const ManageCategoriesScreen = ({ navigation }) => {
           </View>
 
           {/* Custom Categories */}
-          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-            Custom Categories ({customCats.length})
-          </Text>
+          <View style={[styles.sectionHeader, { marginTop: 32 }]}>
+            <View style={[styles.sectionIconBox, { backgroundColor: '#FDF2F8' }]}>
+              <Ionicons name="color-palette" size={14} color="#EC4899" />
+            </View>
+            <Text style={styles.sectionTitle}>CUSTOM CATEGORIES ({customCats.length})</Text>
+          </View>
 
           {customCats.length === 0 ? (
             <View style={styles.emptyCustom}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="brush-outline" size={32} color="#9CA3AF" />
+              </View>
               <Text style={styles.emptyCustomText}>No custom categories yet</Text>
-              <TouchableOpacity onPress={() => setShowModal(true)}>
-                <Text style={styles.emptyCustomLink}>+ Add one</Text>
+              <TouchableOpacity onPress={() => setShowModal(true)} style={styles.emptyAddBtn}>
+                <Text style={styles.emptyAddText}>Create Your First Category</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -178,11 +201,19 @@ const ManageCategoriesScreen = ({ navigation }) => {
                 key={cat.id}
                 style={styles.customCategoryCard}
                 onLongPress={() => handleDeleteCategory(cat)}
+                activeOpacity={0.7}
               >
-                <View style={[styles.categoryDot, { backgroundColor: cat.color }]} />
-                <Text style={styles.customCategoryIcon}>{cat.icon}</Text>
-                <Text style={styles.customCategoryName}>{cat.name}</Text>
-                <TouchableOpacity onPress={() => handleDeleteCategory(cat)}>
+                <View style={[styles.cardIconBox, { backgroundColor: cat.color + '15' }]}>
+                  <Text style={styles.customCategoryIcon}>{cat.icon}</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.customCategoryName}>{cat.name}</Text>
+                  <Text style={styles.customCategorySub}>Added by you</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => handleDeleteCategory(cat)}
+                  style={styles.trashBtn}
+                >
                   <Ionicons name="trash-outline" size={18} color="#EF4444" />
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -192,179 +223,357 @@ const ManageCategoriesScreen = ({ navigation }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Add Category Modal */}
-      <Modal visible={showModal} animationType="slide" transparent>
+      <Modal visible={showModal} animationType="slide" transparent statusBarTranslucent>
         <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalDismiss} 
+            activeOpacity={1} 
+            onPress={() => setShowModal(false)} 
+          />
           <View style={styles.modalContent}>
+            <View style={styles.modalDragHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Category</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <Text style={styles.modalTitle}>New Category</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
-            {/* Preview */}
-            <View style={styles.preview}>
-              <View style={[styles.previewBg, { backgroundColor: newColor + '20' }]}>
-                <Text style={styles.previewIcon}>{newIcon}</Text>
+            <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+              {/* Preview Section */}
+              <View style={styles.previewSection}>
+                <LinearGradient
+                  colors={[newColor, newColor + 'CC']}
+                  style={styles.previewIconBox}
+                >
+                  <Text style={styles.previewIcon}>{newIcon}</Text>
+                </LinearGradient>
+                <Text style={styles.previewName}>{newName || 'Untitled Category'}</Text>
               </View>
-              <Text style={styles.previewName}>{newName || 'Category Name'}</Text>
-            </View>
 
-            {/* Name Input */}
-            <Text style={styles.modalLabel}>Name *</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., Pet Care"
-              placeholderTextColor="#9CA3AF"
-              value={newName}
-              onChangeText={setNewName}
-              autoFocus
-            />
+              {/* Name Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.modalLabel}>CATEGORY NAME</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="e.g. Subscriptions"
+                  placeholderTextColor="#9CA3AF"
+                  value={newName}
+                  onChangeText={setNewName}
+                />
+              </View>
 
-            {/* Icon Picker */}
-            <Text style={styles.modalLabel}>Icon</Text>
-            <View style={styles.emojiGrid}>
-              {EMOJI_OPTIONS.map((emoji) => (
-                <TouchableOpacity
-                  key={emoji}
-                  style={[
-                    styles.emojiChip,
-                    newIcon === emoji && { backgroundColor: '#F0EFFF', borderColor: '#6C63FF' },
-                  ]}
-                  onPress={() => setNewIcon(emoji)}
+              {/* Icon Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.modalLabel}>SELECT ICON</Text>
+                <View style={styles.emojiGrid}>
+                  {EMOJI_OPTIONS.map((emoji) => (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={[
+                        styles.emojiChip,
+                        newIcon === emoji && styles.activeEmojiChip,
+                      ]}
+                      onPress={() => setNewIcon(emoji)}
+                    >
+                      <Text style={styles.emojiText}>{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Color Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.modalLabel}>SELECT COLOR</Text>
+                <View style={styles.colorGrid}>
+                  {COLOR_OPTIONS.map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorChip,
+                        { backgroundColor: color },
+                        newColor === color && styles.colorChipActive,
+                      ]}
+                      onPress={() => setNewColor(color)}
+                    >
+                      {newColor === color && <Ionicons name="checkmark" size={14} color="#FFF" />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Save Button */}
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, saving && { opacity: 0.7 }]}
+                onPress={handleAddCategory}
+                disabled={saving}
+              >
+                <LinearGradient
+                  colors={['#6366F1', '#4338CA']}
+                  style={styles.saveBtnGradient}
                 >
-                  <Text style={styles.emojiText}>{emoji}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Color Picker */}
-            <Text style={styles.modalLabel}>Color</Text>
-            <View style={styles.colorGrid}>
-              {COLOR_OPTIONS.map((color) => (
-                <TouchableOpacity
-                  key={color}
-                  style={[
-                    styles.colorChip,
-                    { backgroundColor: color },
-                    newColor === color && styles.colorChipActive,
-                  ]}
-                  onPress={() => setNewColor(color)}
-                >
-                  {newColor === color && <Ionicons name="checkmark" size={14} color="#FFF" />}
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[styles.modalSaveBtn, saving && { opacity: 0.6 }]}
-              onPress={handleAddCategory}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.modalSaveBtnText}>Add Category</Text>
-              )}
-            </TouchableOpacity>
+                  {saving ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.modalSaveBtnText}>Create Category</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+              <View style={{ height: 40 }} />
+            </ScrollView>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  safeArea: { backgroundColor: '#FFFFFF' },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6',
-    justifyContent: 'center', alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F9FAFB",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
   addHeaderBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFFF',
-    justifyContent: 'center', alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#1A1A2E', marginBottom: 12 },
-
-  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  categoryChip: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: '#F3F4F6',
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 4,
+    marginBottom: 16,
+    marginTop: 24,
   },
-  categoryDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  categoryIcon: { fontSize: 16, marginRight: 4 },
-  categoryName: { fontSize: 13, color: '#374151', maxWidth: 100 },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#6B7280',
+    letterSpacing: 1.5,
+  },
 
-  emptyCustom: { alignItems: 'center', paddingVertical: 24 },
-  emptyCustomText: { fontSize: 14, color: '#9CA3AF' },
-  emptyCustomLink: { fontSize: 14, color: '#6C63FF', fontWeight: '600', marginTop: 8 },
+  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  categoryDot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
+  categoryIcon: { fontSize: 16, marginRight: 6 },
+  categoryName: { fontSize: 13, color: '#111827', fontWeight: '800', maxWidth: 120 },
+
+  emptyCustom: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
+  emptyIconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyCustomText: { fontSize: 14, color: '#6B7280', fontWeight: '500', marginBottom: 12 },
+  emptyAddBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#EEF2FF',
+  },
+  emptyAddText: { color: '#6366F1', fontWeight: '800', fontSize: 13 },
 
   customCategoryCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    padding: 14, borderRadius: 12, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    borderRadius: 20,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
   },
-  customCategoryIcon: { fontSize: 20, marginRight: 10 },
-  customCategoryName: { flex: 1, fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
+  cardIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customCategoryIcon: { fontSize: 24 },
+  customCategoryName: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  customCategorySub: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
+  trashBtn: {
+    padding: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+  },
 
   // Modal
   modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(17, 24, 39, 0.5)',
     justifyContent: 'flex-end',
   },
+  modalDismiss: { flex: 1 },
   modalContent: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, maxHeight: '85%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    paddingTop: 8,
+    maxHeight: '90%',
+  },
+  modalDragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 16,
   },
   modalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  modalLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8, marginTop: 16 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  previewSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  previewIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  previewIcon: { fontSize: 36 },
+  previewName: { fontSize: 18, fontWeight: '900', color: '#111827' },
+
+  inputGroup: { marginBottom: 24 },
+  modalLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#9CA3AF',
+    letterSpacing: 1,
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
   modalInput: {
-    backgroundColor: '#F9FAFB', borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB',
-    paddingHorizontal: 14, height: 48, fontSize: 15, color: '#1A1A2E',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    height: 56,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
   },
 
-  preview: { alignItems: 'center', marginBottom: 8 },
-  previewBg: {
-    width: 56, height: 56, borderRadius: 16, justifyContent: 'center',
-    alignItems: 'center', marginBottom: 8,
-  },
-  previewIcon: { fontSize: 28 },
-  previewName: { fontSize: 15, fontWeight: '600', color: '#1A1A2E' },
-
-  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 2 },
   emojiChip: {
-    width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: '#F9FAFB', borderWidth: 1.5, borderColor: '#E5E7EB',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  emojiText: { fontSize: 20 },
+  activeEmojiChip: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#6366F1',
+  },
+  emojiText: { fontSize: 24 },
 
-  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 2 },
   colorChip: {
-    width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  colorChipActive: { borderWidth: 3, borderColor: '#1A1A2E' },
+  colorChipActive: {
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    transform: [{ scale: 1.1 }],
+  },
 
   modalSaveBtn: {
-    backgroundColor: '#6C63FF', height: 50, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center', marginTop: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginTop: 12,
+    elevation: 4,
+    shadowColor: '#6366F1',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
   },
-  modalSaveBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  saveBtnGradient: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSaveBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', letterSpacing: 0.5 },
 });
 
 export default ManageCategoriesScreen;

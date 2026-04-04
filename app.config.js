@@ -1,7 +1,7 @@
 export default {
   expo: {
-    name: "ExpenseManager",
-    slug: "expense-manager",
+    name: "KOSH",
+    slug: "kosh",
     version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
@@ -11,18 +11,18 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#1A1A2E"
     },
-    scheme: "expensemanager",
+    scheme: "kosh",
     newArchEnabled: true,
     ios: {
       supportsTablet: false,
-      bundleIdentifier: "com.pavan.expensemanager"
+      bundleIdentifier: "com.pavan.kosh"
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/ExpenseManager.jpg",
         backgroundColor: "#1A1A2E"
       },
-      package: "com.pavan.expensemanager"
+      package: "com.pavan.kosh"
     },
     plugins: [
       "expo-secure-store",

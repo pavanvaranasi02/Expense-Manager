@@ -17,7 +17,7 @@ const InviteCodeCard = ({ inviteCode, familyName, onRegenerate, canRegenerate = 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `🏠 Join my family "${familyName}" on ExpenseManager!\n\nFamily Code: ${inviteCode}\n\nOpen the app and enter the code in the Family tab.\n\nDon't have the app?\nhttps://github.com/pavanvaranasi02/Expense-Manager`,
+        message: `🏠 Join my family "${familyName}" on KOSH!\n\nFamily Code: ${inviteCode}\n\nOpen the app and enter the code in the Family tab.\n\nDon't have the app?`,
       });
     } catch (error) {
       console.log('Share error:', error);

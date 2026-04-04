@@ -9,14 +9,16 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import ModernToggle from '../../components/ModernToggle';
 import {
   getAccounts,
   payCreditCardBill,
@@ -220,39 +222,49 @@ const CreditCardBillScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Credit Card Bills</Text>
-          <View style={{ width: 40 }} />
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={24} color="#111827" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Bill Payments</Text>
+            <View style={{ width: 44 }} />
+          </View>
+        </SafeAreaView>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6366F1" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#6C63FF" />
-        </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Credit Card Bills</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color="#111827" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Bill Payments</Text>
+          <View style={{ width: 44 }} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {creditCards.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>💳</Text>
-            <Text style={styles.emptyTitle}>No credit cards</Text>
-            <Text style={styles.emptyText}>Add a credit card from "My Accounts" to track bills</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="card-outline" size={48} color="#9CA3AF" />
+            </View>
+            <Text style={styles.emptyTitle}>Secure Your Cards</Text>
+            <Text style={styles.emptyText}>Add your credit cards to track billing cycles and never miss a payment.</Text>
             <TouchableOpacity style={styles.emptyBtn} onPress={() => navigation.navigate('AddAccount')}>
-              <Text style={styles.emptyBtnText}>+ Add Credit Card</Text>
+              <LinearGradient colors={['#6366F1', '#4338CA']} style={styles.emptyBtnGradient}>
+                <Text style={styles.emptyBtnText}>Link First Card</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         ) : (
@@ -266,96 +278,82 @@ const CreditCardBillScreen = ({ navigation }) => {
 
             return (
               <View key={card.id} style={styles.cardContainer}>
-                {/* Card Visual */}
-                <View style={[styles.creditCard, { backgroundColor: card.color || '#F59E0B' }]}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardName}>{card.name}</Text>
-                    <Text style={styles.cardBank}>{card.bankName || 'Credit Card'}</Text>
-                  </View>
-                  <View style={styles.cardBody}>
+                {/* Card Visual - High Fidelity */}
+                <LinearGradient
+                  colors={[card.color || '#F59E0B', (card.color || '#F59E0B') + 'DD']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.creditCard}
+                >
+                  <View style={styles.cardUpper}>
                     <View>
-                      <Text style={styles.cardLabel}>Outstanding</Text>
+                      <Text style={styles.cardBank}>{card.bankName || 'Premium Card'}</Text>
+                      <Text style={styles.cardName}>{card.name}</Text>
+                    </View>
+                    <View style={styles.chipView} />
+                  </View>
+                  
+                  <View style={styles.cardBottom}>
+                    <View>
+                      <Text style={styles.cardLabel}>CURRENT OUTSTANDING</Text>
                       <Text style={styles.cardAmount}>
                         ₹{(card.currentUsage || 0).toLocaleString('en-IN')}
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.cardLabel}>Limit</Text>
+                      <Text style={styles.cardLabel}>LIMIT</Text>
                       <Text style={styles.cardLimit}>
                         ₹{(card.creditLimit || 0).toLocaleString('en-IN')}
                       </Text>
                     </View>
                   </View>
-                  <View style={styles.usageBarBg}>
-                    <View
-                      style={[
-                        styles.usageBarFill,
-                        {
-                          width: `${Math.min(usagePercent, 100)}%`,
-                          backgroundColor: usagePercent > 80 ? '#FEE2E2' : 'rgba(255,255,255,0.4)',
-                        },
-                      ]}
-                    />
+
+                  <View style={styles.usageContainer}>
+                    <View style={styles.usageBarBg}>
+                      <View
+                        style={[
+                          styles.usageBarFill,
+                          {
+                            width: `${Math.min(usagePercent, 100)}%`,
+                            backgroundColor: usagePercent > 80 ? '#FEE2E2' : '#FFFFFF',
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.usageText}>{usagePercent}% OF LIMIT USED</Text>
                   </View>
-                  <Text style={styles.usageText}>{usagePercent}% used</Text>
-                </View>
+                </LinearGradient>
 
                 {/* Bill Info */}
                 <View style={styles.billInfo}>
-                  <View style={styles.billRow}>
-                    <View style={styles.billItem}>
-                      <Text style={styles.billLabel}>Bill Date</Text>
-                      <Text style={styles.billValue}>{card.billGenerationDate || 1}th</Text>
+                  <View style={styles.statsGrid}>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statLabel}>BILL DATE</Text>
+                      <Text style={styles.statValue}>{card.billGenerationDate || 1}th</Text>
                     </View>
-                    <View style={styles.billItem}>
-                      <Text style={styles.billLabel}>Due Date</Text>
-                      <Text style={styles.billValue}>{card.billDueDate || 15}th</Text>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statLabel}>DUE DATE</Text>
+                      <Text style={styles.statValue}>{card.billDueDate || 15}th</Text>
                     </View>
-                    <View style={styles.billItem}>
-                      <Text style={styles.billLabel}>Days Left</Text>
-                      <Text style={[styles.billValue, { color: statusColor }]}>{daysLeft} days</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.billRow}>
-                    <View style={styles.billItem}>
-                      <Text style={styles.billLabel}>Available</Text>
-                      <Text style={[styles.billValue, { color: '#10B981' }]}>
-                        ₹{((card.creditLimit || 0) - (card.currentUsage || 0)).toLocaleString('en-IN')}
-                      </Text>
-                    </View>
-                    <View style={styles.billItem}>
-                      <Text style={styles.billLabel}>Interest</Text>
-                      <Text style={styles.billValue}>{card.interestRate || 36}% p.a.</Text>
+                    <View style={styles.statBox}>
+                      <Text style={styles.statLabel}>DAYS TO GO</Text>
+                      <Text style={[styles.statValue, { color: statusColor }]}>{daysLeft}D</Text>
                     </View>
                   </View>
 
-                  {/* Last Payment Info */}
-                  {card.lastBillPaidDate && (
-                    <View style={styles.lastPaymentRow}>
-                      <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                      <Text style={styles.lastPaymentText}>
-                        Last paid ₹{(card.lastBillPaidAmount || 0).toLocaleString('en-IN')} on{' '}
-                        {new Date(card.lastBillPaidDate).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Reminder Toggle */}
+                  {/* Reminder Row with ModernToggle */}
                   {hasOutstanding && (
-                    <View style={styles.reminderRow}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.reminderLabel}>Bill Payment Reminder</Text>
-                        <Text style={styles.reminderSub}>Show on Dashboard</Text>
+                    <View style={styles.reminderCard}>
+                      <View style={styles.reminderIconBox}>
+                        <Ionicons name="notifications-outline" size={20} color="#6366F1" />
                       </View>
-                      <Switch
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text style={styles.reminderLabel}>Smart Reminder</Text>
+                        <Text style={styles.reminderSub}>Alert me before due date</Text>
+                      </View>
+                      <ModernToggle
                         value={card.billPaymentReminder || false}
-                        onValueChange={(val) => handleSetReminder(card.id, val)}
-                        trackColor={{ false: '#E5E7EB', true: '#6C63FF' }}
-                        thumbColor="#FFFFFF"
+                        onValueChange={() => handleSetReminder(card.id, !card.billPaymentReminder)}
                       />
                     </View>
                   )}
@@ -386,8 +384,15 @@ const CreditCardBillScreen = ({ navigation }) => {
                         style={styles.payBtn}
                         onPress={() => openPayModal(card)}
                       >
-                        <Ionicons name="card-outline" size={18} color="#FFFFFF" />
-                        <Text style={styles.payBtnText}>Pay Bill</Text>
+                        <LinearGradient
+                          colors={['#6366F1', '#4338CA']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.payBtnGradient}
+                        >
+                          <Ionicons name="flash" size={18} color="#FFFFFF" />
+                          <Text style={styles.payBtnText}>PAY NOW</Text>
+                        </LinearGradient>
                       </TouchableOpacity>
                     )}
                     {(card.billPaymentHistory || []).length > 0 && (
@@ -395,8 +400,8 @@ const CreditCardBillScreen = ({ navigation }) => {
                         style={styles.historyBtn}
                         onPress={() => openHistory(card)}
                       >
-                        <Ionicons name="time-outline" size={18} color="#6C63FF" />
-                        <Text style={styles.historyBtnText}>History</Text>
+                        <Ionicons name="time" size={18} color="#6366F1" />
+                        <Text style={styles.historyBtnText}>HISTORY</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -415,134 +420,122 @@ const CreditCardBillScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* ============ PAY BILL MODAL ============ */}
-      <Modal visible={showPayModal} animationType="slide" transparent>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalOverlay}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <ScrollView keyboardShouldPersistTaps="handled">
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Pay Bill</Text>
-                    <TouchableOpacity onPress={() => setShowPayModal(false)}>
-                      <Ionicons name="close" size={24} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Card Info */}
-                  <View style={styles.payCardInfo}>
-                    <Text style={styles.payCardName}>{selectedCard?.name}</Text>
-                    <Text style={styles.payCardOutstanding}>
-                      Outstanding: ₹{(selectedCard?.currentUsage || 0).toLocaleString('en-IN')}
-                    </Text>
-                  </View>
-
-                  {/* Quick Amount Buttons */}
-                  <Text style={styles.modalLabel}>Quick Select</Text>
-                  <View style={styles.quickAmountRow}>
-                    <TouchableOpacity
-                      style={styles.quickAmountBtn}
-                      onPress={() => setQuickAmount(selectedCard, 'full')}
-                    >
-                      <Text style={styles.quickAmountLabel}>Full</Text>
-                      <Text style={styles.quickAmountValue}>
-                        ₹{(selectedCard?.currentUsage || 0).toLocaleString('en-IN')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.quickAmountBtn}
-                      onPress={() => setQuickAmount(selectedCard, 'half')}
-                    >
-                      <Text style={styles.quickAmountLabel}>Half</Text>
-                      <Text style={styles.quickAmountValue}>
-                        ₹{Math.round((selectedCard?.currentUsage || 0) / 2).toLocaleString('en-IN')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.quickAmountBtn}
-                      onPress={() => setQuickAmount(selectedCard, 'minimum')}
-                    >
-                      <Text style={styles.quickAmountLabel}>Min Due</Text>
-                      <Text style={styles.quickAmountValue}>
-                        ₹{Math.max(Math.round((selectedCard?.currentUsage || 0) * 0.05), 100).toLocaleString('en-IN')}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Custom Amount */}
-                  <Text style={styles.modalLabel}>Payment Amount</Text>
-                  <View style={styles.amountInputRow}>
-                    <Text style={styles.rupeeSign}>₹</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={payAmount}
-                      onChangeText={(v) => setPayAmount(v.replace(/[^0-9]/g, ''))}
-                      keyboardType="numeric"
-                      placeholder="0"
-                      placeholderTextColor="#D1D5DB"
-                    />
-                  </View>
-
-                  {/* Pay From Account */}
-                  <Text style={styles.modalLabel}>Pay From (optional)</Text>
-                  <TouchableOpacity
-                    style={styles.accountSelector}
-                    onPress={() => setShowAccountPicker(true)}
-                  >
-                    {payFromAccount ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                        <Text style={{ fontSize: 18, marginRight: 8 }}>
-                          {payFromAccount.type === 'CASH' ? '💵' : '🏦'}
-                        </Text>
-                        <View>
-                          <Text style={styles.accSelectorName}>{payFromAccount.name}</Text>
-                          <Text style={styles.accSelectorBal}>
-                            Balance: ₹{(payFromAccount.balance || 0).toLocaleString('en-IN')}
-                          </Text>
-                        </View>
-                      </View>
-                    ) : (
-                      <Text style={styles.accSelectorPlaceholder}>
-                        Select account (balance will be deducted)
-                      </Text>
-                    )}
-                    <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-                  </TouchableOpacity>
-
-                  {/* Warning for partial payment */}
-                  {payAmount &&
-                    parseFloat(payAmount) < (selectedCard?.currentUsage || 0) &&
-                    parseFloat(payAmount) > 0 && (
-                      <View style={[styles.alertBanner, { backgroundColor: '#FEF3C7', marginTop: 12 }]}>
-                        <Ionicons name="information-circle" size={16} color="#F59E0B" />
-                        <Text style={[styles.alertText, { color: '#92400E' }]}>
-                          Partial payment. ₹
-                          {((selectedCard?.currentUsage || 0) - parseFloat(payAmount)).toLocaleString('en-IN')}{' '}
-                          will remain and may attract {selectedCard?.interestRate || 36}% interest.
-                        </Text>
-                      </View>
-                    )}
-
-                  <TouchableOpacity
-                    style={[styles.payModalBtn, paying && { opacity: 0.6 }]}
-                    onPress={handlePayBill}
-                    disabled={paying}
-                  >
-                    {paying ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <Text style={styles.payModalBtnText}>
-                        Pay ₹{payAmount ? parseFloat(payAmount).toLocaleString('en-IN') : '0'}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </ScrollView>
-              </View>
+      <Modal visible={showPayModal} animationType="slide" transparent statusBarTranslucent>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalDismiss} 
+            activeOpacity={1} 
+            onPress={() => setShowPayModal(false)} 
+          />
+          <View style={styles.modalContent}>
+            <View style={styles.modalDragHandle} />
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Clear Balance</Text>
+              <TouchableOpacity onPress={() => setShowPayModal(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </TouchableOpacity>
             </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
+
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Card Summary Mini */}
+              <View style={[styles.payCardInfo, { borderLeftColor: selectedCard?.color || '#F59E0B' }]}>
+                <Text style={styles.payCardName}>{selectedCard?.name}</Text>
+                <Text style={styles.payCardOutstanding}>
+                  Outstanding: ₹{(selectedCard?.currentUsage || 0).toLocaleString('en-IN')}
+                </Text>
+              </View>
+
+              {/* Quick Select Grid */}
+              <Text style={styles.modalLabel}>QUICK SELECT</Text>
+              <View style={styles.quickAmountRow}>
+                <TouchableOpacity
+                  style={[styles.quickAmountBtn, payAmount === (selectedCard?.currentUsage || 0).toString() && styles.activeQuickBtn]}
+                  onPress={() => setQuickAmount(selectedCard, 'full')}
+                >
+                  <Text style={styles.quickAmountLabel}>FULL</Text>
+                  <Text style={styles.quickAmountValue}>
+                    ₹{(selectedCard?.currentUsage || 0).toLocaleString('en-IN')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.quickAmountBtn, payAmount === Math.round((selectedCard?.currentUsage || 0) / 2).toString() && styles.activeQuickBtn]}
+                  onPress={() => setQuickAmount(selectedCard, 'half')}
+                >
+                  <Text style={styles.quickAmountLabel}>HALF</Text>
+                  <Text style={styles.quickAmountValue}>
+                    ₹{Math.round((selectedCard?.currentUsage || 0) / 2).toLocaleString('en-IN')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.quickAmountBtn, payAmount === Math.max(Math.round((selectedCard?.currentUsage || 0) * 0.05), 100).toString() && styles.activeQuickBtn]}
+                  onPress={() => setQuickAmount(selectedCard, 'minimum')}
+                >
+                  <Text style={styles.quickAmountLabel}>MIN DUE</Text>
+                  <Text style={styles.quickAmountValue}>
+                    ₹{Math.max(Math.round((selectedCard?.currentUsage || 0) * 0.05), 100).toLocaleString('en-IN')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Amount Input */}
+              <Text style={styles.modalLabel}>CUSTOM AMOUNT</Text>
+              <View style={styles.amountInputRow}>
+                <Text style={styles.rupeeSign}>₹</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={payAmount}
+                  onChangeText={(v) => setPayAmount(v.replace(/[^0-9]/g, ''))}
+                  keyboardType="numeric"
+                  placeholder="0"
+                  placeholderTextColor="#D1D5DB"
+                />
+              </View>
+
+              {/* Source Account */}
+              <Text style={styles.modalLabel}>PAY FROM ACCOUNT</Text>
+              <TouchableOpacity
+                style={styles.accountSelector}
+                onPress={() => setShowAccountPicker(true)}
+              >
+                {payFromAccount ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={styles.accTypeIconBox}>
+                      <Text style={{ fontSize: 16 }}>{payFromAccount.type === 'CASH' ? '💵' : '🏦'}</Text>
+                    </View>
+                    <View style={{ marginLeft: 12 }}>
+                      <Text style={styles.accSelectorName}>{payFromAccount.name}</Text>
+                      <Text style={styles.accSelectorBal}>
+                        Available: ₹{(payFromAccount.balance || 0).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.accSelectorPlaceholder}>Select payout account</Text>
+                )}
+                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.payModalBtnCont, (paying || !payAmount) && { opacity: 0.6 }]}
+                onPress={handlePayBill}
+                disabled={paying || !payAmount}
+              >
+                <LinearGradient
+                  colors={['#10B981', '#059669']}
+                  style={styles.payModalBtn}
+                >
+                  {paying ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <Text style={styles.payModalBtnText}>
+                      CONFIRM PAYMENT (₹{payAmount ? parseFloat(payAmount).toLocaleString('en-IN') : '0'})
+                    </Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
       </Modal>
 
       {/* ============ ACCOUNT PICKER MODAL ============ */}
@@ -587,30 +580,41 @@ const CreditCardBillScreen = ({ navigation }) => {
       </Modal>
 
       {/* ============ PAYMENT HISTORY MODAL ============ */}
-      <Modal visible={showHistoryModal} animationType="slide" transparent>
+      <Modal visible={showHistoryModal} animationType="slide" transparent statusBarTranslucent>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '60%' }]}>
+          <TouchableOpacity 
+            style={styles.modalDismiss} 
+            activeOpacity={1} 
+            onPress={() => setShowHistoryModal(false)} 
+          />
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+            <View style={styles.modalDragHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Payment History</Text>
-              <TouchableOpacity onPress={() => setShowHistoryModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <Text style={styles.modalTitle}>History</Text>
+              <TouchableOpacity onPress={() => setShowHistoryModal(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.historyCardName}>{selectedCard?.name}</Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.historyHeaderInfo}>
+              <Text style={styles.historyCardName}>{selectedCard?.name}</Text>
+              <Text style={styles.historyCardSub}>{selectedCard?.bankName}</Text>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
               {(selectedCard?.billPaymentHistory || []).reverse().map((entry, idx) => (
                 <View key={entry.id || idx} style={styles.historyItem}>
                   <View style={styles.historyLeft}>
-                    <Ionicons
-                      name={entry.isFullPayment ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={20}
-                      color={entry.isFullPayment ? '#10B981' : '#F59E0B'}
-                    />
-                    <View style={{ marginLeft: 10 }}>
-                      <Text style={styles.historyAmount}>
+                    <View style={[styles.historyIconBox, { backgroundColor: entry.isFullPayment ? '#D1FAE5' : '#FEF3C7' }]}>
+                      <Ionicons
+                        name={entry.isFullPayment ? 'checkmark' : 'remove'}
+                        size={16}
+                        color={entry.isFullPayment ? '#10B981' : '#D97706'}
+                      />
+                    </View>
+                    <View style={{ marginLeft: 12 }}>
+                      <Text style={styles.historyAmountText}>
                         ₹{(entry.amount || 0).toLocaleString('en-IN')}
                       </Text>
-                      <Text style={styles.historyDate}>
+                      <Text style={styles.historyDateText}>
                         {new Date(entry.date).toLocaleDateString('en-IN', {
                           day: 'numeric', month: 'short', year: 'numeric',
                         })}
@@ -618,187 +622,174 @@ const CreditCardBillScreen = ({ navigation }) => {
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ alignItems: 'flex-end', marginRight: 10 }}>
-                      <Text
-                        style={[
-                          styles.historyBadge,
-                          { color: entry.isFullPayment ? '#10B981' : '#F59E0B' },
-                        ]}
-                      >
-                        {entry.isFullPayment ? 'Full' : 'Partial'}
+                    <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
+                      <Text style={[styles.historyTypeBadge, { color: entry.isFullPayment ? '#10B981' : '#D97706' }]}>
+                        {entry.isFullPayment ? 'FULL' : 'PARTIAL'}
                       </Text>
                       {!entry.isFullPayment && (
-                        <Text style={styles.historyRemaining}>
-                          ₹{(entry.remainingAfter || 0).toLocaleString('en-IN')} left
-                        </Text>
+                        <Text style={styles.historyBalText}>₹{(entry.remainingAfter || 0).toLocaleString('en-IN')} left</Text>
                       )}
                     </View>
                     <TouchableOpacity 
                       onPress={() => handleUndoPayment(entry.id)}
-                      style={styles.undoBtn}
+                      style={styles.historyUndoBtn}
                     >
-                      <Ionicons name="arrow-undo" size={18} color="#EF4444" />
+                      <Ionicons name="trash-outline" size={18} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 </View>
               ))}
               {(selectedCard?.billPaymentHistory || []).length === 0 && (
-                <Text style={styles.noHistoryText}>No payment history yet</Text>
+                <View style={styles.noHistoryBox}>
+                  <Ionicons name="receipt-outline" size={32} color="#D1D5DB" />
+                  <Text style={styles.noHistoryText}>No records found</Text>
+                </View>
               )}
             </ScrollView>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  safeArea: { backgroundColor: '#FFFFFF' },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F9FAFB",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 10 },
 
-  cardContainer: { marginTop: 16 },
-  creditCard: { borderRadius: 16, padding: 20 },
-  cardHeader: { marginBottom: 20 },
-  cardName: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
-  cardBank: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-  cardBody: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  cardLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)' },
-  cardAmount: { fontSize: 22, fontWeight: '700', color: '#FFFFFF', marginTop: 2 },
-  cardLimit: { fontSize: 16, fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginTop: 2 },
-  usageBarBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
-  usageBarFill: { height: 6, borderRadius: 3 },
-  usageText: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 6, textAlign: 'right' },
+  cardContainer: { marginTop: 24, elevation: 6, shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 8 } },
+  creditCard: { borderRadius: 24, padding: 24, height: 200, justifyContent: 'space-between', overflow: 'hidden' },
+  cardUpper: { flexDirection: 'row', justifyContent: 'space-between' },
+  cardBank: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5 },
+  cardName: { fontSize: 18, fontWeight: '900', color: '#FFFFFF', marginTop: 4 },
+  chipView: { width: 44, height: 32, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between' },
+  cardLabel: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
+  cardAmount: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginTop: 4 },
+  cardLimit: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginTop: 6, opacity: 0.9 },
+  usageContainer: { marginTop: 12 },
+  usageBarBg: { height: 4, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2 },
+  usageBarFill: { height: 4, borderRadius: 2 },
+  usageText: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.8)', marginTop: 8, textAlign: 'right', letterSpacing: 0.5 },
 
   billInfo: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: -8, paddingTop: 24,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    padding: 20,
+    marginTop: -4,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  billRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  billItem: { flex: 1, alignItems: 'center' },
-  billLabel: { fontSize: 11, color: '#9CA3AF' },
-  billValue: { fontSize: 15, fontWeight: '600', color: '#1A1A2E', marginTop: 4 },
+  statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  statBox: { flex: 1, alignItems: 'center' },
+  statLabel: { fontSize: 10, fontWeight: '900', color: '#9CA3AF', letterSpacing: 1 },
+  statValue: { fontSize: 16, fontWeight: '900', color: '#111827', marginTop: 6 },
 
-  lastPaymentRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#D1FAE5',
-    padding: 10, borderRadius: 8, marginBottom: 10,
+  reminderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  lastPaymentText: { fontSize: 12, color: '#065F46', marginLeft: 6 },
+  reminderIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EEF2FF', justifyContent: 'center', alignItems: 'center' },
+  reminderLabel: { fontSize: 14, fontWeight: '800', color: '#111827' },
+  reminderSub: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
 
-  reminderRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB', padding: 12, borderRadius: 10, marginBottom: 10,
-  },
-  reminderLabel: { fontSize: 14, fontWeight: '500', color: '#1A1A2E' },
-  reminderSub: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
+  alertBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', padding: 14, borderRadius: 16, marginBottom: 12 },
+  alertText: { fontSize: 12, color: '#991B1B', fontWeight: '700', marginLeft: 10, flex: 1, lineHeight: 16 },
 
-  alertBanner: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2',
-    padding: 12, borderRadius: 10, marginBottom: 8,
-  },
-  alertText: { fontSize: 12, color: '#991B1B', marginLeft: 8, flex: 1, lineHeight: 16 },
+  actionRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  payBtn: { flex: 1, height: 52, borderRadius: 18, overflow: 'hidden' },
+  payBtnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  payBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
+  historyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderRadius: 18, gap: 8 },
+  historyBtnText: { color: '#6366F1', fontSize: 13, fontWeight: "900", letterSpacing: 0.5 },
 
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
-  payBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#6C63FF', height: 46, borderRadius: 12, gap: 6,
-  },
-  payBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-  historyBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#F0EFFF', height: 46, borderRadius: 12, paddingHorizontal: 16, gap: 6,
-  },
-  historyBtnText: { color: '#6C63FF', fontSize: 14, fontWeight: '600' },
+  paidBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5', padding: 16, borderRadius: 20, marginTop: 8, gap: 10 },
+  paidText: { fontSize: 14, fontWeight: '900', color: '#059669' },
 
-  paidBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#D1FAE5', padding: 14, borderRadius: 10, marginTop: 8, gap: 8,
-  },
-  paidText: { fontSize: 14, fontWeight: '600', color: '#065F46' },
+  emptyContainer: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: 40 },
+  emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  emptyTitle: { fontSize: 22, fontWeight: '900', color: '#111827', marginBottom: 8 },
+  emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 22, fontWeight: '500' },
+  emptyBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 32 },
+  emptyBtnGradient: { height: 56, justifyContent: 'center', alignItems: 'center' },
+  emptyBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
 
   // Modals
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, maxHeight: '80%',
-  },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  modalLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8, marginTop: 14 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(17, 24, 39, 0.5)', justifyContent: 'flex-end' },
+  modalDismiss: { flex: 1 },
+  modalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingTop: 8 },
+  modalDragHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginTop: 8, marginBottom: 16 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  modalLabel: { fontSize: 10, fontWeight: '900', color: '#9CA3AF', letterSpacing: 1, marginBottom: 12, marginTop: 12, paddingLeft: 4 },
 
-  payCardInfo: { backgroundColor: '#F0EFFF', borderRadius: 12, padding: 14, marginBottom: 8 },
-  payCardName: { fontSize: 16, fontWeight: '600', color: '#1A1A2E' },
-  payCardOutstanding: { fontSize: 14, color: '#EF4444', fontWeight: '600', marginTop: 4 },
+  payCardInfo: { backgroundColor: '#F9FAFB', borderRadius: 20, padding: 16, marginBottom: 16, borderLeftWidth: 4 },
+  payCardName: { fontSize: 16, fontWeight: '900', color: '#111827' },
+  payCardOutstanding: { fontSize: 14, color: '#EF4444', fontWeight: '800', marginTop: 4 },
 
-  quickAmountRow: { flexDirection: 'row', gap: 8 },
-  quickAmountBtn: {
-    flex: 1, alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 10,
-    borderWidth: 1.5, borderColor: '#E5E7EB', padding: 10,
-  },
-  quickAmountLabel: { fontSize: 11, color: '#6B7280' },
-  quickAmountValue: { fontSize: 14, fontWeight: '600', color: '#1A1A2E', marginTop: 2 },
+  quickAmountRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  quickAmountBtn: { flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#F3F4F6', padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05 },
+  activeQuickBtn: { borderColor: '#6366F1', backgroundColor: '#EEF2FF', elevation: 0 },
+  quickAmountLabel: { fontSize: 9, fontWeight: '900', color: '#9CA3AF' },
+  quickAmountValue: { fontSize: 14, fontWeight: '900', color: '#111827', marginTop: 4 },
 
-  amountInputRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB',
-    borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB', paddingLeft: 14,
-  },
-  rupeeSign: { fontSize: 20, fontWeight: '600', color: '#374151' },
-  amountInput: { flex: 1, height: 50, fontSize: 20, fontWeight: '600', color: '#1A1A2E', paddingLeft: 8 },
+  amountInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 20, borderWidth: 1, borderColor: '#F3F4F6', paddingLeft: 20, marginBottom: 8 },
+  rupeeSign: { fontSize: 24, fontWeight: '900', color: '#111827' },
+  amountInput: { flex: 1, height: 64, fontSize: 22, fontWeight: '900', color: '#111827', paddingLeft: 12 },
 
-  accountSelector: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB', borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB', padding: 12,
-  },
-  accSelectorName: { fontSize: 14, fontWeight: '500', color: '#1A1A2E' },
-  accSelectorBal: { fontSize: 12, color: '#6B7280', marginTop: 1 },
-  accSelectorPlaceholder: { fontSize: 14, color: '#9CA3AF' },
+  accountSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 20, borderWidth: 1, borderColor: '#F3F4F6', padding: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05 },
+  accTypeIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  accSelectorName: { fontSize: 15, fontWeight: '800', color: '#111827' },
+  accSelectorBal: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 1 },
+  accSelectorPlaceholder: { fontSize: 15, color: '#9CA3AF', fontWeight: '700' },
 
-  payModalBtn: {
-    backgroundColor: '#6C63FF', height: 52, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center', marginTop: 20, marginBottom: 20,
-  },
-  payModalBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  payModalBtnCont: { borderRadius: 24, overflow: 'hidden', marginTop: 32, marginBottom: 20, elevation: 6, shadowColor: '#10B981', shadowOpacity: 0.3 },
+  payModalBtn: { height: 64, justifyContent: 'center', alignItems: 'center' },
+  payModalBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 1 },
 
-  // Account Picker
-  accPickerItem: {
-    flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12,
-    marginBottom: 6, backgroundColor: '#F9FAFB',
-  },
-  accPickerActive: { backgroundColor: '#F0EFFF', borderWidth: 1.5, borderColor: '#6C63FF' },
-  accPickerName: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
-  accPickerBal: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-
-  // History
-  historyCardName: { fontSize: 16, fontWeight: '600', color: '#1A1A2E', marginBottom: 12 },
-  historyItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
-  },
+  historyHeaderInfo: { marginBottom: 20, paddingLeft: 4 },
+  historyCardName: { fontSize: 18, fontWeight: '900', color: '#111827' },
+  historyCardSub: { fontSize: 12, color: '#9CA3AF', fontWeight: '700', marginTop: 2 },
+  historyItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   historyLeft: { flexDirection: 'row', alignItems: 'center' },
-  historyAmount: { fontSize: 16, fontWeight: '600', color: '#1A1A2E' },
-  historyDate: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  historyBadge: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
-  historyRemaining: { fontSize: 11, color: '#9CA3AF', textAlign: 'right', marginTop: 2 },
-  undoBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#FEE2E2',
-    marginLeft: 4,
-  },
-  noHistoryText: { textAlign: 'center', color: '#9CA3AF', padding: 20 },
-
-  emptyContainer: { alignItems: 'center', paddingVertical: 60 },
-  emptyEmoji: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
-  emptyText: { fontSize: 14, color: '#6B7280', marginTop: 4, textAlign: 'center' },
-  emptyBtn: { backgroundColor: '#6C63FF', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10, marginTop: 20 },
-  emptyBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  historyIconBox: { width: 32, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  historyAmountText: { fontSize: 16, fontWeight: '900', color: '#111827' },
+  historyDateText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
+  historyTypeBadge: { fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textAlign: 'right' },
+  historyBalText: { fontSize: 11, color: '#9CA3AF', fontWeight: '700', textAlign: 'right', marginTop: 2 },
+  historyUndoBtn: { padding: 10, backgroundColor: '#FEF2F2', borderRadius: 12 },
+  noHistoryBox: { alignItems: 'center', paddingVertical: 40 },
+  noHistoryText: { fontSize: 14, color: '#D1D5DB', fontWeight: '700', marginTop: 12 },
 });
 
 export default CreditCardBillScreen;

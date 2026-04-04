@@ -9,6 +9,7 @@ const useAuthStore = create((set, get) => ({
   isOnboardingComplete: false,
   role: 'USER',
   isStealthMode: false,
+  showTabLabels: true,
 
   // Actions
   setUser: (user) => set({
@@ -29,6 +30,7 @@ const useAuthStore = create((set, get) => ({
       isOnboardingComplete: profile?.onboardingComplete === true,
       role: profile?.role || 'USER',
       isStealthMode: profile?.isStealthMode === true,
+      showTabLabels: profile?.showTabLabels !== false, // default true
     });
   },
 
@@ -47,6 +49,8 @@ const useAuthStore = create((set, get) => ({
 
   updateProfile: (data) => set((state) => ({
     userProfile: { ...state.userProfile, ...data },
+    ...(data.showTabLabels !== undefined && { showTabLabels: data.showTabLabels }),
+    ...(data.isStealthMode !== undefined && { isStealthMode: data.isStealthMode }),
   })),
 
   logout: () => {
@@ -63,6 +67,9 @@ const useAuthStore = create((set, get) => ({
   
   setStealthMode: (isStealthMode) => set({ isStealthMode }),
   toggleStealthMode: () => set((state) => ({ isStealthMode: !state.isStealthMode })),
+  
+  setTabLabels: (showTabLabels) => set({ showTabLabels }),
+  toggleTabLabels: () => set((state) => ({ showTabLabels: !state.showTabLabels })),
 
   // Getters
   isMaster: () => get().role === 'MASTER',

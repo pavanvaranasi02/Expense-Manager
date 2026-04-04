@@ -51,6 +51,7 @@ export const addIncome = async (incomeData) => {
       accountName: incomeData.accountName,
       note: incomeData.note?.trim() || '',
       date: Timestamp.fromDate(new Date(incomeData.date)),
+      paymentMode: incomeData.paymentMode || 'UPI',
       isRecurring: incomeData.isRecurring || false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -116,6 +117,15 @@ export const getIncomes = async (filters = {}) => {
 
     if (filters.accountId) {
       incomes = incomes.filter((i) => i.accountId === filters.accountId);
+    }
+    
+    if (filters.paymentMode) {
+      incomes = incomes.filter((i) => i.paymentMode === filters.paymentMode);
+    }
+
+    // If a category filter is active (expense category), incomes should be excluded
+    if (filters.categoryId) {
+      return { success: true, incomes: [] };
     }
 
     return { success: true, incomes };

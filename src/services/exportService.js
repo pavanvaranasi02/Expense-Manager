@@ -335,7 +335,7 @@ export const exportFamilyExpensesToPDF = async (
   </div>
 
   <div class="footer">
-    ExpenseManager • Family Financial Report<br>
+    KOSH • Family Financial Report<br>
     This is an auto-generated document. All amounts are in Indian Rupees (₹).
   </div>
 </body>
