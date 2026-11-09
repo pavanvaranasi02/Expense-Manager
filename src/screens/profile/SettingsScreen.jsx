@@ -1,15 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Dimensions,
+  Linking,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
   View,
-  StatusBar,
-  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,6 +21,11 @@ import {
   DEFAULT_NOTIFICATION_SETTINGS,
   updateNotificationPreferences,
 } from "../../services/notificationService";
+import {
+  checkForGitHubUpdates,
+  CURRENT_APP_VERSION,
+} from "../../services/updateService";
+import UpdateModal from "../../components/UpdateModal";
 import useAuthStore from "../../store/useAuthStore";
 import * as Haptics from 'expo-haptics';
 import ModernToggle from "../../components/ModernToggle";
@@ -77,6 +84,28 @@ const SettingsScreen = ({ navigation }) => {
     setNotificationSettings(updated);
     await updateNotificationPreferences(updated);
     await saveToFirebase("notificationSettings", updated);
+  };
+
+  // Update Checker State
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdate(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const res = await checkForGitHubUpdates();
+      setUpdateInfo(res);
+      setShowUpdateModal(true);
+      if (res.hasUpdate) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to check for updates. Please try again.");
+    } finally {
+      setCheckingUpdate(false);
+    }
   };
 
   return (
@@ -484,21 +513,67 @@ const SettingsScreen = ({ navigation }) => {
           </>
         )}
 
-        {/* About Card */}
+        {/* About & Updates Card */}
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionIcon, { backgroundColor: '#F1F5F9' }]}>
             <Ionicons name="information-circle" size={16} color="#64748B" />
           </View>
-          <Text style={styles.sectionTitle}>ABOUT KOSH</Text>
+          <Text style={styles.sectionTitle}>ABOUT & UPDATES</Text>
         </View>
 
         <View style={styles.card}>
           <View style={[styles.aboutRow, styles.borderBottom]}>
-            <Text style={styles.settingLabel}>App Version</Text>
+            <View>
+              <Text style={styles.settingLabel}>App Version</Text>
+              <Text style={styles.settingSubLabel}>Installed build release</Text>
+            </View>
             <View style={styles.betaBadge}>
-              <Text style={styles.betaText}>1.0.0 Alpha</Text>
+              <Text style={styles.betaText}>v{CURRENT_APP_VERSION}</Text>
             </View>
           </View>
+
+          {/* Check for Updates Button */}
+          <TouchableOpacity
+            style={[styles.aboutRow, styles.borderBottom]}
+            onPress={handleCheckForUpdates}
+            disabled={checkingUpdate}
+            activeOpacity={0.7}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Check for Updates</Text>
+              <Text style={styles.settingSubLabel}>
+                Verify latest release tags on GitHub
+              </Text>
+            </View>
+            {checkingUpdate ? (
+              <ActivityIndicator size="small" color="#6366F1" />
+            ) : (
+              <View style={styles.updateBadge}>
+                <Ionicons name="cloud-download-outline" size={14} color="#6366F1" />
+                <Text style={styles.updateBadgeText}>Check Now</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* GitHub Releases Link */}
+          <TouchableOpacity
+            style={[styles.aboutRow, styles.borderBottom]}
+            onPress={() =>
+              Linking.openURL(
+                "https://github.com/pavanvaranasi02/Expense-Manager/releases"
+              )
+            }
+            activeOpacity={0.7}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>GitHub Releases</Text>
+              <Text style={styles.settingSubLabel}>
+                View changelogs and source repo
+              </Text>
+            </View>
+            <Ionicons name="open-outline" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.aboutRow}>
             <Text style={styles.settingLabel}>User ID</Text>
             <Text style={styles.aboutValue} numberOfLines={1}>
@@ -541,6 +616,13 @@ const SettingsScreen = ({ navigation }) => {
         
         <View style={{ height: 60 }} />
       </ScrollView>
+
+      {/* Update Checker Modal */}
+      <UpdateModal
+        visible={showUpdateModal}
+        updateInfo={updateInfo}
+        onClose={() => setShowUpdateModal(false)}
+      />
     </View>
   );
 };
@@ -717,6 +799,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   betaText: { fontSize: 10, fontWeight: '900', color: '#64748B', textTransform: 'uppercase' },
+  updateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  updateBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6366F1',
+  },
 
   dangerBtn: {
     borderRadius: 20,
