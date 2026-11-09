@@ -2,6 +2,7 @@ import {
     collection,
     deleteDoc,
     doc,
+    getDoc,
     getDocs,
     orderBy,
     query,
@@ -19,10 +20,62 @@ const getUserId = () => {
   return uid;
 };
 
+// ============ NOTIFICATION PREFERENCES ============
+export const DEFAULT_NOTIFICATION_SETTINGS = {
+  enabled: true,             // Master toggle for all notifications
+  sipReminders: true,        // Mutual Fund SIP alerts
+  rdReminders: true,         // Recurring Deposit alerts
+  maturityAlerts: true,      // Maturity reminders for FD/RD
+  budgetAlerts: true,        // Budget warning/exceeded alerts
+  creditCardAlerts: true,    // CC payment due alerts
+  dailyReminder: true,       // Daily expense logging reminder
+};
+
+export const getNotificationPreferences = async () => {
+  try {
+    const userId = getUserId();
+    const snap = await getDoc(doc(db, "users", userId));
+    if (snap.exists()) {
+      const data = snap.data();
+      return {
+        ...DEFAULT_NOTIFICATION_SETTINGS,
+        ...(data.notificationSettings || {}),
+      };
+    }
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  } catch (error) {
+    console.log("❌ Get notification preferences error:", error);
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  }
+};
+
+export const updateNotificationPreferences = async (newSettings) => {
+  try {
+    const userId = getUserId();
+    await setDoc(
+      doc(db, "users", userId),
+      {
+        notificationSettings: newSettings,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return { success: true };
+  } catch (error) {
+    console.log("❌ Update notification preferences error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 // ============ SEND NOTIFICATION ============
 export const sendNotification = async (notificationData) => {
   try {
     const userId = getUserId();
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled) {
+      return { success: true, disabled: true };
+    }
+
     const notificationRef = doc(
       collection(db, "users", userId, "notifications"),
     );
@@ -50,6 +103,11 @@ export const sendCreditCardAlert = async (
   type,
 ) => {
   try {
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled || !settings.creditCardAlerts) {
+      return { success: true, disabled: true };
+    }
+
     const isUrgent = daysLeft <= 3;
     const alertType = type === "DANGER" ? "CREDIT_CARD_URGENT" : "CREDIT_CARD_DUE";
     
@@ -105,6 +163,11 @@ export const sendSipNotification = async (
   investmentId,
 ) => {
   try {
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled || !settings.sipReminders) {
+      return { success: true, disabled: true };
+    }
+
     const userId = getUserId();
     const notificationRef = doc(
       collection(db, "users", userId, "notifications"),
@@ -157,6 +220,11 @@ export const sendRdNotification = async (
   investmentId,
 ) => {
   try {
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled || !settings.rdReminders) {
+      return { success: true, disabled: true };
+    }
+
     const userId = getUserId();
     const notificationRef = doc(
       collection(db, "users", userId, "notifications"),
@@ -209,6 +277,11 @@ export const sendBudgetAlertNotification = async (
   type,
 ) => {
   try {
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled || !settings.budgetAlerts) {
+      return { success: true, disabled: true };
+    }
+
     const isExceeded = percent >= 100;
     const alertType = isExceeded ? "BUDGET_EXCEEDED" : "BUDGET_WARNING";
     

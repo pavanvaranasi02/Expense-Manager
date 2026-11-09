@@ -8,7 +8,8 @@ import {
     orderBy,
     query,
     serverTimestamp,
-    updateDoc
+    updateDoc,
+    writeBatch
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { addIncome } from './incomeService';
@@ -457,4 +458,188 @@ export const processMaturedInvestments = async (investments) => {
     console.log('❌ Process maturity error:', error);
     return { success: false, error: error.message };
   }
+};
+
+// ============ WITHDRAW / REDEEM FROM INVESTMENT ============
+export const withdrawInvestmentAmount = async (investmentId, amount, newCurrentValue, note = '') => {
+  try {
+    const userId = getUserId();
+    const docRef = doc(db, 'users', userId, 'investments', investmentId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
+
+    const data = docSnap.data();
+    const withdrawAmt = parseFloat(amount) || 0;
+    const oldCurrent = data.currentValue || 0;
+    const updatedCurrent = newCurrentValue !== null && newCurrentValue !== undefined
+      ? parseFloat(newCurrentValue)
+      : Math.max(0, oldCurrent - withdrawAmt);
+
+    // Proportionally adjust invested amount if desired, or keep as is
+    const oldInvested = data.investedAmount || 0;
+    const reductionRatio = oldCurrent > 0 ? withdrawAmt / oldCurrent : 1;
+    const updatedInvested = Math.max(0, oldInvested - oldInvested * reductionRatio);
+
+    const transaction = {
+      id: `txn_${Date.now()}`,
+      type: 'WITHDRAW',
+      amount: withdrawAmt,
+      date: new Date().toISOString(),
+      note: note || 'Withdrawal / Redemption',
+      balanceAfter: updatedCurrent,
+    };
+
+    const existingTxns = data.transactions || [];
+
+    await updateDoc(docRef, {
+      investedAmount: updatedInvested,
+      currentValue: updatedCurrent,
+      transactions: [...existingTxns, transaction],
+      updatedAt: serverTimestamp(),
+    });
+
+    return { success: true, newInvested: updatedInvested, newCurrentValue: updatedCurrent };
+  } catch (error) {
+    console.log('❌ Withdraw investment error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============ UPDATE FULL INVESTMENT DETAILS ============
+export const updateInvestmentDetails = async (investmentId, details) => {
+  try {
+    const userId = getUserId();
+    const updateData = { updatedAt: serverTimestamp() };
+
+    if (details.name !== undefined) updateData.name = details.name.trim();
+    if (details.investedAmount !== undefined) updateData.investedAmount = parseFloat(details.investedAmount) || 0;
+    if (details.currentValue !== undefined) updateData.currentValue = parseFloat(details.currentValue) || 0;
+    if (details.platform !== undefined) updateData.platform = details.platform ? details.platform.trim() : null;
+    if (details.note !== undefined) updateData.note = details.note ? details.note.trim() : '';
+    if (details.sipAmount !== undefined) updateData.sipAmount = details.sipAmount ? parseFloat(details.sipAmount) : null;
+    if (details.sipDate !== undefined) updateData.sipDate = details.sipDate ? parseInt(details.sipDate) : null;
+    if (details.interestRate !== undefined) updateData.interestRate = details.interestRate ? parseFloat(details.interestRate) : null;
+    if (details.maturityDate !== undefined) updateData.maturityDate = details.maturityDate || null;
+    if (details.maturityAmount !== undefined) updateData.maturityAmount = details.maturityAmount ? parseFloat(details.maturityAmount) : null;
+    if (details.rdMonthlyAmount !== undefined) updateData.rdMonthlyAmount = details.rdMonthlyAmount ? parseFloat(details.rdMonthlyAmount) : null;
+    if (details.rdTotalMonths !== undefined) updateData.rdTotalMonths = details.rdTotalMonths ? parseInt(details.rdTotalMonths) : null;
+    if (details.rdPaymentDate !== undefined) updateData.rdPaymentDate = details.rdPaymentDate ? parseInt(details.rdPaymentDate) : null;
+    if (details.isActive !== undefined) updateData.isActive = !!details.isActive;
+
+    await updateDoc(doc(db, 'users', userId, 'investments', investmentId), updateData);
+    return { success: true };
+  } catch (error) {
+    console.log('❌ Update investment details error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============ BATCH ADD INVESTMENTS (FOR BULK IMPORT) ============
+export const batchAddInvestments = async (investmentsList) => {
+  try {
+    const userId = getUserId();
+    if (!investmentsList || investmentsList.length === 0) {
+      return { success: false, error: 'No investments to add' };
+    }
+
+    const batch = writeBatch(db);
+    const investmentsCol = collection(db, 'users', userId, 'investments');
+
+    let count = 0;
+    for (const inv of investmentsList) {
+      const docRef = doc(investmentsCol);
+      const newInv = {
+        name: inv.name.trim(),
+        type: inv.type,
+        typeName: inv.typeName || inv.type,
+        typeIcon: inv.typeIcon || '💰',
+        platform: inv.platform?.trim() || null,
+        investedAmount: parseFloat(inv.investedAmount) || 0,
+        currentValue: parseFloat(inv.currentValue) || parseFloat(inv.investedAmount) || 0,
+        interestRate: inv.interestRate ? parseFloat(inv.interestRate) : null,
+        startDate: inv.startDate || new Date().toISOString(),
+        note: inv.note?.trim() || '',
+        isActive: true,
+        transactions: [
+          {
+            id: `txn_${Date.now()}_${count}`,
+            type: 'INVEST',
+            amount: parseFloat(inv.investedAmount) || 0,
+            date: inv.startDate || new Date().toISOString(),
+            note: 'Initial import',
+            balanceAfter: parseFloat(inv.investedAmount) || 0,
+          },
+        ],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      batch.set(docRef, newInv);
+      count++;
+    }
+
+    await batch.commit();
+    return { success: true, count };
+  } catch (error) {
+    console.log('❌ Batch add investments error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============ GET ALL INVESTMENT TRANSACTIONS (FOR TIMELINE/HISTORY) ============
+export const getAllInvestmentTransactions = (investments) => {
+  const allTxns = [];
+
+  (investments || []).forEach((inv) => {
+    // 1. Transactions array
+    if (inv.transactions && inv.transactions.length > 0) {
+      inv.transactions.forEach((t) => {
+        allTxns.push({
+          id: t.id || `txn_${inv.id}_${t.date}`,
+          investmentId: inv.id,
+          investmentName: inv.name,
+          investmentType: inv.type,
+          investmentIcon: inv.typeIcon || '💰',
+          type: t.type || 'INVEST',
+          amount: t.amount || 0,
+          date: t.date || inv.startDate || new Date().toISOString(),
+          note: t.note || '',
+          balanceAfter: t.balanceAfter || null,
+        });
+      });
+    } else if (inv.investedAmount > 0) {
+      // Synthetic initial investment transaction if none recorded
+      allTxns.push({
+        id: `initial_${inv.id}`,
+        investmentId: inv.id,
+        investmentName: inv.name,
+        investmentType: inv.type,
+        investmentIcon: inv.typeIcon || '💰',
+        type: 'INVEST',
+        amount: inv.investedAmount,
+        date: inv.startDate || (inv.createdAt?.toDate ? inv.createdAt.toDate().toISOString() : new Date().toISOString()),
+        note: 'Initial investment',
+        balanceAfter: inv.investedAmount,
+      });
+    }
+
+    // 2. Maturity credit transaction if matured
+    if (inv.maturityCredited && inv.maturityAmount) {
+      allTxns.push({
+        id: `matured_${inv.id}`,
+        investmentId: inv.id,
+        investmentName: inv.name,
+        investmentType: inv.type,
+        investmentIcon: inv.typeIcon || '📈',
+        type: 'MATURED',
+        amount: inv.maturityAmount,
+        date: inv.maturityDate || new Date().toISOString(),
+        note: 'Matured & credited to bank',
+        balanceAfter: 0,
+      });
+    }
+  });
+
+  // Sort newest first
+  return allTxns.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
