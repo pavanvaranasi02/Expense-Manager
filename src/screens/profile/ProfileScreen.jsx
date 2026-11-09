@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { logoutUser } from '../../services/authService';
+import { CURRENT_APP_VERSION } from '../../services/updateService';
 import useAuthStore from '../../store/useAuthStore';
 
 const menuSections = [
@@ -223,7 +224,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App Version */}
         <View style={styles.footer}>
           <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>v1.3.0 ALPHA</Text>
+            <Text style={styles.versionText}>v{CURRENT_APP_VERSION} ALPHA</Text>
           </View>
           <Text style={styles.footerSlogan}>Built with Pride 🇮🇳 in India</Text>
         </View>
