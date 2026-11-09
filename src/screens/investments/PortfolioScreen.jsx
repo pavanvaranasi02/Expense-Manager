@@ -1,3 +1,4 @@
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
@@ -146,6 +147,8 @@ const PortfolioScreen = ({ navigation }) => {
   const [addAmtValue, setAddAmtValue] = useState("");
   const [addAmtCurrentValue, setAddAmtCurrentValue] = useState("");
   const [addAmtNote, setAddAmtNote] = useState("");
+  const [addAmtDate, setAddAmtDate] = useState(new Date());
+  const [showAddAmtDatePicker, setShowAddAmtDatePicker] = useState(false);
   const [rdPayAmount, setRdPayAmount] = useState("");
   const [editRdProgressValue, setEditRdProgressValue] = useState("");
 
@@ -440,6 +443,7 @@ const PortfolioScreen = ({ navigation }) => {
     }
     setSaving(true);
     try {
+      const selectedDateIso = (addAmtDate || new Date()).toISOString();
       if (payFromAccount) {
         await addExpense({
           amount: addAmtValue,
@@ -449,8 +453,10 @@ const PortfolioScreen = ({ navigation }) => {
           accountId: payFromAccount.id,
           accountName: payFromAccount.name,
           paymentMode: payFromAccount.type,
-          note: `Top-up: ${editingInvestment.name}`,
-          date: new Date().toISOString(),
+          note: addAmtNote?.trim()
+            ? `Top-up: ${editingInvestment.name} - ${addAmtNote.trim()}`
+            : `Top-up: ${editingInvestment.name}`,
+          date: selectedDateIso,
         });
       }
 
@@ -458,7 +464,8 @@ const PortfolioScreen = ({ navigation }) => {
         editingInvestment.id,
         addAmtValue,
         addAmtCurrentValue || null,
-        addAmtNote,
+        addAmtNote?.trim() || "",
+        selectedDateIso,
       );
 
       if (result.success) {
@@ -466,6 +473,7 @@ const PortfolioScreen = ({ navigation }) => {
         setAddAmtValue("");
         setAddAmtCurrentValue("");
         setAddAmtNote("");
+        setAddAmtDate(new Date());
         setEditingInvestment(null);
         setPayFromAccount(null);
         fetchInvestments();
@@ -635,6 +643,9 @@ const PortfolioScreen = ({ navigation }) => {
   // ── FILTER & SORT HOLDINGS ──
   const filteredInvestments = investments
     .filter((inv) => {
+      // Exclude inactive / matured investments from active holdings tab
+      if (inv.isActive === false) return false;
+
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -948,6 +959,8 @@ const PortfolioScreen = ({ navigation }) => {
                     setAddAmtValue("");
                     setAddAmtCurrentValue("");
                     setAddAmtNote("");
+                    setAddAmtDate(new Date());
+                    setShowAddAmtDatePicker(false);
                     setShowAddAmountModal(true);
                   }}
                   onUpdateValue={() => {
@@ -996,6 +1009,8 @@ const PortfolioScreen = ({ navigation }) => {
           setAddAmtValue("");
           setAddAmtCurrentValue("");
           setAddAmtNote("");
+          setAddAmtDate(new Date());
+          setShowAddAmtDatePicker(false);
           setShowAddAmountModal(true);
         }}
         onOpenEditDetails={(inv) => {
@@ -1458,81 +1473,121 @@ const PortfolioScreen = ({ navigation }) => {
       {/* 9. Top-Up / Add Amount Modal */}
       <Modal visible={showAddAmountModal} animationType="slide" transparent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { maxHeight: "65%" }]}>
-              <ScrollView keyboardShouldPersistTaps="handled">
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Add Investment Amount</Text>
-                  <TouchableOpacity
-                    onPress={() => setShowAddAmountModal(false)}
-                  >
-                    <Ionicons name="close" size={24} color="#6B7280" />
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.subHoldingName}>
-                  {editingInvestment?.name}
-                </Text>
-
-                <Text style={styles.modalLabel}>Amount to Invest *</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="10000"
-                  placeholderTextColor="#9CA3AF"
-                  value={addAmtValue}
-                  onChangeText={(v) =>
-                    setAddAmtValue(v.replace(/[^0-9]/g, ""))
-                  }
-                  keyboardType="numeric"
-                  autoFocus
-                />
-
-                <Text style={styles.modalLabel}>
-                  Total Market Value After Top-up (Optional)
-                </Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Leave empty to auto-calculate"
-                  placeholderTextColor="#9CA3AF"
-                  value={addAmtCurrentValue}
-                  onChangeText={(v) =>
-                    setAddAmtCurrentValue(v.replace(/[^0-9]/g, ""))
-                  }
-                  keyboardType="numeric"
-                />
-
-                <Text style={styles.modalLabel}>Payment Source</Text>
+          <View style={[styles.modalContent, { maxHeight: "88%" }]}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 40 }}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Investment Amount</Text>
                 <TouchableOpacity
-                  style={styles.typeSelector}
-                  onPress={() => {
-                    setPickerType("addAmount");
-                    setShowAccountPicker(true);
-                  }}
+                  onPress={() => setShowAddAmountModal(false)}
                 >
+                  <Ionicons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.subHoldingName}>
+                {editingInvestment?.name}
+              </Text>
+
+              <Text style={styles.modalLabel}>Amount to Invest *</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="10000"
+                placeholderTextColor="#9CA3AF"
+                value={addAmtValue}
+                onChangeText={(v) =>
+                  setAddAmtValue(v.replace(/[^0-9]/g, ""))
+                }
+                keyboardType="numeric"
+              />
+
+              <Text style={styles.modalLabel}>Date of Investment</Text>
+              <TouchableOpacity
+                style={styles.typeSelector}
+                onPress={() => setShowAddAmtDatePicker(true)}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Ionicons name="calendar-outline" size={18} color="#4F46E5" />
                   <Text style={styles.typeSelectorText}>
-                    {payFromAccount
-                      ? payFromAccount.name
-                      : "Select account (optional)"}
+                    {addAmtDate.toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-                </TouchableOpacity>
+                </View>
+                <Text style={{ fontSize: 13, color: "#6366F1", fontWeight: "600" }}>Change Date</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.modalSaveBtn, saving && { opacity: 0.6 }]}
-                  onPress={handleAddAmount}
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <Text style={styles.modalSaveBtnText}>Confirm Add</Text>
-                  )}
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
+              {showAddAmtDatePicker && (
+                <DateTimePicker
+                  value={addAmtDate || new Date()}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(event, selectedDate) => {
+                    setShowAddAmtDatePicker(Platform.OS === "ios");
+                    if (selectedDate) setAddAmtDate(selectedDate);
+                  }}
+                />
+              )}
+
+              <Text style={styles.modalLabel}>
+                Total Market Value After Top-up (Optional)
+              </Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Leave empty to auto-calculate"
+                placeholderTextColor="#9CA3AF"
+                value={addAmtCurrentValue}
+                onChangeText={(v) =>
+                  setAddAmtCurrentValue(v.replace(/[^0-9]/g, ""))
+                }
+                keyboardType="numeric"
+              />
+
+              <Text style={styles.modalLabel}>Payment Source</Text>
+              <TouchableOpacity
+                style={styles.typeSelector}
+                onPress={() => {
+                  setPickerType("addAmount");
+                  setShowAccountPicker(true);
+                }}
+              >
+                <Text style={styles.typeSelectorText}>
+                  {payFromAccount
+                    ? payFromAccount.name
+                    : "Select account (optional)"}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <Text style={styles.modalLabel}>Note (Optional)</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Monthly top-up, bonus investment, dip buy"
+                placeholderTextColor="#9CA3AF"
+                value={addAmtNote}
+                onChangeText={setAddAmtNote}
+              />
+
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, saving && { opacity: 0.6 }]}
+                onPress={handleAddAmount}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.modalSaveBtnText}>Confirm Add</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
