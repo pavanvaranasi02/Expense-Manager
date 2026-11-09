@@ -132,7 +132,7 @@ export const updateInvestment = async (investmentId, data) => {
 
 // ============ ADD INVESTMENT AMOUNT (UNIVERSAL) ============
 // Works for ALL investment types — records a new investment transaction
-export const addInvestmentAmount = async (investmentId, amount, currentValue, note = '') => {
+export const addInvestmentAmount = async (investmentId, amount, currentValue, note = '', customDate = null) => {
   try {
     const userId = getUserId();
     const docRef = doc(db, 'users', userId, 'investments', investmentId);
@@ -144,11 +144,15 @@ export const addInvestmentAmount = async (investmentId, amount, currentValue, no
     const newInvested = (data.investedAmount || 0) + parseFloat(amount);
     const newCurrentValue = currentValue ? parseFloat(currentValue) : newInvested;
 
+    const txnDate = customDate
+      ? (customDate instanceof Date ? customDate.toISOString() : new Date(customDate).toISOString())
+      : new Date().toISOString();
+
     const transaction = {
       id: `txn_${Date.now()}`,
       type: 'INVEST',
       amount: parseFloat(amount),
-      date: new Date().toISOString(),
+      date: txnDate,
       note: note || '',
       balanceAfter: newInvested,
     };
