@@ -15,6 +15,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { auth } from "../../config/firebase";
 import { updateUserProfile } from "../../services/authService";
+import {
+  DEFAULT_NOTIFICATION_SETTINGS,
+  updateNotificationPreferences,
+} from "../../services/notificationService";
 import useAuthStore from "../../store/useAuthStore";
 import * as Haptics from 'expo-haptics';
 import ModernToggle from "../../components/ModernToggle";
@@ -37,10 +41,10 @@ const SettingsScreen = ({ navigation }) => {
   const [showInvestmentsInAssets, setShowInvestmentsInAssets] = useState(
     userProfile?.showInvestmentsInAssets || false,
   );
-  const [notifications, setNotifications] = useState(true);
-  const [dailyReminder, setDailyReminder] = useState(true);
-  const [budgetAlerts, setBudgetAlerts] = useState(true);
-  const [creditCardAlerts, setCreditCardAlerts] = useState(true);
+  const [notificationSettings, setNotificationSettings] = useState({
+    ...DEFAULT_NOTIFICATION_SETTINGS,
+    ...(userProfile?.notificationSettings || {}),
+  });
   const [showTabLabels, setShowTabLabels] = useState(
     userProfile?.showTabLabels !== false,
   );
@@ -66,6 +70,13 @@ const SettingsScreen = ({ navigation }) => {
   const handleLabelToggle = async (value) => {
     setShowTabLabels(value);
     await saveToFirebase("showTabLabels", value);
+  };
+
+  const handleNotificationToggle = async (key, value) => {
+    const updated = { ...notificationSettings, [key]: value };
+    setNotificationSettings(updated);
+    await updateNotificationPreferences(updated);
+    await saveToFirebase("notificationSettings", updated);
   };
 
   return (
@@ -221,11 +232,59 @@ const SettingsScreen = ({ navigation }) => {
           <View style={[styles.switchRow, styles.borderBottom]}>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>Push Notifications</Text>
-              <Text style={styles.settingSubLabel}>Receive smart alerts and tips</Text>
+              <Text style={styles.settingSubLabel}>Master toggle for all alerts and tips</Text>
             </View>
             <ModernToggle
-              value={notifications}
-              onValueChange={setNotifications}
+              value={notificationSettings.enabled}
+              onValueChange={(val) => handleNotificationToggle("enabled", val)}
+              activeColor="#6366F1"
+            />
+          </View>
+
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>SIP Due Reminders</Text>
+              <Text style={styles.settingSubLabel}>Notify before scheduled mutual fund SIPs</Text>
+            </View>
+            <ModernToggle
+              value={notificationSettings.enabled && notificationSettings.sipReminders}
+              onValueChange={(val) => handleNotificationToggle("sipReminders", val)}
+              activeColor="#6366F1"
+            />
+          </View>
+
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>RD Payment Reminders</Text>
+              <Text style={styles.settingSubLabel}>Alerts for recurring deposit installments</Text>
+            </View>
+            <ModernToggle
+              value={notificationSettings.enabled && notificationSettings.rdReminders}
+              onValueChange={(val) => handleNotificationToggle("rdReminders", val)}
+              activeColor="#6366F1"
+            />
+          </View>
+
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Budget Overrun Alerts</Text>
+              <Text style={styles.settingSubLabel}>Warning when spending reaches 80% or 100%</Text>
+            </View>
+            <ModernToggle
+              value={notificationSettings.enabled && notificationSettings.budgetAlerts}
+              onValueChange={(val) => handleNotificationToggle("budgetAlerts", val)}
+              activeColor="#6366F1"
+            />
+          </View>
+
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>Credit Card Bill Alerts</Text>
+              <Text style={styles.settingSubLabel}>Remind before payment due date to avoid interest</Text>
+            </View>
+            <ModernToggle
+              value={notificationSettings.enabled && notificationSettings.creditCardAlerts}
+              onValueChange={(val) => handleNotificationToggle("creditCardAlerts", val)}
               activeColor="#6366F1"
             />
           </View>
@@ -236,8 +295,8 @@ const SettingsScreen = ({ navigation }) => {
               <Text style={styles.settingSubLabel}>Log your daily expenses at 9 PM</Text>
             </View>
             <ModernToggle
-              value={dailyReminder}
-              onValueChange={setDailyReminder}
+              value={notificationSettings.enabled && notificationSettings.dailyReminder}
+              onValueChange={(val) => handleNotificationToggle("dailyReminder", val)}
               activeColor="#6366F1"
             />
           </View>

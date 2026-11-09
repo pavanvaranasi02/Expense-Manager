@@ -54,7 +54,10 @@ import PortfolioHistoryView from "./components/PortfolioHistoryView";
 
 // Modals
 import ImportModal from "./modals/ImportModal";
+import InvestmentDetailModal from "./modals/InvestmentDetailModal";
 import InvestmentEditModal from "./modals/InvestmentEditModal";
+import NotificationSettingsModal from "./modals/NotificationSettingsModal";
+import QuickValueUpdateModal from "./modals/QuickValueUpdateModal";
 import ReportModal from "./modals/ReportModal";
 import WithdrawModal from "./modals/WithdrawModal";
 
@@ -93,6 +96,9 @@ const PortfolioScreen = ({ navigation }) => {
   const [showSortPicker, setShowSortPicker] = useState(false);
 
   // Modals Visibility
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showQuickUpdateModal, setShowQuickUpdateModal] = useState(false);
+  const [showNotificationSettingsModal, setShowNotificationSettingsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditDetailsModal, setShowEditDetailsModal] = useState(false);
@@ -620,88 +626,10 @@ const PortfolioScreen = ({ navigation }) => {
     ]);
   };
 
-  // ── ACTION SHEET ──
-  const openInvestmentActions = (inv) => {
+  // ── INVESTMENT DETAILS MODAL ──
+  const openInvestmentDetails = (inv) => {
     setEditingInvestment(inv);
-    const actions = [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "📈 Update Current Value",
-        onPress: () => {
-          setUpdateValue(inv.currentValue?.toString() || "");
-          setShowUpdateModal(true);
-        },
-      },
-      {
-        text: "💰 Add Investment Amount",
-        onPress: () => {
-          setAddAmtValue("");
-          setAddAmtCurrentValue("");
-          setAddAmtNote("");
-          setShowAddAmountModal(true);
-        },
-      },
-      {
-        text: "✏️ Edit Investment Details",
-        onPress: () => {
-          setShowEditDetailsModal(true);
-        },
-      },
-      {
-        text: "💸 Redeem / Withdraw Funds",
-        onPress: () => {
-          setShowWithdrawModal(true);
-        },
-      },
-      {
-        text: "📝 Edit Invested Amount (Correction)",
-        onPress: () => {
-          setEditInvestedValue(inv.investedAmount?.toString() || "");
-          setShowEditInvestedModal(true);
-        },
-      },
-    ];
-
-    if (inv.type === "rd") {
-      actions.push({
-        text: "🔃 Update RD Progress",
-        onPress: () => {
-          setEditRdProgressValue((inv.rdCompletedMonths || 0).toString());
-          setShowEditRdProgressModal(true);
-        },
-      });
-
-      const completed = inv.rdCompletedMonths || 0;
-      const total = inv.rdTotalMonths || 0;
-      if (!total || completed < total) {
-        actions.push({
-          text: `🔄 Pay RD Month ${completed + 1}`,
-          onPress: () => {
-            setRdPayAmount((inv.rdMonthlyAmount || "").toString());
-            setShowRdPayModal(true);
-          },
-        });
-      }
-    }
-
-    if ((inv.transactions || []).length > 0) {
-      actions.push({
-        text: "📋 View Transaction History",
-        onPress: () => setShowTxnHistoryModal(true),
-      });
-    }
-
-    actions.push({
-      text: "🗑️ Delete Investment",
-      style: "destructive",
-      onPress: () => handleDelete(inv),
-    });
-
-    Alert.alert(
-      inv.name,
-      `${inv.typeName} • ${inv.platform || "Direct"}`,
-      actions,
-    );
+    setShowDetailModal(true);
   };
 
   // ── FILTER & SORT HOLDINGS ──
@@ -777,6 +705,14 @@ const PortfolioScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Portfolio & Wealth</Text>
 
         <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => setShowNotificationSettingsModal(true)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="notifications-outline" size={20} color="#4F46E5" />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => setShowImportModal(true)}
@@ -1006,7 +942,7 @@ const PortfolioScreen = ({ navigation }) => {
                   investment={inv}
                   isStealthMode={isStealthMode}
                   currencySymbol={currencySymbol}
-                  onPress={() => openInvestmentActions(inv)}
+                  onPress={() => openInvestmentDetails(inv)}
                   onAddAmount={() => {
                     setEditingInvestment(inv);
                     setAddAmtValue("");
@@ -1016,14 +952,13 @@ const PortfolioScreen = ({ navigation }) => {
                   }}
                   onUpdateValue={() => {
                     setEditingInvestment(inv);
-                    setUpdateValue(inv.currentValue?.toString() || "");
-                    setShowUpdateModal(true);
+                    setShowQuickUpdateModal(true);
                   }}
                   onViewHistory={() => {
                     setEditingInvestment(inv);
                     setShowTxnHistoryModal(true);
                   }}
-                  onOpenActions={() => openInvestmentActions(inv)}
+                  onOpenActions={() => openInvestmentDetails(inv)}
                 />
               ))
             )}
@@ -1044,6 +979,70 @@ const PortfolioScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* ================= MODALS ================= */}
+
+      {/* 0. Comprehensive Investment Detail & Actions Modal */}
+      <InvestmentDetailModal
+        visible={showDetailModal}
+        investment={editingInvestment}
+        isStealthMode={isStealthMode}
+        currencySymbol={currencySymbol}
+        onClose={() => setShowDetailModal(false)}
+        onOpenQuickUpdate={(inv) => {
+          setEditingInvestment(inv);
+          setShowQuickUpdateModal(true);
+        }}
+        onOpenAddAmount={(inv) => {
+          setEditingInvestment(inv);
+          setAddAmtValue("");
+          setAddAmtCurrentValue("");
+          setAddAmtNote("");
+          setShowAddAmountModal(true);
+        }}
+        onOpenEditDetails={(inv) => {
+          setEditingInvestment(inv);
+          setShowEditDetailsModal(true);
+        }}
+        onOpenWithdraw={(inv) => {
+          setEditingInvestment(inv);
+          setShowWithdrawModal(true);
+        }}
+        onOpenHistory={(inv) => {
+          setEditingInvestment(inv);
+          setShowTxnHistoryModal(true);
+        }}
+        onDelete={(inv) => handleDelete(inv)}
+        onPayRd={(inv) => {
+          setEditingInvestment(inv);
+          setRdPayAmount((inv.rdMonthlyAmount || "").toString());
+          setShowRdPayModal(true);
+        }}
+        onConfirmSip={(inv) => {
+          setCurrentSipInvestment(inv);
+          setSipConfirmAmount((inv.sipAmount || "").toString());
+          setShowSipModal(true);
+        }}
+      />
+
+      {/* 0.1 Quick Value Update Modal (Invested & Current Value) */}
+      <QuickValueUpdateModal
+        visible={showQuickUpdateModal}
+        investment={editingInvestment}
+        currencySymbol={currencySymbol}
+        onClose={() => {
+          setShowQuickUpdateModal(false);
+          setEditingInvestment(null);
+        }}
+        onSuccessUpdate={() => {
+          fetchInvestments();
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }}
+      />
+
+      {/* 0.2 Notification Settings Modal */}
+      <NotificationSettingsModal
+        visible={showNotificationSettingsModal}
+        onClose={() => setShowNotificationSettingsModal(false)}
+      />
 
       {/* 1. Report & Statement Modal */}
       <ReportModal
@@ -1068,11 +1067,13 @@ const PortfolioScreen = ({ navigation }) => {
       <InvestmentEditModal
         visible={showEditDetailsModal}
         investment={editingInvestment}
+        currencySymbol={currencySymbol}
         onClose={() => {
           setShowEditDetailsModal(false);
           setEditingInvestment(null);
         }}
         onSuccessUpdate={fetchInvestments}
+        onDelete={(inv) => handleDelete(inv)}
       />
 
       {/* 4. Withdraw / Redeem Modal */}

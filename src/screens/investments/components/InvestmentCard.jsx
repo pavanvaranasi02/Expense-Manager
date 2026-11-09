@@ -188,7 +188,7 @@ const InvestmentCard = ({
           activeOpacity={0.7}
         >
           <Ionicons name="add-circle-outline" size={15} color="#4F46E5" />
-          <Text style={styles.actionBtnText}>Add</Text>
+          <Text style={styles.actionBtnText}>Add Funds</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -196,29 +196,21 @@ const InvestmentCard = ({
           onPress={onUpdateValue}
           activeOpacity={0.7}
         >
-          <Ionicons name="create-outline" size={15} color="#0D9488" />
+          <Ionicons name="trending-up" size={15} color="#0D9488" />
           <Text style={[styles.actionBtnText, { color: "#0D9488" }]}>
-            Update Val
+            Update Values
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={onViewHistory}
+          style={[styles.actionBtn, styles.manageBtn]}
+          onPress={onPress}
           activeOpacity={0.7}
         >
-          <Ionicons name="time-outline" size={15} color="#64748B" />
-          <Text style={[styles.actionBtnText, { color: "#64748B" }]}>
-            History
+          <Ionicons name="options-outline" size={14} color="#475569" />
+          <Text style={[styles.actionBtnText, { color: "#475569" }]}>
+            Manage
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.moreBtn}
-          onPress={onOpenActions}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="ellipsis-horizontal" size={16} color="#475569" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -382,10 +374,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#4F46E5",
   },
-  moreBtn: {
+  manageBtn: {
     marginLeft: "auto",
-    padding: 6,
-    borderRadius: 8,
     backgroundColor: "#F1F5F9",
   },
 });

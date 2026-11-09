@@ -513,6 +513,8 @@ export const updateInvestmentDetails = async (investmentId, details) => {
     const updateData = { updatedAt: serverTimestamp() };
 
     if (details.name !== undefined) updateData.name = details.name.trim();
+    if (details.investedAmount !== undefined) updateData.investedAmount = parseFloat(details.investedAmount) || 0;
+    if (details.currentValue !== undefined) updateData.currentValue = parseFloat(details.currentValue) || 0;
     if (details.platform !== undefined) updateData.platform = details.platform ? details.platform.trim() : null;
     if (details.note !== undefined) updateData.note = details.note ? details.note.trim() : '';
     if (details.sipAmount !== undefined) updateData.sipAmount = details.sipAmount ? parseFloat(details.sipAmount) : null;

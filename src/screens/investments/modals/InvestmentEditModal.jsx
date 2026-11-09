@@ -19,11 +19,15 @@ import { updateInvestmentDetails } from "../../../services/investmentService";
 const InvestmentEditModal = ({
   visible,
   investment,
+  currencySymbol = "₹",
   onClose,
   onSuccessUpdate,
+  onDelete,
 }) => {
   const [name, setName] = useState("");
   const [platform, setPlatform] = useState("");
+  const [investedAmount, setInvestedAmount] = useState("");
+  const [currentValue, setCurrentValue] = useState("");
   const [sipAmount, setSipAmount] = useState("");
   const [sipDate, setSipDate] = useState("");
   const [interestRate, setInterestRate] = useState("");
@@ -37,6 +41,16 @@ const InvestmentEditModal = ({
     if (investment) {
       setName(investment.name || "");
       setPlatform(investment.platform || "");
+      setInvestedAmount(
+        investment.investedAmount !== undefined && investment.investedAmount !== null
+          ? investment.investedAmount.toString()
+          : ""
+      );
+      setCurrentValue(
+        investment.currentValue !== undefined && investment.currentValue !== null
+          ? investment.currentValue.toString()
+          : ""
+      );
       setSipAmount(investment.sipAmount ? investment.sipAmount.toString() : "");
       setSipDate(investment.sipDate ? investment.sipDate.toString() : "");
       setInterestRate(
@@ -55,9 +69,20 @@ const InvestmentEditModal = ({
     }
   }, [investment, visible]);
 
+  const numInvested = parseFloat(investedAmount) || 0;
+  const numCurrent = parseFloat(currentValue) || 0;
+  const absoluteGain = numCurrent - numInvested;
+  const gainPercent = numInvested > 0 ? ((absoluteGain / numInvested) * 100).toFixed(2) : "0.00";
+  const isGain = absoluteGain >= 0;
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("Required", "Please enter an investment name");
+      return;
+    }
+
+    if (investedAmount === "" || isNaN(numInvested) || numInvested < 0) {
+      Alert.alert("Required", "Please enter a valid invested amount");
       return;
     }
 
@@ -75,6 +100,8 @@ const InvestmentEditModal = ({
     const res = await updateInvestmentDetails(investment.id, {
       name,
       platform,
+      investedAmount: numInvested,
+      currentValue: numCurrent,
       sipAmount: sipAmount ? parseFloat(sipAmount) : null,
       sipDate: sipDate ? parseInt(sipDate) : null,
       interestRate: interestRate ? parseFloat(interestRate) : null,
@@ -143,13 +170,52 @@ const InvestmentEditModal = ({
               placeholderTextColor="#94A3B8"
             />
 
+            {/* Financial Capital & Valuation */}
+            <View style={styles.sectionBox}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Capital & Valuation</Text>
+                {numInvested > 0 && (
+                  <View style={[styles.gainBadge, { backgroundColor: isGain ? "#ECFDF5" : "#FEF2F2" }]}>
+                    <Text style={[styles.gainBadgeText, { color: isGain ? "#10B981" : "#EF4444" }]}>
+                      {isGain ? "+" : ""}{gainPercent}% ({isGain ? "+" : ""}{currencySymbol}{Math.abs(Math.round(absoluteGain)).toLocaleString("en-IN")})
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={styles.label}>Invested Amount ({currencySymbol}) *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={investedAmount}
+                    onChangeText={setInvestedAmount}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.label}>Current Value ({currencySymbol})</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={currentValue}
+                    onChangeText={setCurrentValue}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
+              </View>
+            </View>
+
             {/* SIP Details if Mutual Fund */}
             {isMutualFund && (
               <View style={styles.sectionBox}>
                 <Text style={styles.sectionTitle}>SIP Settings</Text>
                 <View style={styles.row}>
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.label}>Monthly SIP (₹)</Text>
+                    <Text style={styles.label}>Monthly SIP ({currencySymbol})</Text>
                     <TextInput
                       style={styles.input}
                       value={sipAmount}
@@ -191,7 +257,7 @@ const InvestmentEditModal = ({
 
                 <View style={styles.row}>
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.label}>Maturity Amount (₹)</Text>
+                    <Text style={styles.label}>Maturity Amount ({currencySymbol})</Text>
                     <TextInput
                       style={styles.input}
                       value={maturityAmount}
@@ -257,6 +323,20 @@ const InvestmentEditModal = ({
                 <Text style={styles.saveBtnText}>Save Changes</Text>
               )}
             </TouchableOpacity>
+
+            {/* Delete Option */}
+            {onDelete && (
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => {
+                  onClose();
+                  onDelete(investment);
+                }}
+              >
+                <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                <Text style={styles.deleteBtnText}>Delete Investment</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
@@ -275,7 +355,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: "85%",
+    maxHeight: "88%",
   },
   header: {
     flexDirection: "row",
@@ -326,12 +406,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: "700",
     color: "#4F46E5",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  gainBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  gainBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
   row: {
     flexDirection: "row",
@@ -370,6 +465,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+  },
+  deleteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginTop: 10,
+    gap: 6,
+  },
+  deleteBtnText: {
+    color: "#EF4444",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 
