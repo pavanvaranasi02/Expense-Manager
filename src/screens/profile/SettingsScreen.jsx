@@ -318,6 +318,18 @@ const SettingsScreen = ({ navigation }) => {
             />
           </View>
 
+          <View style={[styles.switchRow, styles.borderBottom]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>EMI Due Alerts</Text>
+              <Text style={styles.settingSubLabel}>Remind before monthly credit card & loan EMI debits</Text>
+            </View>
+            <ModernToggle
+              value={notificationSettings.enabled && notificationSettings.emiAlerts}
+              onValueChange={(val) => handleNotificationToggle("emiAlerts", val)}
+              activeColor="#6366F1"
+            />
+          </View>
+
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>Daily Reminder</Text>
