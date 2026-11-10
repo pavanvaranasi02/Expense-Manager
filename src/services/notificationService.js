@@ -28,6 +28,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
   maturityAlerts: true,      // Maturity reminders for FD/RD
   budgetAlerts: true,        // Budget warning/exceeded alerts
   creditCardAlerts: true,    // CC payment due alerts
+  emiAlerts: true,           // Credit Card & Loan EMI due alerts
   dailyReminder: true,       // Daily expense logging reminder
 };
 
@@ -151,6 +152,67 @@ export const sendCreditCardAlert = async (
     return { success: true };
   } catch (error) {
     console.log("❌ Send CC alert error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============ SEND EMI ALERT ============
+export const sendEmiAlert = async (
+  emiName,
+  daysLeft,
+  amount,
+  monthInfo,
+  emiId,
+) => {
+  try {
+    const settings = await getNotificationPreferences();
+    if (!settings.enabled || !settings.emiAlerts) {
+      return { success: true, disabled: true };
+    }
+
+    const isUrgent = daysLeft <= 2;
+    const alertType = isUrgent ? "EMI_URGENT" : "EMI_DUE";
+
+    const userId = getUserId();
+    const existingQuery = query(
+      collection(db, "users", userId, "notifications"),
+      where("type", "==", alertType),
+      where("metadata.emiName", "==", emiName)
+    );
+
+    const snapshot = await getDocs(existingQuery);
+
+    let shouldSend = true;
+    if (!snapshot.empty) {
+      const now = Date.now();
+      snapshot.forEach((d) => {
+        const data = d.data();
+        const createdAt = data.createdAt?.toMillis?.() || 0;
+        if (now - createdAt < 24 * 60 * 60 * 1000) {
+          shouldSend = false;
+        }
+      });
+    }
+
+    if (!shouldSend) return { success: true, existing: true };
+
+    await sendNotification({
+      type: alertType,
+      title: `${emiName} EMI ${isUrgent ? "URGENT: " : ""}Due ${daysLeft <= 0 ? "TODAY!" : `in ${daysLeft} days`}`,
+      body: `Monthly installment of ₹${amount?.toLocaleString?.("en-IN") || amount}${monthInfo ? ` (${monthInfo})` : ""}`,
+      actionRoute: "CreditCardBill",
+      priority: isUrgent ? "high" : "medium",
+      metadata: {
+        emiName,
+        daysLeft,
+        amount,
+        monthInfo,
+        emiId,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.log("❌ Send EMI alert error:", error);
     return { success: false, error: error.message };
   }
 };
