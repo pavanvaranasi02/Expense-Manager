@@ -21,15 +21,18 @@ export const exportPortfolioCSV = async (
 
     // CSV Headers
     let csv =
-      "Investment Name,Type,Platform,Invested Amount,Current Value,Absolute Return,Return %,Annualized / XIRR,Interest Rate,Start Date,Maturity Date,Status,Notes\n";
+      "Investment Name,Type,Platform,Currency,Exchange Rate,Invested Amount,Current Value,Converted Value (Base),Absolute Return,Return %,Annualized / XIRR,Interest Rate,Start Date,Maturity Date,Status,Notes\n";
 
     investments.forEach((inv) => {
       const returns = calculateInvestmentReturns(inv);
       const name = (inv.name || "").replace(/"/g, '""');
       const type = (inv.typeName || inv.type || "").replace(/"/g, '""');
       const platform = (inv.platform || "Direct").replace(/"/g, '""');
+      const currency = inv.currency || "INR";
+      const exchangeRate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
       const invested = inv.investedAmount || 0;
       const current = inv.currentValue || 0;
+      const convertedVal = (current * exchangeRate).toFixed(2);
       const absReturn = returns.absoluteReturn;
       const returnPct = returns.returnPercent;
       const xirrOrRate = returns.displayRate;
@@ -43,7 +46,7 @@ export const exportPortfolioCSV = async (
       const status = inv.isActive ? "Active" : "Completed / Matured";
       const notes = (inv.note || "").replace(/"/g, '""');
 
-      csv += `"${name}","${type}","${platform}",${invested},${current},${absReturn},${returnPct}%,"${xirrOrRate}","${interestRate}","${startDate}","${maturityDate}","${status}","${notes}"\n`;
+      csv += `"${name}","${type}","${platform}","${currency}",${exchangeRate},${invested},${current},${convertedVal},${absReturn},${returnPct}%,"${xirrOrRate}","${interestRate}","${startDate}","${maturityDate}","${status}","${notes}"\n`;
     });
 
     // Summary Section
@@ -433,6 +436,12 @@ export const parseInvestmentsFromCSV = (csvText) => {
   const dateIdx = headers.findIndex(
     (h) => h.includes("date") || h.includes("start"),
   );
+  const currencyIdx = headers.findIndex(
+    (h) => h.includes("currency") || h.includes("curr"),
+  );
+  const exchangeRateIdx = headers.findIndex(
+    (h) => h.includes("exchange") || h.includes("forex"),
+  );
   const noteIdx = headers.findIndex((h) => h.includes("note"));
 
   if (nameIdx === -1) {
@@ -519,6 +528,14 @@ export const parseInvestmentsFromCSV = (csvText) => {
       dateIdx !== -1 && parts[dateIdx]
         ? new Date(parts[dateIdx].replace(/["']/g, "")).toISOString()
         : new Date().toISOString();
+    const currency =
+      currencyIdx !== -1 && parts[currencyIdx]
+        ? parts[currencyIdx].replace(/["']/g, "").trim().toUpperCase()
+        : "INR";
+    const exchangeRate =
+      exchangeRateIdx !== -1 && parts[exchangeRateIdx]
+        ? parseFloat(parts[exchangeRateIdx].replace(/[^0-9.]/g, "")) || 1
+        : 1;
     const note =
       noteIdx !== -1 ? parts[noteIdx]?.replace(/["']/g, "").trim() : "";
 
@@ -528,6 +545,8 @@ export const parseInvestmentsFromCSV = (csvText) => {
       typeName: matchedType.name,
       typeIcon: matchedType.icon,
       platform: platform || null,
+      currency,
+      exchangeRate,
       investedAmount,
       currentValue,
       interestRate,

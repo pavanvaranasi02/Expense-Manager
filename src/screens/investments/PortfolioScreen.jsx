@@ -38,6 +38,7 @@ import {
   skipSip,
   updateInvestment,
 } from "../../services/investmentService";
+import { CURRENCIES, getCurrencySymbol } from "../../constants/currencies";
 import { exportTransactionHistoryCSV } from "../../services/portfolioReportService";
 import useAuthStore from "../../store/useAuthStore";
 import { Theme } from "../../theme/theme";
@@ -75,7 +76,8 @@ const PortfolioScreen = ({ navigation }) => {
   const isStealthMode = useAuthStore((s) => s.isStealthMode);
   const toggleStealthMode = useAuthStore((s) => s.toggleStealthMode);
   const userProfile = useAuthStore((s) => s.userProfile);
-  const currencySymbol = userProfile?.currencySymbol || "₹";
+  const baseCurrency = userProfile?.currency || "INR";
+  const currencySymbol = userProfile?.currencySymbol || getCurrencySymbol(baseCurrency);
 
   // State
   const [investments, setInvestments] = useState([]);
@@ -124,6 +126,8 @@ const PortfolioScreen = ({ navigation }) => {
   const [invName, setInvName] = useState("");
   const [invType, setInvType] = useState(INVESTMENT_TYPES[0]);
   const [invPlatform, setInvPlatform] = useState("");
+  const [invCurrency, setInvCurrency] = useState(baseCurrency);
+  const [invExchangeRate, setInvExchangeRate] = useState("1");
   const [invAmount, setInvAmount] = useState("");
   const [invCurrentValue, setInvCurrentValue] = useState("");
   const [invInterestRate, setInvInterestRate] = useState("");
@@ -239,6 +243,8 @@ const PortfolioScreen = ({ navigation }) => {
   const resetAddForm = () => {
     setInvName("");
     setInvPlatform("");
+    setInvCurrency(baseCurrency);
+    setInvExchangeRate("1");
     setInvAmount("");
     setInvCurrentValue("");
     setInvInterestRate("");
@@ -289,6 +295,12 @@ const PortfolioScreen = ({ navigation }) => {
       return;
     }
 
+    const rate = invCurrency === baseCurrency ? 1 : parseFloat(invExchangeRate) || 0;
+    if (invCurrency !== baseCurrency && rate <= 0) {
+      Alert.alert("Required", `Enter a valid positive exchange rate for ${invCurrency}`);
+      return;
+    }
+
     if (invType.id === "rd") {
       if (!invRdMonthly || parseFloat(invRdMonthly) <= 0) {
         Alert.alert("Required", "Enter monthly RD amount");
@@ -308,8 +320,9 @@ const PortfolioScreen = ({ navigation }) => {
     setSaving(true);
     try {
       let expenseId = null;
-      const amountToPay =
+      const rawAmountToPay =
         invType.id === "rd" ? 0 : parseFloat(invAmount) || 0;
+      const amountToPay = rawAmountToPay * rate;
 
       if (payFromAccount && amountToPay > 0) {
         const expRes = await addExpense({
@@ -320,7 +333,7 @@ const PortfolioScreen = ({ navigation }) => {
           accountId: payFromAccount.id,
           accountName: payFromAccount.name,
           paymentMode: payFromAccount.type,
-          note: `Investment: ${invName}`,
+          note: `Investment: ${invName}${invCurrency !== baseCurrency ? ` (${getCurrencySymbol(invCurrency)}${rawAmountToPay} @ ${rate})` : ""}`,
           date: new Date().toISOString(),
         });
         if (expRes.success) expenseId = expRes.id;
@@ -332,6 +345,8 @@ const PortfolioScreen = ({ navigation }) => {
         typeName: invType.name,
         typeIcon: invType.icon,
         platform: invPlatform,
+        currency: invCurrency,
+        exchangeRate: rate,
         investedAmount:
           invType.id === "rd"
             ? parseFloat(invRdMonthly) * (parseInt(invRdCompletedMonths) || 0)
@@ -445,8 +460,10 @@ const PortfolioScreen = ({ navigation }) => {
     try {
       const selectedDateIso = (addAmtDate || new Date()).toISOString();
       if (payFromAccount) {
+        const rate = parseFloat(editingInvestment?.exchangeRate) > 0 ? parseFloat(editingInvestment.exchangeRate) : 1;
+        const deductedAmount = (parseFloat(addAmtValue) || 0) * rate;
         await addExpense({
-          amount: addAmtValue,
+          amount: deductedAmount,
           categoryId: "investment",
           categoryName: "Investment",
           categoryIcon: editingInvestment.typeIcon || "💰",
@@ -1096,6 +1113,7 @@ const PortfolioScreen = ({ navigation }) => {
         visible={showWithdrawModal}
         investment={editingInvestment}
         bankAccounts={bankAccounts}
+        currencySymbol={currencySymbol}
         onClose={() => {
           setShowWithdrawModal(false);
           setEditingInvestment(null);
@@ -1200,10 +1218,68 @@ const PortfolioScreen = ({ navigation }) => {
                     onChangeText={setInvPlatform}
                   />
 
+                  {/* Currency Selection */}
+                  <Text style={styles.modalLabel}>Currency</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginVertical: 6 }}
+                    contentContainerStyle={{ gap: 8 }}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <TouchableOpacity
+                        key={c.code}
+                        onPress={() => {
+                          setInvCurrency(c.code);
+                          if (c.code === baseCurrency) {
+                            setInvExchangeRate("1");
+                          }
+                        }}
+                        style={[
+                          styles.currencyChip,
+                          invCurrency === c.code && styles.activeCurrencyChip,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.currencyChipText,
+                            invCurrency === c.code && styles.activeCurrencyChipText,
+                          ]}
+                        >
+                          {c.code} ({c.symbol})
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
+                  {/* Foreign Currency Exchange Rate Input */}
+                  {invCurrency !== baseCurrency && (
+                    <View style={styles.foreignRateBox}>
+                      <Text style={styles.modalLabel}>
+                        Exchange Rate (1 {invCurrency} = ? {currencySymbol}) *
+                      </Text>
+                      <TextInput
+                        style={styles.modalInput}
+                        placeholder="e.g., 86.50"
+                        placeholderTextColor="#9CA3AF"
+                        value={invExchangeRate}
+                        onChangeText={setInvExchangeRate}
+                        keyboardType="numeric"
+                      />
+                      {parseFloat(invExchangeRate) > 0 && parseFloat(invAmount) > 0 && (
+                        <Text style={styles.conversionHint}>
+                          ≈ {currencySymbol}{((parseFloat(invAmount) || 0) * (parseFloat(invExchangeRate) || 1)).toLocaleString("en-IN")} converted to base currency
+                        </Text>
+                      )}
+                    </View>
+                  )}
+
                   {/* RD Specific Fields */}
                   {invType.id === "rd" && (
                     <>
-                      <Text style={styles.modalLabel}>Monthly Installment *</Text>
+                      <Text style={styles.modalLabel}>
+                        Monthly Installment ({getCurrencySymbol(invCurrency, currencySymbol)}) *
+                      </Text>
                       <TextInput
                         style={styles.modalInput}
                         placeholder="5000"
@@ -1244,7 +1320,9 @@ const PortfolioScreen = ({ navigation }) => {
                   {/* Non-RD Invested & Current Value */}
                   {invType.id !== "rd" && (
                     <>
-                      <Text style={styles.modalLabel}>Invested Amount *</Text>
+                      <Text style={styles.modalLabel}>
+                        Invested Amount ({getCurrencySymbol(invCurrency, currencySymbol)}) *
+                      </Text>
                       <TextInput
                         style={styles.modalInput}
                         placeholder="50000"
@@ -1256,7 +1334,9 @@ const PortfolioScreen = ({ navigation }) => {
                         keyboardType="numeric"
                       />
 
-                      <Text style={styles.modalLabel}>Current Market Value</Text>
+                      <Text style={styles.modalLabel}>
+                        Current Market Value ({getCurrencySymbol(invCurrency, currencySymbol)})
+                      </Text>
                       <TextInput
                         style={styles.modalInput}
                         placeholder="Leave blank if same as invested"
@@ -1273,7 +1353,9 @@ const PortfolioScreen = ({ navigation }) => {
                   {/* SIP Fields */}
                   {invType.id === "mutual_fund" && (
                     <>
-                      <Text style={styles.modalLabel}>Monthly SIP Amount (Optional)</Text>
+                      <Text style={styles.modalLabel}>
+                        Monthly SIP Amount (Optional) ({getCurrencySymbol(invCurrency, currencySymbol)})
+                      </Text>
                       <TextInput
                         style={styles.modalInput}
                         placeholder="5000"
@@ -2058,6 +2140,42 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: "#0F172A",
+  },
+  currencyChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  activeCurrencyChip: {
+    backgroundColor: "#EEF2FF",
+    borderColor: "#6366F1",
+  },
+  currencyChipText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#475569",
+  },
+  activeCurrencyChipText: {
+    color: "#4F46E5",
+    fontWeight: "700",
+  },
+  foreignRateBox: {
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  conversionHint: {
+    fontSize: 11,
+    color: "#0284C7",
+    fontWeight: "600",
+    marginTop: 4,
   },
   subHoldingName: {
     fontSize: 14,

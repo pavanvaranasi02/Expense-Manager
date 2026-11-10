@@ -48,6 +48,10 @@ export const addInvestment = async (data) => {
       investedAmount: parseFloat(data.investedAmount) || 0,
       currentValue: parseFloat(data.currentValue) || parseFloat(data.investedAmount) || 0,
 
+      // Multi-currency support
+      currency: data.currency || 'INR',
+      exchangeRate: data.exchangeRate !== undefined && data.exchangeRate !== null && !isNaN(parseFloat(data.exchangeRate)) && parseFloat(data.exchangeRate) > 0 ? parseFloat(data.exchangeRate) : 1,
+
       // SIP fields (for mutual funds)
       sipAmount: parseFloat(data.sipAmount) || null,
       sipDate: data.sipDate ? parseInt(data.sipDate) : null,
@@ -119,6 +123,10 @@ export const updateInvestment = async (investmentId, data) => {
 
     if (data.currentValue !== undefined) updateData.currentValue = parseFloat(data.currentValue) || 0;
     if (data.investedAmount !== undefined) updateData.investedAmount = parseFloat(data.investedAmount) || 0;
+    if (data.currency !== undefined) updateData.currency = data.currency;
+    if (data.exchangeRate !== undefined) {
+      updateData.exchangeRate = parseFloat(data.exchangeRate) > 0 ? parseFloat(data.exchangeRate) : 1;
+    }
     if (data.sipAmount !== undefined) updateData.sipAmount = data.sipAmount ? parseFloat(data.sipAmount) : null;
     if (data.maturityAmount !== undefined) updateData.maturityAmount = data.maturityAmount ? parseFloat(data.maturityAmount) : null;
     if (data.rdMonthlyAmount !== undefined) updateData.rdMonthlyAmount = data.rdMonthlyAmount ? parseFloat(data.rdMonthlyAmount) : null;
@@ -328,22 +336,32 @@ export const deleteInvestment = async (investmentId) => {
 // ============ CALCULATE INVESTMENT TOTALS ============
 export const calculateInvestmentTotals = (investments) => {
   const active = investments.filter((i) => i.isActive);
-  const totalInvested = active.reduce((s, i) => s + (i.investedAmount || 0), 0);
-  const totalCurrentValue = active.reduce((s, i) => s + (i.currentValue || 0), 0);
+  const totalInvested = active.reduce((s, i) => {
+    const rate = parseFloat(i.exchangeRate) > 0 ? parseFloat(i.exchangeRate) : 1;
+    return s + (parseFloat(i.investedAmount) || 0) * rate;
+  }, 0);
+  const totalCurrentValue = active.reduce((s, i) => {
+    const rate = parseFloat(i.exchangeRate) > 0 ? parseFloat(i.exchangeRate) : 1;
+    return s + (parseFloat(i.currentValue) || 0) * rate;
+  }, 0);
   const totalReturns = totalCurrentValue - totalInvested;
   const returnPercent = totalInvested > 0
     ? ((totalReturns / totalInvested) * 100).toFixed(1) : 0;
 
   const byType = {};
   active.forEach((inv) => {
+    const rate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
+    const invAmt = (parseFloat(inv.investedAmount) || 0) * rate;
+    const currVal = (parseFloat(inv.currentValue) || 0) * rate;
+
     if (!byType[inv.type]) {
       byType[inv.type] = {
         type: inv.type, typeName: inv.typeName, typeIcon: inv.typeIcon,
         invested: 0, currentValue: 0, count: 0,
       };
     }
-    byType[inv.type].invested += inv.investedAmount || 0;
-    byType[inv.type].currentValue += inv.currentValue || 0;
+    byType[inv.type].invested += invAmt;
+    byType[inv.type].currentValue += currVal;
     byType[inv.type].count += 1;
   });
 
@@ -519,6 +537,10 @@ export const updateInvestmentDetails = async (investmentId, details) => {
     if (details.name !== undefined) updateData.name = details.name.trim();
     if (details.investedAmount !== undefined) updateData.investedAmount = parseFloat(details.investedAmount) || 0;
     if (details.currentValue !== undefined) updateData.currentValue = parseFloat(details.currentValue) || 0;
+    if (details.currency !== undefined) updateData.currency = details.currency;
+    if (details.exchangeRate !== undefined) {
+      updateData.exchangeRate = parseFloat(details.exchangeRate) > 0 ? parseFloat(details.exchangeRate) : 1;
+    }
     if (details.platform !== undefined) updateData.platform = details.platform ? details.platform.trim() : null;
     if (details.note !== undefined) updateData.note = details.note ? details.note.trim() : '';
     if (details.sipAmount !== undefined) updateData.sipAmount = details.sipAmount ? parseFloat(details.sipAmount) : null;
@@ -561,6 +583,8 @@ export const batchAddInvestments = async (investmentsList) => {
         platform: inv.platform?.trim() || null,
         investedAmount: parseFloat(inv.investedAmount) || 0,
         currentValue: parseFloat(inv.currentValue) || parseFloat(inv.investedAmount) || 0,
+        currency: inv.currency || 'INR',
+        exchangeRate: parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1,
         interestRate: inv.interestRate ? parseFloat(inv.interestRate) : null,
         startDate: inv.startDate || new Date().toISOString(),
         note: inv.note?.trim() || '',
@@ -604,6 +628,8 @@ export const getAllInvestmentTransactions = (investments) => {
           investmentName: inv.name,
           investmentType: inv.type,
           investmentIcon: inv.typeIcon || '💰',
+          currency: inv.currency || 'INR',
+          exchangeRate: parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1,
           type: t.type || 'INVEST',
           amount: t.amount || 0,
           date: t.date || inv.startDate || new Date().toISOString(),
@@ -619,6 +645,8 @@ export const getAllInvestmentTransactions = (investments) => {
         investmentName: inv.name,
         investmentType: inv.type,
         investmentIcon: inv.typeIcon || '💰',
+        currency: inv.currency || 'INR',
+        exchangeRate: parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1,
         type: 'INVEST',
         amount: inv.investedAmount,
         date: inv.startDate || (inv.createdAt?.toDate ? inv.createdAt.toDate().toISOString() : new Date().toISOString()),
@@ -635,6 +663,8 @@ export const getAllInvestmentTransactions = (investments) => {
         investmentName: inv.name,
         investmentType: inv.type,
         investmentIcon: inv.typeIcon || '📈',
+        currency: inv.currency || 'INR',
+        exchangeRate: parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1,
         type: 'MATURED',
         amount: inv.maturityAmount,
         date: inv.maturityDate || new Date().toISOString(),

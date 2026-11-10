@@ -143,6 +143,11 @@ export const calculateInvestmentReturns = (inv) => {
   const current = parseFloat(inv.currentValue) || 0;
   const absoluteReturn = current - invested;
   const returnPercent = invested > 0 ? +((absoluteReturn / invested) * 100).toFixed(1) : 0;
+  const exchangeRate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
+  const currency = inv.currency || 'INR';
+  const convertedInvested = invested * exchangeRate;
+  const convertedCurrent = current * exchangeRate;
+  const convertedReturn = absoluteReturn * exchangeRate;
 
   // Check if it's a fixed-income instrument with explicitly configured interest rate
   const isFixedIncome = ['fd', 'rd', 'ppf', 'nps', 'bonds'].includes(inv.type);
@@ -154,6 +159,11 @@ export const calculateInvestmentReturns = (inv) => {
       current,
       absoluteReturn,
       returnPercent,
+      currency,
+      exchangeRate,
+      convertedInvested,
+      convertedCurrent,
+      convertedReturn,
       displayRate: `${explicitRate}%`,
       rateLabel: 'Interest',
       rateType: 'FIXED',
@@ -201,6 +211,11 @@ export const calculateInvestmentReturns = (inv) => {
       current,
       absoluteReturn,
       returnPercent,
+      currency,
+      exchangeRate,
+      convertedInvested,
+      convertedCurrent,
+      convertedReturn,
       displayRate: `${xirrVal >= 0 ? '+' : ''}${xirrVal}%`,
       rateLabel: 'XIRR',
       rateType: 'XIRR',
@@ -219,6 +234,11 @@ export const calculateInvestmentReturns = (inv) => {
       current,
       absoluteReturn,
       returnPercent,
+      currency,
+      exchangeRate,
+      convertedInvested,
+      convertedCurrent,
+      convertedReturn,
       displayRate: `${cagrVal >= 0 ? '+' : ''}${cagrVal}%`,
       rateLabel: 'CAGR',
       rateType: 'CAGR',
@@ -233,6 +253,11 @@ export const calculateInvestmentReturns = (inv) => {
     current,
     absoluteReturn,
     returnPercent,
+    currency,
+    exchangeRate,
+    convertedInvested,
+    convertedCurrent,
+    convertedReturn,
     displayRate: `${returnPercent >= 0 ? '+' : ''}${returnPercent}%`,
     rateLabel: 'Return',
     rateType: 'SIMPLE',
@@ -247,20 +272,27 @@ export const calculateInvestmentReturns = (inv) => {
 export const calculatePortfolioMetrics = (investments) => {
   const active = (investments || []).filter((i) => i.isActive !== false);
 
-  const totalInvested = active.reduce((s, i) => s + (parseFloat(i.investedAmount) || 0), 0);
-  const totalCurrentValue = active.reduce((s, i) => s + (parseFloat(i.currentValue) || 0), 0);
+  const totalInvested = active.reduce((s, i) => {
+    const rate = parseFloat(i.exchangeRate) > 0 ? parseFloat(i.exchangeRate) : 1;
+    return s + (parseFloat(i.investedAmount) || 0) * rate;
+  }, 0);
+  const totalCurrentValue = active.reduce((s, i) => {
+    const rate = parseFloat(i.exchangeRate) > 0 ? parseFloat(i.exchangeRate) : 1;
+    return s + (parseFloat(i.currentValue) || 0) * rate;
+  }, 0);
   const totalReturns = totalCurrentValue - totalInvested;
   const returnPercent = totalInvested > 0 ? +((totalReturns / totalInvested) * 100).toFixed(1) : 0;
 
-  // Master Portfolio XIRR Cash Flows
+  // Master Portfolio XIRR Cash Flows (converted to base currency)
   const allFlows = [];
   const today = new Date();
 
   active.forEach((inv) => {
+    const rate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
     const startDate = inv.startDate ? new Date(inv.startDate) : new Date();
     if (inv.transactions && inv.transactions.length > 0) {
       inv.transactions.forEach((t) => {
-        const amt = parseFloat(t.amount) || 0;
+        const amt = (parseFloat(t.amount) || 0) * rate;
         if (amt > 0) {
           if (t.type === 'WITHDRAW') {
             allFlows.push({ date: t.date || startDate, amount: amt });
@@ -270,7 +302,7 @@ export const calculatePortfolioMetrics = (investments) => {
         }
       });
     } else {
-      const invAmt = parseFloat(inv.investedAmount) || 0;
+      const invAmt = (parseFloat(inv.investedAmount) || 0) * rate;
       if (invAmt > 0) {
         allFlows.push({ date: startDate, amount: -invAmt });
       }
@@ -283,9 +315,13 @@ export const calculatePortfolioMetrics = (investments) => {
 
   const portfolioXirr = calculateXIRR(allFlows);
 
-  // Group by category/type
+  // Group by category/type (converted to base currency)
   const byType = {};
   active.forEach((inv) => {
+    const rate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
+    const invAmt = (parseFloat(inv.investedAmount) || 0) * rate;
+    const currVal = (parseFloat(inv.currentValue) || 0) * rate;
+
     if (!byType[inv.type]) {
       byType[inv.type] = {
         type: inv.type,
@@ -296,8 +332,8 @@ export const calculatePortfolioMetrics = (investments) => {
         count: 0,
       };
     }
-    byType[inv.type].invested += parseFloat(inv.investedAmount) || 0;
-    byType[inv.type].currentValue += parseFloat(inv.currentValue) || 0;
+    byType[inv.type].invested += invAmt;
+    byType[inv.type].currentValue += currVal;
     byType[inv.type].count += 1;
   });
 
@@ -315,10 +351,10 @@ export const calculatePortfolioMetrics = (investments) => {
   active.forEach((inv) => {
     const returns = calculateInvestmentReturns(inv);
     if (!topGainer || returns.returnPercent > topGainer.returnPercent) {
-      topGainer = { name: inv.name, returnPercent: returns.returnPercent, amount: returns.absoluteReturn };
+      topGainer = { name: inv.name, returnPercent: returns.returnPercent, amount: returns.convertedReturn };
     }
     if (!topLaggard || returns.returnPercent < topLaggard.returnPercent) {
-      topLaggard = { name: inv.name, returnPercent: returns.returnPercent, amount: returns.absoluteReturn };
+      topLaggard = { name: inv.name, returnPercent: returns.returnPercent, amount: returns.convertedReturn };
     }
   });
 

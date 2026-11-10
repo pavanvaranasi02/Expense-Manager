@@ -53,3 +53,12 @@ app-example
 
 .vscode/
 
+# Local database dumps, backups, and emulator data
+*.backup.json
+*.seed.json
+*.local-db.*
+.local-db/
+firestore-debug.log
+firebase-export/
+docs/*.local.json
+

@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getCurrencySymbol } from "../../../constants/currencies";
 import { addIncome } from "../../../services/incomeService";
 import { withdrawInvestmentAmount } from "../../../services/investmentService";
 
@@ -20,6 +21,7 @@ const WithdrawModal = ({
   visible,
   investment,
   bankAccounts = [],
+  currencySymbol = "₹",
   onClose,
   onSuccessWithdraw,
 }) => {
@@ -28,6 +30,11 @@ const WithdrawModal = ({
   const [creditAccount, setCreditAccount] = useState(null);
   const [showAccountList, setShowAccountList] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const invCurrency = investment?.currency || "INR";
+  const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
+  const rate = parseFloat(investment?.exchangeRate) > 0 ? parseFloat(investment.exchangeRate) : 1;
+  const isForeign = !!(investment?.currency && (investment.currency !== "INR" || rate !== 1));
 
   useEffect(() => {
     setAmount("");
@@ -47,7 +54,7 @@ const WithdrawModal = ({
     if (withdrawAmt > currentVal) {
       Alert.alert(
         "Amount Exceeds Value",
-        `You cannot withdraw more than the current market value (₹${currentVal.toLocaleString("en-IN")}).`,
+        `You cannot withdraw more than the current market value (${nativeSymbol}${currentVal.toLocaleString("en-IN")}).`,
       );
       return;
     }
@@ -71,21 +78,22 @@ const WithdrawModal = ({
 
       // 2. If user chose to credit to account, record as income
       if (creditAccount) {
+        const creditAmt = isForeign ? withdrawAmt * rate : withdrawAmt;
         await addIncome({
-          amount: withdrawAmt,
+          amount: creditAmt,
           source: "investment_return",
           sourceName: "Investment Redemption",
           sourceIcon: investment.typeIcon || "📈",
           accountId: creditAccount.id,
           accountName: creditAccount.name,
-          note: `Redeemed: ${investment.name}`,
+          note: `Redeemed: ${investment.name}${isForeign ? ` (${nativeSymbol}${withdrawAmt} @ ${rate})` : ""}`,
           date: new Date().toISOString(),
         });
       }
 
       Alert.alert(
         "✅ Redemption Recorded",
-        `₹${withdrawAmt.toLocaleString("en-IN")} redeemed from ${investment.name}.`,
+        `${nativeSymbol}${withdrawAmt.toLocaleString("en-IN")}${isForeign ? ` (≈ ${currencySymbol}${(withdrawAmt * rate).toLocaleString("en-IN")})` : ""} redeemed from ${investment.name}.`,
       );
       onSuccessWithdraw();
       onClose();
@@ -124,21 +132,23 @@ const WithdrawModal = ({
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Current Market Value</Text>
                 <Text style={styles.infoVal}>
-                  ₹{(investment?.currentValue || 0).toLocaleString("en-IN")}
+                  {nativeSymbol}{(investment?.currentValue || 0).toLocaleString("en-IN")}
+                  {isForeign ? ` (≈ ${currencySymbol}${((investment?.currentValue || 0) * rate).toLocaleString("en-IN")})` : ""}
                 </Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Invested Amount</Text>
                 <Text style={styles.infoVal}>
-                  ₹{(investment?.investedAmount || 0).toLocaleString("en-IN")}
+                  {nativeSymbol}{(investment?.investedAmount || 0).toLocaleString("en-IN")}
+                  {isForeign ? ` (≈ ${currencySymbol}${((investment?.investedAmount || 0) * rate).toLocaleString("en-IN")})` : ""}
                 </Text>
               </View>
             </View>
 
             {/* Withdrawal Amount */}
-            <Text style={styles.label}>Amount to Withdraw *</Text>
+            <Text style={styles.label}>Amount to Withdraw ({nativeSymbol}) *</Text>
             <View style={styles.amountInputRow}>
-              <Text style={styles.rupee}>₹</Text>
+              <Text style={styles.rupee}>{nativeSymbol}</Text>
               <TextInput
                 style={styles.amountInput}
                 placeholder="0"
@@ -149,6 +159,11 @@ const WithdrawModal = ({
                 autoFocus
               />
             </View>
+            {isForeign && parseFloat(amount) > 0 && (
+              <Text style={{ fontSize: 12, color: "#0284C7", fontWeight: "600", marginTop: 4, marginBottom: 8 }}>
+                ≈ {currencySymbol}{(parseFloat(amount) * rate).toLocaleString("en-IN")} credited in base currency
+              </Text>
+            )}
 
             {/* Quick amount shortcuts */}
             <View style={styles.shortcutRow}>
