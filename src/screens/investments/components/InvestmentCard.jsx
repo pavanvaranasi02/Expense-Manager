@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getCurrencySymbol } from "../../../constants/currencies";
 import { INVESTMENT_TYPES } from "../../../services/investmentService";
 import { formatCurrency } from "../../../utils/format";
 import {
@@ -21,6 +22,11 @@ const InvestmentCard = ({
   const returns = calculateInvestmentReturns(inv);
   const typeConfig = INVESTMENT_TYPES.find((t) => t.id === inv.type);
   const typeColor = typeConfig?.color || "#6C63FF";
+
+  const invCurrency = inv.currency || "INR";
+  const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
+  const exchangeRate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
+  const isForeign = !!(inv.currency && (inv.currency !== "INR" || exchangeRate !== 1) && nativeSymbol !== currencySymbol);
 
   const isPos = returns.absoluteReturn >= 0;
   const hasSip = inv.type === "mutual_fund" && inv.sipAmount;
@@ -50,6 +56,14 @@ const InvestmentCard = ({
                 <Text style={styles.platformText}>{inv.platform}</Text>
               </View>
             ) : null}
+            {isForeign && (
+              <View style={styles.foreignBadge}>
+                <Ionicons name="globe-outline" size={10} color="#0284C7" />
+                <Text style={styles.foreignBadgeText}>
+                  {invCurrency} • 1 = {currencySymbol}{exchangeRate}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -85,15 +99,25 @@ const InvestmentCard = ({
         <View style={styles.valCol}>
           <Text style={styles.valLabel}>Invested</Text>
           <Text style={styles.valNum}>
-            {formatCurrency(returns.invested, isStealthMode, currencySymbol)}
+            {formatCurrency(returns.invested, isStealthMode, nativeSymbol)}
           </Text>
+          {isForeign && (
+            <Text style={styles.convertedSub}>
+              ≈ {formatCurrency(returns.convertedInvested, isStealthMode, currencySymbol)}
+            </Text>
+          )}
         </View>
 
         <View style={styles.valCol}>
           <Text style={styles.valLabel}>Current Value</Text>
           <Text style={styles.valNum}>
-            {formatCurrency(returns.current, isStealthMode, currencySymbol)}
+            {formatCurrency(returns.current, isStealthMode, nativeSymbol)}
           </Text>
+          {isForeign && (
+            <Text style={styles.convertedSub}>
+              ≈ {formatCurrency(returns.convertedCurrent, isStealthMode, currencySymbol)}
+            </Text>
+          )}
         </View>
 
         <View style={[styles.valCol, { alignItems: "flex-end" }]}>
@@ -108,7 +132,7 @@ const InvestmentCard = ({
             {formatCurrency(
               returns.absoluteReturn,
               isStealthMode,
-              currencySymbol,
+              nativeSymbol,
             )}
           </Text>
           {!isStealthMode && (
@@ -120,6 +144,16 @@ const InvestmentCard = ({
             >
               ({isPos ? "+" : ""}
               {returns.returnPercent}%)
+            </Text>
+          )}
+          {isForeign && (
+            <Text
+              style={[
+                styles.convertedSub,
+                { color: isPos ? "#10B981" : "#EF4444" },
+              ]}
+            >
+              ≈ {isPos ? "+" : ""}{formatCurrency(returns.convertedReturn, isStealthMode, currencySymbol)}
             </Text>
           )}
         </View>
@@ -276,6 +310,28 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#475569",
     fontWeight: "600",
+  },
+  foreignBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    gap: 3,
+  },
+  foreignBadgeText: {
+    fontSize: 10,
+    color: "#0369A1",
+    fontWeight: "600",
+  },
+  convertedSub: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 1,
+    fontWeight: "500",
   },
   rateBadge: {
     flexDirection: "row",

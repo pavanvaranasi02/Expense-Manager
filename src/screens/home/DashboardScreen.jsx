@@ -30,6 +30,7 @@ import {
   getBudgets,
   updateBudget,
 } from "../../services/budgetService";
+import { getCurrencySymbol } from "../../constants/currencies";
 import { getDashboardData } from "../../services/expenseService";
 import {
   calculateInvestmentTotals,
@@ -73,11 +74,8 @@ const DashboardScreen = ({ navigation }) => {
   const showInvestmentsInAssets = userProfile?.showInvestmentsInAssets || false;
 
   const cs =
-    userProfile?.currency === "USD"
-      ? "$"
-      : userProfile?.currency === "EUR"
-        ? "€"
-        : "₹";
+    userProfile?.currencySymbol ||
+    getCurrencySymbol(userProfile?.currency, "₹");
 
   // Replace your existing fetchAll with this:
   const fetchDashboardData = async () => {

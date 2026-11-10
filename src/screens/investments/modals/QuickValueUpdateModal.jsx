@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getCurrencySymbol } from "../../../constants/currencies";
 import { updateInvestment } from "../../../services/investmentService";
 import { formatCurrency } from "../../../utils/format";
 
@@ -25,8 +26,13 @@ const QuickValueUpdateModal = ({
 }) => {
   const [investedAmount, setInvestedAmount] = useState("");
   const [currentValue, setCurrentValue] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("1");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const invCurrency = investment?.currency || "INR";
+  const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
+  const isForeign = !!(investment?.currency && (investment.currency !== "INR" || (investment.exchangeRate && investment.exchangeRate !== 1)));
 
   useEffect(() => {
     if (investment) {
@@ -40,12 +46,18 @@ const QuickValueUpdateModal = ({
           ? investment.currentValue.toString()
           : ""
       );
+      setExchangeRate(
+        investment.exchangeRate !== undefined && investment.exchangeRate !== null
+          ? investment.exchangeRate.toString()
+          : "1"
+      );
       setNote("");
     }
   }, [investment, visible]);
 
   const numInvested = parseFloat(investedAmount) || 0;
   const numCurrent = parseFloat(currentValue) || 0;
+  const numRate = parseFloat(exchangeRate) > 0 ? parseFloat(exchangeRate) : 1;
   const absoluteGain = numCurrent - numInvested;
   const gainPercent = numInvested > 0 ? ((absoluteGain / numInvested) * 100).toFixed(2) : "0.00";
   const isGain = absoluteGain >= 0;
@@ -66,12 +78,19 @@ const QuickValueUpdateModal = ({
       Alert.alert("Required", "Please enter a valid current value");
       return;
     }
+    if (isForeign && (!exchangeRate || isNaN(parseFloat(exchangeRate)) || parseFloat(exchangeRate) <= 0)) {
+      Alert.alert("Required", "Please enter a valid positive exchange rate");
+      return;
+    }
 
     setSaving(true);
     const updatePayload = {
       investedAmount: numInvested,
       currentValue: numCurrent,
     };
+    if (isForeign) {
+      updatePayload.exchangeRate = parseFloat(exchangeRate);
+    }
     if (note.trim()) {
       updatePayload.note = note.trim();
     }
@@ -138,8 +157,13 @@ const QuickValueUpdateModal = ({
                   ]}
                 >
                   {isGain ? "+" : ""}
-                  {formatCurrency(absoluteGain, false, currencySymbol)}
+                  {formatCurrency(absoluteGain, false, nativeSymbol)}
                 </Text>
+                {isForeign && (
+                  <Text style={{ fontSize: 11, color: isGain ? "#059669" : "#DC2626", marginTop: 2, fontWeight: "600" }}>
+                    ≈ {isGain ? "+" : ""}{formatCurrency(absoluteGain * numRate, false, currencySymbol)}
+                  </Text>
+                )}
               </View>
               <View style={styles.previewColRight}>
                 <View
@@ -164,11 +188,11 @@ const QuickValueUpdateModal = ({
             {/* Input 1: Invested Amount */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
-                <Text style={styles.label}>Invested Amount ({currencySymbol})</Text>
+                <Text style={styles.label}>Invested Amount ({nativeSymbol})</Text>
                 <Text style={styles.subLabel}>Total capital invested</Text>
               </View>
               <View style={styles.inputWrapper}>
-                <Text style={styles.currencyPrefix}>{currencySymbol}</Text>
+                <Text style={styles.currencyPrefix}>{nativeSymbol}</Text>
                 <TextInput
                   style={styles.amountInput}
                   value={investedAmount}
@@ -178,16 +202,21 @@ const QuickValueUpdateModal = ({
                   placeholderTextColor="#94A3B8"
                 />
               </View>
+              {isForeign && numInvested > 0 && (
+                <Text style={{ fontSize: 11, color: "#64748B", marginTop: 2, fontWeight: "500" }}>
+                  ≈ {currencySymbol}{(numInvested * numRate).toLocaleString("en-IN")} in base currency
+                </Text>
+              )}
             </View>
 
             {/* Input 2: Current Market Value */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
-                <Text style={styles.label}>Current Value ({currencySymbol})</Text>
+                <Text style={styles.label}>Current Value ({nativeSymbol})</Text>
                 <Text style={styles.subLabel}>Current market valuation</Text>
               </View>
               <View style={styles.inputWrapper}>
-                <Text style={styles.currencyPrefix}>{currencySymbol}</Text>
+                <Text style={styles.currencyPrefix}>{nativeSymbol}</Text>
                 <TextInput
                   style={styles.amountInput}
                   value={currentValue}
@@ -197,6 +226,11 @@ const QuickValueUpdateModal = ({
                   placeholderTextColor="#94A3B8"
                 />
               </View>
+              {isForeign && numCurrent > 0 && (
+                <Text style={{ fontSize: 11, color: "#64748B", marginTop: 2, fontWeight: "500" }}>
+                  ≈ {currencySymbol}{(numCurrent * numRate).toLocaleString("en-IN")} in base currency
+                </Text>
+              )}
 
               {/* Quick valuation presets */}
               <View style={styles.presetRow}>
@@ -232,6 +266,29 @@ const QuickValueUpdateModal = ({
                 </TouchableOpacity>
               </View>
             </View>
+
+            {/* Foreign Exchange Rate Update if applicable */}
+            {isForeign && (
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>
+                    Exchange Rate (1 {invCurrency} = ? {currencySymbol})
+                  </Text>
+                  <Text style={styles.subLabel}>Update forex conversion</Text>
+                </View>
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.currencyPrefix}>{currencySymbol}</Text>
+                  <TextInput
+                    style={styles.amountInput}
+                    value={exchangeRate}
+                    onChangeText={setExchangeRate}
+                    keyboardType="numeric"
+                    placeholder="e.g. 86.5"
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
+              </View>
+            )}
 
             {/* Note / Reason (Optional) */}
             <View style={styles.inputGroup}>

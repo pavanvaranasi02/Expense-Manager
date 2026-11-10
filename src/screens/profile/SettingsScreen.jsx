@@ -29,6 +29,7 @@ import UpdateModal from "../../components/UpdateModal";
 import useAuthStore from "../../store/useAuthStore";
 import * as Haptics from 'expo-haptics';
 import ModernToggle from "../../components/ModernToggle";
+import { getCurrencySymbol } from "../../constants/currencies";
 
 const { width } = Dimensions.get('window');
 
@@ -66,7 +67,15 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleCurrencyChange = async (newCurrency) => {
     setCurrency(newCurrency);
-    await saveToFirebase("currency", newCurrency);
+    const newSymbol = getCurrencySymbol(newCurrency);
+    const userId = auth.currentUser.uid;
+    const result = await updateUserProfile(userId, {
+      currency: newCurrency,
+      currencySymbol: newSymbol,
+    });
+    if (result.success) {
+      updateProfile({ currency: newCurrency, currencySymbol: newSymbol });
+    }
   };
 
   const handleInvestmentToggle = async (value) => {

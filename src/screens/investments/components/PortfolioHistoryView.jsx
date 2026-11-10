@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getCurrencySymbol } from "../../../constants/currencies";
 import { formatCurrency } from "../../../utils/format";
 
 const FILTER_TYPES = [
@@ -173,15 +174,28 @@ const PortfolioHistoryView = ({
                 </View>
 
                 <View style={styles.amountCol}>
-                  <Text
-                    style={[
-                      styles.amountText,
-                      { color: isCredit ? "#10B981" : "#0F172A" },
-                    ]}
-                  >
-                    {isCredit ? "+" : "-"}
-                    {formatCurrency(item.amount, isStealthMode, currencySymbol)}
-                  </Text>
+                  {(() => {
+                    const itemSymbol = item.currency ? getCurrencySymbol(item.currency, currencySymbol) : currencySymbol;
+                    const isForeignItem = !!(item.currency && item.currency !== "INR" && item.exchangeRate && item.exchangeRate !== 1);
+                    return (
+                      <>
+                        <Text
+                          style={[
+                            styles.amountText,
+                            { color: isCredit ? "#10B981" : "#0F172A" },
+                          ]}
+                        >
+                          {isCredit ? "+" : "-"}
+                          {formatCurrency(item.amount, isStealthMode, itemSymbol)}
+                        </Text>
+                        {isForeignItem && (
+                          <Text style={{ fontSize: 10, color: "#64748B", fontWeight: "500", marginTop: 1 }}>
+                            ≈ {isCredit ? "+" : "-"}{formatCurrency(item.amount * (item.exchangeRate || 1), isStealthMode, currencySymbol)}
+                          </Text>
+                        )}
+                      </>
+                    );
+                  })()}
                   <Text style={styles.typeBadgeText}>
                     {item.type === "SIP"
                       ? "SIP Payment"

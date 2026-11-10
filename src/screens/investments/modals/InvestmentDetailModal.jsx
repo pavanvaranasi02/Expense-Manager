@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getCurrencySymbol } from "../../../constants/currencies";
 import { formatCurrency } from "../../../utils/format";
 import {
   calculateInvestmentReturns,
@@ -38,6 +39,11 @@ const InvestmentDetailModal = ({
   const hasSip = inv.type === "mutual_fund" && inv.sipAmount;
   const isRd = inv.type === "rd";
   const maturityCountdown = getMaturityCountdown(inv.maturityDate);
+
+  const invCurrency = inv.currency || "INR";
+  const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
+  const exchangeRate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
+  const isForeign = !!(inv.currency && (inv.currency !== "INR" || exchangeRate !== 1) && nativeSymbol !== currencySymbol);
 
   const confirmDelete = () => {
     Alert.alert(
@@ -105,13 +111,32 @@ const InvestmentDetailModal = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 24 }}
           >
+            {isForeign && (
+              <View style={styles.foreignBanner}>
+                <Ionicons name="globe-outline" size={18} color="#0284C7" />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.foreignBannerTitle}>
+                    Foreign Asset ({invCurrency})
+                  </Text>
+                  <Text style={styles.foreignBannerSub}>
+                    Exchange Rate: 1 {invCurrency} = {currencySymbol}{exchangeRate}
+                  </Text>
+                </View>
+              </View>
+            )}
+
             {/* Financial Overview Card */}
             <View style={styles.metricsCard}>
               <View style={styles.primaryMetric}>
                 <Text style={styles.metricLabel}>Current Valuation</Text>
                 <Text style={styles.metricBig}>
-                  {formatCurrency(returns.current, isStealthMode, currencySymbol)}
+                  {formatCurrency(returns.current, isStealthMode, nativeSymbol)}
                 </Text>
+                {isForeign && (
+                  <Text style={styles.metricBigConverted}>
+                    ≈ {formatCurrency(returns.convertedCurrent, isStealthMode, currencySymbol)}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.divider} />
@@ -123,9 +148,14 @@ const InvestmentDetailModal = ({
                     {formatCurrency(
                       returns.invested,
                       isStealthMode,
-                      currencySymbol,
+                      nativeSymbol,
                     )}
                   </Text>
+                  {isForeign && (
+                    <Text style={styles.metricSubValConverted}>
+                      ≈ {formatCurrency(returns.convertedInvested, isStealthMode, currencySymbol)}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.metricSubCol}>
@@ -140,9 +170,19 @@ const InvestmentDetailModal = ({
                     {formatCurrency(
                       returns.absoluteReturn,
                       isStealthMode,
-                      currencySymbol,
+                      nativeSymbol,
                     )}
                   </Text>
+                  {isForeign && (
+                    <Text
+                      style={[
+                        styles.metricSubValConverted,
+                        { color: isPos ? "#10B981" : "#EF4444" },
+                      ]}
+                    >
+                      ≈ {isPos ? "+" : ""}{formatCurrency(returns.convertedReturn, isStealthMode, currencySymbol)}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.metricSubColRight}>
@@ -499,6 +539,38 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#0F172A",
     marginTop: 2,
+  },
+  metricBigConverted: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748B",
+    marginTop: 2,
+  },
+  foreignBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  foreignBannerTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0369A1",
+  },
+  foreignBannerSub: {
+    fontSize: 11,
+    color: "#0284C7",
+    marginTop: 2,
+  },
+  metricSubValConverted: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#64748B",
+    marginTop: 1,
   },
   divider: {
     height: 1,

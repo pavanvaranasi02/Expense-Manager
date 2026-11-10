@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { CURRENCIES, getCurrencySymbol } from "../../../constants/currencies";
 import { updateInvestmentDetails } from "../../../services/investmentService";
 
 const InvestmentEditModal = ({
@@ -26,6 +27,8 @@ const InvestmentEditModal = ({
 }) => {
   const [name, setName] = useState("");
   const [platform, setPlatform] = useState("");
+  const [currency, setCurrency] = useState("INR");
+  const [exchangeRate, setExchangeRate] = useState("1");
   const [investedAmount, setInvestedAmount] = useState("");
   const [currentValue, setCurrentValue] = useState("");
   const [sipAmount, setSipAmount] = useState("");
@@ -41,6 +44,12 @@ const InvestmentEditModal = ({
     if (investment) {
       setName(investment.name || "");
       setPlatform(investment.platform || "");
+      setCurrency(investment.currency || "INR");
+      setExchangeRate(
+        investment.exchangeRate !== undefined && investment.exchangeRate !== null
+          ? investment.exchangeRate.toString()
+          : "1"
+      );
       setInvestedAmount(
         investment.investedAmount !== undefined && investment.investedAmount !== null
           ? investment.investedAmount.toString()
@@ -71,9 +80,12 @@ const InvestmentEditModal = ({
 
   const numInvested = parseFloat(investedAmount) || 0;
   const numCurrent = parseFloat(currentValue) || 0;
+  const numRate = parseFloat(exchangeRate) > 0 ? parseFloat(exchangeRate) : 1;
   const absoluteGain = numCurrent - numInvested;
   const gainPercent = numInvested > 0 ? ((absoluteGain / numInvested) * 100).toFixed(2) : "0.00";
   const isGain = absoluteGain >= 0;
+  const currentInvSymbol = getCurrencySymbol(currency, currencySymbol);
+  const isForeign = currency !== "INR" || numRate !== 1;
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -83,6 +95,11 @@ const InvestmentEditModal = ({
 
     if (investedAmount === "" || isNaN(numInvested) || numInvested < 0) {
       Alert.alert("Required", "Please enter a valid invested amount");
+      return;
+    }
+
+    if (isForeign && (!exchangeRate || isNaN(parseFloat(exchangeRate)) || parseFloat(exchangeRate) <= 0)) {
+      Alert.alert("Required", "Please enter a valid positive exchange rate");
       return;
     }
 
@@ -100,6 +117,8 @@ const InvestmentEditModal = ({
     const res = await updateInvestmentDetails(investment.id, {
       name,
       platform,
+      currency,
+      exchangeRate: isForeign ? parseFloat(exchangeRate) : 1,
       investedAmount: numInvested,
       currentValue: numCurrent,
       sipAmount: sipAmount ? parseFloat(sipAmount) : null,
@@ -170,6 +189,63 @@ const InvestmentEditModal = ({
               placeholderTextColor="#94A3B8"
             />
 
+            {/* Currency & Exchange Rate */}
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>Asset Currency</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginVertical: 8 }}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {CURRENCIES.map((c) => (
+                  <TouchableOpacity
+                    key={c.code}
+                    onPress={() => {
+                      setCurrency(c.code);
+                      if (c.code === "INR" && exchangeRate === "1") {
+                        setExchangeRate("1");
+                      }
+                    }}
+                    style={[
+                      styles.currencyChip,
+                      currency === c.code && styles.activeCurrencyChip,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.currencyChipText,
+                        currency === c.code && styles.activeCurrencyChipText,
+                      ]}
+                    >
+                      {c.code} ({c.symbol})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {isForeign && (
+                <View style={{ marginTop: 6 }}>
+                  <Text style={styles.label}>
+                    Exchange Rate (1 {currency} = ? {currencySymbol}) *
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={exchangeRate}
+                    onChangeText={setExchangeRate}
+                    keyboardType="numeric"
+                    placeholder="e.g. 86.5"
+                    placeholderTextColor="#94A3B8"
+                  />
+                  {numRate > 0 && numInvested > 0 && (
+                    <Text style={styles.ratePreviewText}>
+                      ≈ {currencySymbol}{(numInvested * numRate).toLocaleString("en-IN")} invested • {currencySymbol}{(numCurrent * numRate).toLocaleString("en-IN")} current
+                    </Text>
+                  )}
+                </View>
+              )}
+            </View>
+
             {/* Financial Capital & Valuation */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
@@ -177,7 +253,7 @@ const InvestmentEditModal = ({
                 {numInvested > 0 && (
                   <View style={[styles.gainBadge, { backgroundColor: isGain ? "#ECFDF5" : "#FEF2F2" }]}>
                     <Text style={[styles.gainBadgeText, { color: isGain ? "#10B981" : "#EF4444" }]}>
-                      {isGain ? "+" : ""}{gainPercent}% ({isGain ? "+" : ""}{currencySymbol}{Math.abs(Math.round(absoluteGain)).toLocaleString("en-IN")})
+                      {isGain ? "+" : ""}{gainPercent}% ({isGain ? "+" : ""}{currentInvSymbol}{Math.abs(Math.round(absoluteGain)).toLocaleString("en-IN")})
                     </Text>
                   </View>
                 )}
@@ -185,7 +261,7 @@ const InvestmentEditModal = ({
 
               <View style={styles.row}>
                 <View style={{ flex: 1, marginRight: 8 }}>
-                  <Text style={styles.label}>Invested Amount ({currencySymbol}) *</Text>
+                  <Text style={styles.label}>Invested Amount ({currentInvSymbol}) *</Text>
                   <TextInput
                     style={styles.input}
                     value={investedAmount}
@@ -194,9 +270,14 @@ const InvestmentEditModal = ({
                     placeholder="0"
                     placeholderTextColor="#94A3B8"
                   />
+                  {isForeign && numInvested > 0 && (
+                    <Text style={styles.convertedMiniText}>
+                      ≈ {currencySymbol}{(numInvested * numRate).toLocaleString("en-IN")}
+                    </Text>
+                  )}
                 </View>
                 <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={styles.label}>Current Value ({currencySymbol})</Text>
+                  <Text style={styles.label}>Current Value ({currentInvSymbol})</Text>
                   <TextInput
                     style={styles.input}
                     value={currentValue}
@@ -205,6 +286,11 @@ const InvestmentEditModal = ({
                     placeholder="0"
                     placeholderTextColor="#94A3B8"
                   />
+                  {isForeign && numCurrent > 0 && (
+                    <Text style={styles.convertedMiniText}>
+                      ≈ {currencySymbol}{(numCurrent * numRate).toLocaleString("en-IN")}
+                    </Text>
+                  )}
                 </View>
               </View>
             </View>
@@ -478,6 +564,39 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     fontSize: 14,
     fontWeight: "600",
+  },
+  currencyChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  activeCurrencyChip: {
+    backgroundColor: "#EEF2FF",
+    borderColor: "#6366F1",
+  },
+  currencyChipText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#475569",
+  },
+  activeCurrencyChipText: {
+    color: "#4F46E5",
+    fontWeight: "700",
+  },
+  ratePreviewText: {
+    fontSize: 11,
+    color: "#0284C7",
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  convertedMiniText: {
+    fontSize: 10,
+    color: "#64748B",
+    fontWeight: "600",
+    marginTop: 2,
   },
 });
 
