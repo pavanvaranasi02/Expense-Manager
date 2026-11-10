@@ -2,7 +2,7 @@
   "expo": {
     "name": "KOSH",
     "slug": "kosh",
-    "version": "1.3.4",
+    "version": "1.3.5",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/ExpenseManager.jpg",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pavan.kosh",
-      "buildNumber": "1.3.4"
+      "buildNumber": "1.3.5"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +24,7 @@
         "backgroundColor": "#1A1A2E"
       },
       "package": "com.pavan.kosh",
-      "versionCode": 14
+      "versionCode": 15
     },
     "plugins": [
       "expo-secure-store",

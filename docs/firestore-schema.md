@@ -1,6 +1,6 @@
 # Cloud Firestore Database Schema Specification
 **Application:** KOSH (Expense & Investment Manager)  
-**Version:** 1.3.4  
+**Version:** 1.3.5  
 **Database:** Cloud Firestore (NoSQL Document Store)
 
 ---
