@@ -38,7 +38,14 @@ import {
   skipSip,
   updateInvestment,
 } from "../../services/investmentService";
-import { CURRENCIES, getCurrencySymbol } from "../../constants/currencies";
+import {
+  CURRENCIES,
+  cleanDecimal,
+  detectForeignInvestment,
+  getDefaultExchangeRate,
+  getCurrencySymbol,
+  isForeignInvestment,
+} from "../../constants/currencies";
 import { exportTransactionHistoryCSV } from "../../services/portfolioReportService";
 import useAuthStore from "../../store/useAuthStore";
 import { Theme } from "../../theme/theme";
@@ -65,7 +72,10 @@ import WithdrawModal from "./modals/WithdrawModal";
 
 const SORT_OPTIONS = [
   { id: "VALUE_DESC", label: "Highest Value" },
+  { id: "VALUE_ASC", label: "Lowest Value" },
+  { id: "INVESTED_DESC", label: "Highest Invested" },
   { id: "RETURN_DESC", label: "Top Gainers (%)" },
+  { id: "RETURN_ABS_DESC", label: "Highest Profit" },
   { id: "XIRR_DESC", label: "Highest Return / XIRR" },
   { id: "NAME_ASC", label: "Alphabetical (A-Z)" },
   { id: "RECENT", label: "Recently Added" },
@@ -143,6 +153,58 @@ const PortfolioScreen = ({ navigation }) => {
 
   // Account Source
   const [payFromAccount, setPayFromAccount] = useState(null);
+
+  // Foreign Detection and Top-Up Currency State
+  const [detectedForeign, setDetectedForeign] = useState(null);
+  const [userChangedCurrencyManually, setUserChangedCurrencyManually] = useState(false);
+  const [addAmtExchangeRate, setAddAmtExchangeRate] = useState("1");
+
+  // Early Foreign Investment Detection Handlers
+  const handleInvNameChange = (text) => {
+    setInvName(text);
+    if (!userChangedCurrencyManually) {
+      const detection = detectForeignInvestment(text, invPlatform);
+      if (detection.isForeign) {
+        setInvCurrency(detection.suggestedCurrency);
+        setInvExchangeRate(detection.defaultRate.toString());
+        setDetectedForeign(detection);
+      } else if (detectedForeign) {
+        const platDetection = detectForeignInvestment("", invPlatform);
+        if (platDetection.isForeign) {
+          setInvCurrency(platDetection.suggestedCurrency);
+          setInvExchangeRate(platDetection.defaultRate.toString());
+          setDetectedForeign(platDetection);
+        } else {
+          setInvCurrency(baseCurrency);
+          setInvExchangeRate("1");
+          setDetectedForeign(null);
+        }
+      }
+    }
+  };
+
+  const handleInvPlatformChange = (text) => {
+    setInvPlatform(text);
+    if (!userChangedCurrencyManually) {
+      const detection = detectForeignInvestment(invName, text);
+      if (detection.isForeign) {
+        setInvCurrency(detection.suggestedCurrency);
+        setInvExchangeRate(detection.defaultRate.toString());
+        setDetectedForeign(detection);
+      } else if (detectedForeign) {
+        const nameDetection = detectForeignInvestment(invName, "");
+        if (nameDetection.isForeign) {
+          setInvCurrency(nameDetection.suggestedCurrency);
+          setInvExchangeRate(nameDetection.defaultRate.toString());
+          setDetectedForeign(nameDetection);
+        } else {
+          setInvCurrency(baseCurrency);
+          setInvExchangeRate("1");
+          setDetectedForeign(null);
+        }
+      }
+    }
+  };
 
   // Sub-forms
   const [updateValue, setUpdateValue] = useState("");
@@ -259,6 +321,8 @@ const PortfolioScreen = ({ navigation }) => {
     setInvRdCompletedMonths("0");
     setInvType(INVESTMENT_TYPES[0]);
     setPayFromAccount(null);
+    setDetectedForeign(null);
+    setUserChangedCurrencyManually(false);
   };
 
   const parseMaturityDate = (ddmmyyyy) => {
@@ -459,9 +523,13 @@ const PortfolioScreen = ({ navigation }) => {
     setSaving(true);
     try {
       const selectedDateIso = (addAmtDate || new Date()).toISOString();
+      const isForeign = isForeignInvestment(editingInvestment, baseCurrency);
+      const effectiveRate = parseFloat(addAmtExchangeRate) > 0
+        ? parseFloat(addAmtExchangeRate)
+        : (parseFloat(editingInvestment?.exchangeRate) > 0 ? parseFloat(editingInvestment.exchangeRate) : 1);
+      const deductedAmount = (parseFloat(addAmtValue) || 0) * effectiveRate;
+
       if (payFromAccount) {
-        const rate = parseFloat(editingInvestment?.exchangeRate) > 0 ? parseFloat(editingInvestment.exchangeRate) : 1;
-        const deductedAmount = (parseFloat(addAmtValue) || 0) * rate;
         await addExpense({
           amount: deductedAmount,
           categoryId: "investment",
@@ -483,21 +551,28 @@ const PortfolioScreen = ({ navigation }) => {
         addAmtCurrentValue || null,
         addAmtNote?.trim() || "",
         selectedDateIso,
+        isForeign ? effectiveRate : null,
       );
 
       if (result.success) {
         setShowAddAmountModal(false);
+        const invSym = getCurrencySymbol(editingInvestment?.currency, currencySymbol);
+        const savedName = editingInvestment?.name;
+        const savedAmt = addAmtValue;
         setAddAmtValue("");
         setAddAmtCurrentValue("");
         setAddAmtNote("");
         setAddAmtDate(new Date());
+        setAddAmtExchangeRate("1");
         setEditingInvestment(null);
         setPayFromAccount(null);
         fetchInvestments();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Alert.alert(
           "✅ Amount Added",
-          `₹${parseFloat(addAmtValue).toLocaleString("en-IN")} added to ${editingInvestment.name}`,
+          `${invSym}${parseFloat(savedAmt).toLocaleString("en-IN")}${
+            isForeign ? ` (≈ ${currencySymbol}${deductedAmount.toLocaleString("en-IN")})` : ""
+          } added to ${savedName}`,
         );
       } else {
         Alert.alert("Error", result.error);
@@ -671,40 +746,62 @@ const PortfolioScreen = ({ navigation }) => {
         const matchesType = (inv.typeName || "").toLowerCase().includes(q);
         if (!matchesName && !matchesPlatform && !matchesType) return false;
       }
-      // Category filter
-      if (selectedCategory && inv.type !== selectedCategory) {
-        return false;
+      // Category filter (with separate foreign assets support)
+      if (selectedCategory) {
+        const isForeignInv = isForeignInvestment(inv, baseCurrency);
+        if (selectedCategory === "foreign_stocks" || selectedCategory === "foreign") {
+          if (!isForeignInv) return false;
+        } else if (selectedCategory.startsWith("foreign_")) {
+          const baseType = selectedCategory.replace("foreign_", "");
+          if (!isForeignInv || inv.type !== baseType) return false;
+        } else {
+          // Domestic category: match inv.type AND not foreign
+          if (inv.type !== selectedCategory || isForeignInv) return false;
+        }
       }
       return true;
     })
     .sort((a, b) => {
+      const rateA = parseFloat(a.exchangeRate) > 0 ? parseFloat(a.exchangeRate) : 1;
+      const rateB = parseFloat(b.exchangeRate) > 0 ? parseFloat(b.exchangeRate) : 1;
+      const valA = (parseFloat(a.currentValue) || 0) * rateA;
+      const valB = (parseFloat(b.currentValue) || 0) * rateB;
+      const invA = (parseFloat(a.investedAmount) || 0) * rateA;
+      const invB = (parseFloat(b.investedAmount) || 0) * rateB;
+
       if (sortOption === "VALUE_DESC") {
-        return (b.currentValue || 0) - (a.currentValue || 0);
+        return valB - valA;
+      }
+      if (sortOption === "VALUE_ASC") {
+        return valA - valB;
+      }
+      if (sortOption === "INVESTED_DESC") {
+        return invB - invA;
       }
       if (sortOption === "RETURN_DESC") {
-        const retA =
-          a.investedAmount > 0
-            ? ((a.currentValue - a.investedAmount) / a.investedAmount) * 100
-            : 0;
-        const retB =
-          b.investedAmount > 0
-            ? ((b.currentValue - b.investedAmount) / b.investedAmount) * 100
-            : 0;
+        const retA = invA > 0 ? ((valA - invA) / invA) * 100 : 0;
+        const retB = invB > 0 ? ((valB - invB) / invB) * 100 : 0;
         return retB - retA;
+      }
+      if (sortOption === "RETURN_ABS_DESC") {
+        const gainA = valA - invA;
+        const gainB = valB - invB;
+        return gainB - gainA;
       }
       if (sortOption === "XIRR_DESC") {
         const rA = calculateInvestmentReturns(a);
         const rB = calculateInvestmentReturns(b);
-        return (
-          parseFloat(rB.displayRate.replace(/[^0-9.-]/g, "")) -
-          parseFloat(rA.displayRate.replace(/[^0-9.-]/g, ""))
-        );
+        const rateNumA = parseFloat(String(rA?.displayRate || 0).replace(/[^0-9.-]/g, "")) || 0;
+        const rateNumB = parseFloat(String(rB?.displayRate || 0).replace(/[^0-9.-]/g, "")) || 0;
+        return rateNumB - rateNumA;
       }
       if (sortOption === "NAME_ASC") {
         return (a.name || "").localeCompare(b.name || "");
       }
       // RECENT
-      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+      return timeB - timeA;
     });
 
   // Loading Screen
@@ -977,6 +1074,11 @@ const PortfolioScreen = ({ navigation }) => {
                     setAddAmtCurrentValue("");
                     setAddAmtNote("");
                     setAddAmtDate(new Date());
+                    setAddAmtExchangeRate(
+                      inv.exchangeRate !== undefined && inv.exchangeRate !== null
+                        ? inv.exchangeRate.toString()
+                        : "1"
+                    );
                     setShowAddAmtDatePicker(false);
                     setShowAddAmountModal(true);
                   }}
@@ -1027,6 +1129,11 @@ const PortfolioScreen = ({ navigation }) => {
           setAddAmtCurrentValue("");
           setAddAmtNote("");
           setAddAmtDate(new Date());
+          setAddAmtExchangeRate(
+            inv.exchangeRate !== undefined && inv.exchangeRate !== null
+              ? inv.exchangeRate.toString()
+              : "1"
+          );
           setShowAddAmtDatePicker(false);
           setShowAddAmountModal(true);
         }}
@@ -1202,21 +1309,36 @@ const PortfolioScreen = ({ navigation }) => {
                   <Text style={styles.modalLabel}>Investment Name *</Text>
                   <TextInput
                     style={styles.modalInput}
-                    placeholder="e.g., HDFC Midcap Fund, SBI FD"
+                    placeholder="e.g., Vanguard S&P 500 ETF, HDFC Midcap"
                     placeholderTextColor="#9CA3AF"
                     value={invName}
-                    onChangeText={setInvName}
+                    onChangeText={handleInvNameChange}
                   />
 
                   {/* Platform */}
                   <Text style={styles.modalLabel}>Platform / Broker (Optional)</Text>
                   <TextInput
                     style={styles.modalInput}
-                    placeholder="e.g., Groww, Zerodha, Bank"
+                    placeholder="e.g., INDmoney, Alpaca, Zerodha, Bank"
                     placeholderTextColor="#9CA3AF"
                     value={invPlatform}
-                    onChangeText={setInvPlatform}
+                    onChangeText={handleInvPlatformChange}
                   />
+
+                  {/* Early Foreign Asset Detection Banner */}
+                  {detectedForeign?.isForeign && (
+                    <View style={styles.foreignDetectionBanner}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Ionicons name="globe" size={16} color="#0284C7" />
+                        <Text style={styles.foreignDetectionTitle}>
+                          Foreign Asset Detected ({detectedForeign.currency})
+                        </Text>
+                      </View>
+                      <Text style={styles.foreignDetectionSubtitle}>
+                        {detectedForeign.reason} • Automatically flagged as {detectedForeign.currency} ({getCurrencySymbol(detectedForeign.currency)}) with default exchange rate ₹{detectedForeign.defaultRate}.
+                      </Text>
+                    </View>
+                  )}
 
                   {/* Currency Selection */}
                   <Text style={styles.modalLabel}>Currency</Text>
@@ -1230,9 +1352,12 @@ const PortfolioScreen = ({ navigation }) => {
                       <TouchableOpacity
                         key={c.code}
                         onPress={() => {
+                          setUserChangedCurrencyManually(true);
                           setInvCurrency(c.code);
                           if (c.code === baseCurrency) {
                             setInvExchangeRate("1");
+                          } else {
+                            setInvExchangeRate(getDefaultExchangeRate(c.code).toString());
                           }
                         }}
                         style={[
@@ -1263,7 +1388,7 @@ const PortfolioScreen = ({ navigation }) => {
                         placeholder="e.g., 86.50"
                         placeholderTextColor="#9CA3AF"
                         value={invExchangeRate}
-                        onChangeText={setInvExchangeRate}
+                        onChangeText={(v) => setInvExchangeRate(cleanDecimal(v))}
                         keyboardType="numeric"
                       />
                       {parseFloat(invExchangeRate) > 0 && parseFloat(invAmount) > 0 && (
@@ -1286,7 +1411,7 @@ const PortfolioScreen = ({ navigation }) => {
                         placeholderTextColor="#9CA3AF"
                         value={invRdMonthly}
                         onChangeText={(v) =>
-                          setInvRdMonthly(v.replace(/[^0-9]/g, ""))
+                          setInvRdMonthly(cleanDecimal(v))
                         }
                         keyboardType="numeric"
                       />
@@ -1325,14 +1450,19 @@ const PortfolioScreen = ({ navigation }) => {
                       </Text>
                       <TextInput
                         style={styles.modalInput}
-                        placeholder="50000"
+                        placeholder={invCurrency !== baseCurrency ? "100.00" : "50000"}
                         placeholderTextColor="#9CA3AF"
                         value={invAmount}
                         onChangeText={(v) =>
-                          setInvAmount(v.replace(/[^0-9]/g, ""))
+                          setInvAmount(cleanDecimal(v))
                         }
                         keyboardType="numeric"
                       />
+                      {invCurrency !== baseCurrency && parseFloat(invAmount) > 0 && parseFloat(invExchangeRate) > 0 && (
+                        <Text style={styles.conversionHint}>
+                          ≈ {currencySymbol}{((parseFloat(invAmount) || 0) * (parseFloat(invExchangeRate) || 1)).toLocaleString("en-IN")} in base currency
+                        </Text>
+                      )}
 
                       <Text style={styles.modalLabel}>
                         Current Market Value ({getCurrencySymbol(invCurrency, currencySymbol)})
@@ -1343,10 +1473,15 @@ const PortfolioScreen = ({ navigation }) => {
                         placeholderTextColor="#9CA3AF"
                         value={invCurrentValue}
                         onChangeText={(v) =>
-                          setInvCurrentValue(v.replace(/[^0-9]/g, ""))
+                          setInvCurrentValue(cleanDecimal(v))
                         }
                         keyboardType="numeric"
                       />
+                      {invCurrency !== baseCurrency && parseFloat(invCurrentValue) > 0 && parseFloat(invExchangeRate) > 0 && (
+                        <Text style={styles.conversionHint}>
+                          ≈ {currencySymbol}{((parseFloat(invCurrentValue) || 0) * (parseFloat(invExchangeRate) || 1)).toLocaleString("en-IN")} in base currency
+                        </Text>
+                      )}
                     </>
                   )}
 
@@ -1362,7 +1497,7 @@ const PortfolioScreen = ({ navigation }) => {
                         placeholderTextColor="#9CA3AF"
                         value={invSipAmount}
                         onChangeText={(v) =>
-                          setInvSipAmount(v.replace(/[^0-9]/g, ""))
+                          setInvSipAmount(cleanDecimal(v))
                         }
                         keyboardType="numeric"
                       />
@@ -1573,21 +1708,56 @@ const PortfolioScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.subHoldingName}>
-                {editingInvestment?.name}
-              </Text>
+              {/* Holding Info with Foreign Flag */}
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <Text style={styles.subHoldingName}>
+                  {editingInvestment?.name}
+                </Text>
+                {isForeignInvestment(editingInvestment, baseCurrency) && (
+                  <View style={styles.foreignBadgeSmall}>
+                    <Ionicons name="globe-outline" size={12} color="#0284C7" />
+                    <Text style={styles.foreignBadgeSmallText}>
+                      {editingInvestment?.currency || "USD"}
+                    </Text>
+                  </View>
+                )}
+              </View>
 
-              <Text style={styles.modalLabel}>Amount to Invest *</Text>
+              <Text style={styles.modalLabel}>
+                Amount to Invest ({getCurrencySymbol(editingInvestment?.currency, currencySymbol)}) *
+              </Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="10000"
+                placeholder={isForeignInvestment(editingInvestment, baseCurrency) ? "100.00" : "10000"}
                 placeholderTextColor="#9CA3AF"
                 value={addAmtValue}
                 onChangeText={(v) =>
-                  setAddAmtValue(v.replace(/[^0-9]/g, ""))
+                  setAddAmtValue(cleanDecimal(v))
                 }
                 keyboardType="numeric"
               />
+
+              {/* Foreign Currency Exchange Rate & Conversion for Top-up */}
+              {isForeignInvestment(editingInvestment, baseCurrency) && (
+                <View style={styles.foreignRateBox}>
+                  <Text style={styles.modalLabel}>
+                    Exchange Rate (1 {editingInvestment?.currency || "USD"} = ? {currencySymbol}) *
+                  </Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="e.g. 86.50"
+                    placeholderTextColor="#9CA3AF"
+                    value={addAmtExchangeRate}
+                    onChangeText={(v) => setAddAmtExchangeRate(cleanDecimal(v))}
+                    keyboardType="numeric"
+                  />
+                  {parseFloat(addAmtValue) > 0 && parseFloat(addAmtExchangeRate) > 0 && (
+                    <Text style={styles.conversionHint}>
+                      ≈ {currencySymbol}{((parseFloat(addAmtValue) || 0) * (parseFloat(addAmtExchangeRate) || 1)).toLocaleString("en-IN")} converted to base currency
+                    </Text>
+                  )}
+                </View>
+              )}
 
               <Text style={styles.modalLabel}>Date of Investment</Text>
               <TouchableOpacity
@@ -1620,7 +1790,7 @@ const PortfolioScreen = ({ navigation }) => {
               )}
 
               <Text style={styles.modalLabel}>
-                Total Market Value After Top-up (Optional)
+                Total Market Value After Top-up ({getCurrencySymbol(editingInvestment?.currency, currencySymbol)}) (Optional)
               </Text>
               <TextInput
                 style={styles.modalInput}
@@ -1628,7 +1798,7 @@ const PortfolioScreen = ({ navigation }) => {
                 placeholderTextColor="#9CA3AF"
                 value={addAmtCurrentValue}
                 onChangeText={(v) =>
-                  setAddAmtCurrentValue(v.replace(/[^0-9]/g, ""))
+                  setAddAmtCurrentValue(cleanDecimal(v))
                 }
                 keyboardType="numeric"
               />
@@ -2170,6 +2340,39 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 6,
     marginBottom: 4,
+  },
+  foreignDetectionBanner: {
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 8,
+  },
+  foreignDetectionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0369A1",
+  },
+  foreignDetectionSubtitle: {
+    fontSize: 11,
+    color: "#0284C7",
+    marginTop: 3,
+    lineHeight: 15,
+  },
+  foreignBadgeSmall: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E0F2FE",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 4,
+  },
+  foreignBadgeSmallText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#0284C7",
   },
   conversionHint: {
     fontSize: 11,

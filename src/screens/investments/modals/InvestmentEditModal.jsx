@@ -14,7 +14,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { CURRENCIES, getCurrencySymbol } from "../../../constants/currencies";
+import {
+  CURRENCIES,
+  cleanDecimal,
+  detectForeignInvestment,
+  getDefaultExchangeRate,
+  getCurrencySymbol,
+  isForeignInvestment,
+} from "../../../constants/currencies";
 import { updateInvestmentDetails } from "../../../services/investmentService";
 
 const InvestmentEditModal = ({
@@ -85,7 +92,8 @@ const InvestmentEditModal = ({
   const gainPercent = numInvested > 0 ? ((absoluteGain / numInvested) * 100).toFixed(2) : "0.00";
   const isGain = absoluteGain >= 0;
   const currentInvSymbol = getCurrencySymbol(currency, currencySymbol);
-  const isForeign = currency !== "INR" || numRate !== 1;
+  const isForeign = isForeignInvestment(currency, "INR") || numRate !== 1;
+  const detectedAsset = (!isForeign || currency === "INR") ? detectForeignInvestment(name, platform) : null;
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -189,6 +197,28 @@ const InvestmentEditModal = ({
               placeholderTextColor="#94A3B8"
             />
 
+            {/* Early Foreign Asset Detection Suggestion */}
+            {detectedAsset?.isForeign && currency === "INR" && (
+              <TouchableOpacity
+                style={styles.suggestionBanner}
+                onPress={() => {
+                  setCurrency(detectedAsset.currency);
+                  setExchangeRate(detectedAsset.defaultRate.toString());
+                }}
+              >
+                <Ionicons name="globe-outline" size={16} color="#0284C7" />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.suggestionTitle}>
+                    Foreign Asset Detected ({detectedAsset.currency})
+                  </Text>
+                  <Text style={styles.suggestionSub}>
+                    {detectedAsset.reason} • Tap to switch to {detectedAsset.currency} ({getCurrencySymbol(detectedAsset.currency)}) @ ₹{detectedAsset.defaultRate}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#0284C7" />
+              </TouchableOpacity>
+            )}
+
             {/* Currency & Exchange Rate */}
             <View style={styles.sectionBox}>
               <Text style={styles.sectionTitle}>Asset Currency</Text>
@@ -203,8 +233,10 @@ const InvestmentEditModal = ({
                     key={c.code}
                     onPress={() => {
                       setCurrency(c.code);
-                      if (c.code === "INR" && exchangeRate === "1") {
+                      if (c.code === "INR") {
                         setExchangeRate("1");
+                      } else {
+                        setExchangeRate(getDefaultExchangeRate(c.code).toString());
                       }
                     }}
                     style={[
@@ -232,7 +264,7 @@ const InvestmentEditModal = ({
                   <TextInput
                     style={styles.input}
                     value={exchangeRate}
-                    onChangeText={setExchangeRate}
+                    onChangeText={(v) => setExchangeRate(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="e.g. 86.5"
                     placeholderTextColor="#94A3B8"
@@ -265,7 +297,7 @@ const InvestmentEditModal = ({
                   <TextInput
                     style={styles.input}
                     value={investedAmount}
-                    onChangeText={setInvestedAmount}
+                    onChangeText={(v) => setInvestedAmount(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="0"
                     placeholderTextColor="#94A3B8"
@@ -281,7 +313,7 @@ const InvestmentEditModal = ({
                   <TextInput
                     style={styles.input}
                     value={currentValue}
-                    onChangeText={setCurrentValue}
+                    onChangeText={(v) => setCurrentValue(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="0"
                     placeholderTextColor="#94A3B8"
@@ -596,6 +628,26 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#64748B",
     fontWeight: "600",
+    marginTop: 2,
+  },
+  suggestionBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 8,
+  },
+  suggestionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0369A1",
+  },
+  suggestionSub: {
+    fontSize: 11,
+    color: "#0284C7",
     marginTop: 2,
   },
 });

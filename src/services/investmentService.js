@@ -23,13 +23,14 @@ const getUserId = () => {
 export const INVESTMENT_TYPES = [
   { id: 'mutual_fund', name: 'Mutual Funds', icon: '📊', color: '#6C63FF' },
   { id: 'stocks', name: 'Stocks', icon: '📈', color: '#10B981' },
+  { id: 'foreign_stocks', name: 'Foreign Stocks', icon: '🌐', color: '#0EA5E9' },
   { id: 'fd', name: 'Fixed Deposit', icon: '🏦', color: '#3B82F6' },
   { id: 'rd', name: 'Recurring Deposit', icon: '🔄', color: '#14B8A6' },
   { id: 'ppf', name: 'PPF / EPF', icon: '🛡️', color: '#8B5CF6' },
   { id: 'gold', name: 'Gold / Silver / Precious Metals', icon: '🥇', color: '#F59E0B' },
   { id: 'crypto', name: 'Crypto', icon: '₿', color: '#F97316' },
   { id: 'real_estate', name: 'Real Estate', icon: '🏠', color: '#EC4899' },
-  { id: 'nps', name: 'NPS', icon: '📋', color: '#0EA5E9' },
+  { id: 'nps', name: 'NPS', icon: '📋', color: '#0284C7' },
   { id: 'bonds', name: 'Bonds', icon: '📄', color: '#64748B' },
   { id: 'other', name: 'Other', icon: '💰', color: '#9E9E9E' },
 ];
@@ -140,7 +141,7 @@ export const updateInvestment = async (investmentId, data) => {
 
 // ============ ADD INVESTMENT AMOUNT (UNIVERSAL) ============
 // Works for ALL investment types — records a new investment transaction
-export const addInvestmentAmount = async (investmentId, amount, currentValue, note = '', customDate = null) => {
+export const addInvestmentAmount = async (investmentId, amount, currentValue, note = '', customDate = null, updatedExchangeRate = null) => {
   try {
     const userId = getUserId();
     const docRef = doc(db, 'users', userId, 'investments', investmentId);
@@ -167,12 +168,23 @@ export const addInvestmentAmount = async (investmentId, amount, currentValue, no
 
     const existingTxns = data.transactions || [];
 
-    await updateDoc(docRef, {
+    const updatePayload = {
       investedAmount: newInvested,
       currentValue: newCurrentValue,
       transactions: [...existingTxns, transaction],
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    if (
+      updatedExchangeRate !== null &&
+      updatedExchangeRate !== undefined &&
+      !isNaN(parseFloat(updatedExchangeRate)) &&
+      parseFloat(updatedExchangeRate) > 0
+    ) {
+      updatePayload.exchangeRate = parseFloat(updatedExchangeRate);
+    }
+
+    await updateDoc(docRef, updatePayload);
 
     console.log('✅ Investment amount added:', amount);
     return { success: true, newInvested, newCurrentValue };
