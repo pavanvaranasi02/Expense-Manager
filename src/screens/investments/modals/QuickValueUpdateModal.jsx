@@ -13,7 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getCurrencySymbol } from "../../../constants/currencies";
+import {
+  cleanDecimal,
+  getCurrencySymbol,
+  isForeignInvestment,
+} from "../../../constants/currencies";
 import { updateInvestment } from "../../../services/investmentService";
 import { formatCurrency } from "../../../utils/format";
 
@@ -32,7 +36,7 @@ const QuickValueUpdateModal = ({
 
   const invCurrency = investment?.currency || "INR";
   const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
-  const isForeign = !!(investment?.currency && (investment.currency !== "INR" || (investment.exchangeRate && investment.exchangeRate !== 1)));
+  const isForeign = isForeignInvestment(investment, "INR") || (investment?.exchangeRate && investment.exchangeRate !== 1);
 
   useEffect(() => {
     if (investment) {
@@ -64,7 +68,8 @@ const QuickValueUpdateModal = ({
 
   const applyPercentageGain = (pct) => {
     if (numInvested > 0) {
-      const newVal = Math.round(numInvested * (1 + pct / 100));
+      const rawVal = numInvested * (1 + pct / 100);
+      const newVal = isForeign ? rawVal.toFixed(2) : Math.round(rawVal).toString();
       setCurrentValue(newVal.toString());
     }
   };
@@ -196,7 +201,7 @@ const QuickValueUpdateModal = ({
                 <TextInput
                   style={styles.amountInput}
                   value={investedAmount}
-                  onChangeText={setInvestedAmount}
+                  onChangeText={(v) => setInvestedAmount(cleanDecimal(v))}
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor="#94A3B8"
@@ -220,7 +225,7 @@ const QuickValueUpdateModal = ({
                 <TextInput
                   style={styles.amountInput}
                   value={currentValue}
-                  onChangeText={setCurrentValue}
+                  onChangeText={(v) => setCurrentValue(cleanDecimal(v))}
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor="#94A3B8"
@@ -281,7 +286,7 @@ const QuickValueUpdateModal = ({
                   <TextInput
                     style={styles.amountInput}
                     value={exchangeRate}
-                    onChangeText={setExchangeRate}
+                    onChangeText={(v) => setExchangeRate(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="e.g. 86.5"
                     placeholderTextColor="#94A3B8"

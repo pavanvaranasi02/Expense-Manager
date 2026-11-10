@@ -124,7 +124,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "mutual_fund", "stocks", "fd", "rd", "ppf",
+                "mutual_fund", "stocks", "foreign_stocks", "fd", "rd", "ppf",
                 "gold", "crypto", "real_estate", "nps", "bonds", "other"
               ],
               "required": true

@@ -178,7 +178,7 @@ Portfolio assets spanning mutual funds, stocks, fixed deposits, RD, crypto, gold
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `name` | `string` | Yes | - | Investment name (e.g. "Apple Inc", "SBI FD") |
-| `type` | `string` | Yes | - | `"mutual_fund"`, `"stocks"`, `"fd"`, `"rd"`, `"ppf"`, `"gold"`, `"crypto"`, `"real_estate"`, `"nps"`, `"bonds"`, `"other"` |
+| `type` | `string` | Yes | - | `"mutual_fund"`, `"stocks"`, `"foreign_stocks"`, `"fd"`, `"rd"`, `"ppf"`, `"gold"`, `"crypto"`, `"real_estate"`, `"nps"`, `"bonds"`, `"other"` |
 | `typeName` | `string` | Yes | - | Display name of asset type |
 | `typeIcon` | `string` | Yes | `"💰"` | Asset icon emoji |
 | `platform` | `string \| null` | No | `null` | Broker / Institution (e.g. "Groww", "Zerodha") |
@@ -207,7 +207,7 @@ Portfolio assets spanning mutual funds, stocks, fixed deposits, RD, crypto, gold
 | `autoMaturityCredit` | `boolean` | No | `false` | Automatically credit bank account when matured |
 | `maturityCredited` | `boolean` | No | `false` | Whether maturity proceeds were credited |
 | **Universal Transactions** | | | | |
-| `transactions` | `array<map>` | No | `[]` | Transaction history (purchases, top-ups, redemptions) |
+| `transactions` | `array<map>` | No | `[]` | Transaction history (purchases, top-ups, redemptions, buy orders) |
 | `createdAt` | `timestamp` | Yes | `serverTimestamp()` | Record created timestamp |
 | `updatedAt` | `timestamp` | Yes | `serverTimestamp()` | Record updated timestamp |
 
@@ -215,7 +215,7 @@ Portfolio assets spanning mutual funds, stocks, fixed deposits, RD, crypto, gold
 ```json
 {
   "id": "txn_1731210000000",
-  "type": "INVEST | SIP | RD_PAYMENT | WITHDRAW | MATURED",
+  "type": "INVEST | BUY | SIP | RD_PAYMENT | WITHDRAW | MATURED | VALUE_UPDATE",
   "amount": 500,
   "date": "2026-11-10T08:00:00.000Z",
   "note": "Quarterly lumpsum",

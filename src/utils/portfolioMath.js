@@ -3,6 +3,8 @@
  * Includes robust XIRR calculation, CAGR, Annualized Return, and Maturity countdowns.
  */
 
+import { isForeignInvestment } from '../constants/currencies.js';
+
 /**
  * Calculates the Extended Internal Rate of Return (XIRR) for a series of cash flows.
  * Positive amounts = cash inflows (e.g. current valuation, withdrawals).
@@ -315,26 +317,41 @@ export const calculatePortfolioMetrics = (investments) => {
 
   const portfolioXirr = calculateXIRR(allFlows);
 
-  // Group by category/type (converted to base currency)
+  // Group by category/type (converted to base currency, separating foreign assets)
   const byType = {};
   active.forEach((inv) => {
     const rate = parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1;
     const invAmt = (parseFloat(inv.investedAmount) || 0) * rate;
     const currVal = (parseFloat(inv.currentValue) || 0) * rate;
 
-    if (!byType[inv.type]) {
-      byType[inv.type] = {
-        type: inv.type,
-        typeName: inv.typeName || inv.type,
-        typeIcon: inv.typeIcon || '💰',
+    const isForeign = isForeignInvestment(inv) || inv.type === 'foreign_stocks';
+
+    const typeKey = isForeign
+      ? (inv.type === 'stocks' || inv.type === 'foreign_stocks' ? 'foreign_stocks' : `foreign_${inv.type}`)
+      : inv.type;
+
+    const typeName = isForeign
+      ? (inv.type === 'stocks' || inv.type === 'foreign_stocks' ? 'Foreign Stocks' : `Foreign ${inv.typeName || inv.type}`)
+      : (inv.typeName || inv.type);
+
+    const typeIcon = isForeign ? '🌐' : (inv.typeIcon || '💰');
+    const color = isForeign ? '#0EA5E9' : null;
+
+    if (!byType[typeKey]) {
+      byType[typeKey] = {
+        type: typeKey,
+        typeName,
+        typeIcon,
+        color,
+        isForeign,
         invested: 0,
         currentValue: 0,
         count: 0,
       };
     }
-    byType[inv.type].invested += invAmt;
-    byType[inv.type].currentValue += currVal;
-    byType[inv.type].count += 1;
+    byType[typeKey].invested += invAmt;
+    byType[typeKey].currentValue += currVal;
+    byType[typeKey].count += 1;
   });
 
   const typeBreakdown = Object.values(byType)

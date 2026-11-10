@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getCurrencySymbol } from "../../../constants/currencies";
+import { cleanDecimal, getCurrencySymbol, isForeignInvestment } from "../../../constants/currencies";
 import { addIncome } from "../../../services/incomeService";
 import { withdrawInvestmentAmount } from "../../../services/investmentService";
 
@@ -34,7 +34,7 @@ const WithdrawModal = ({
   const invCurrency = investment?.currency || "INR";
   const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
   const rate = parseFloat(investment?.exchangeRate) > 0 ? parseFloat(investment.exchangeRate) : 1;
-  const isForeign = !!(investment?.currency && (investment.currency !== "INR" || rate !== 1));
+  const isForeign = isForeignInvestment(investment, "INR") || rate !== 1;
 
   useEffect(() => {
     setAmount("");
@@ -154,7 +154,7 @@ const WithdrawModal = ({
                 placeholder="0"
                 placeholderTextColor="#CBD5E1"
                 value={amount}
-                onChangeText={(v) => setAmount(v.replace(/[^0-9]/g, ""))}
+                onChangeText={(v) => setAmount(cleanDecimal(v))}
                 keyboardType="numeric"
                 autoFocus
               />

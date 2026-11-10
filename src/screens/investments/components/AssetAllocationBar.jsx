@@ -29,7 +29,7 @@ const AssetAllocationBar = ({
       <View style={styles.progressBar}>
         {breakdown.map((item) => {
           const typeConfig = INVESTMENT_TYPES.find((t) => t.id === item.type);
-          const color = typeConfig?.color || "#6C63FF";
+          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#6C63FF");
           const pct = Math.max(item.percentage || 0, 2); // Minimum 2% so small slices show visually
           return (
             <View
@@ -51,7 +51,7 @@ const AssetAllocationBar = ({
       <View style={styles.chipsRow}>
         {breakdown.map((item) => {
           const typeConfig = INVESTMENT_TYPES.find((t) => t.id === item.type);
-          const color = typeConfig?.color || "#6C63FF";
+          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#6C63FF");
           const isSelected = selectedCategory === item.type;
 
           return (
@@ -64,7 +64,11 @@ const AssetAllocationBar = ({
               onPress={() => onSelectCategory(isSelected ? null : item.type)}
               activeOpacity={0.7}
             >
-              <View style={[styles.dot, { backgroundColor: color }]} />
+              {item.typeIcon ? (
+                <Text style={{ marginRight: 4, fontSize: 11 }}>{item.typeIcon}</Text>
+              ) : (
+                <View style={[styles.dot, { backgroundColor: color }]} />
+              )}
               <Text
                 style={[
                   styles.chipName,
