@@ -253,6 +253,104 @@ export const getAllIncomes = async () => {
   }
 };
 
+// ============ UPDATE INCOME ============
+export const updateIncome = async (incomeId, newData, oldData) => {
+  try {
+    const userId = getUserId();
+    const newAmount = parseFloat(newData.amount);
+    const oldAmount = parseFloat(oldData?.amount || 0);
+
+    const updatedFields = {
+      amount: newAmount,
+      source: newData.source,
+      sourceName: newData.sourceName || newData.source,
+      sourceIcon: newData.sourceIcon || '📦',
+      accountId: newData.accountId,
+      accountName: newData.accountName,
+      note: newData.note?.trim() || '',
+      date: new Date(newData.date).toISOString(),
+      paymentMode: newData.paymentMode || 'UPI',
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INCOMES, incomeId, updatedFields);
+
+      if (oldData?.accountId) {
+        const oldAcc = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, oldData.accountId);
+        if (oldAcc) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, oldData.accountId, {
+            balance: (oldAcc.balance || 0) - oldAmount,
+          });
+        }
+      }
+      if (newData.accountId) {
+        const newAcc = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, newData.accountId);
+        if (newAcc) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, newData.accountId, {
+            balance: (newAcc.balance || 0) + newAmount,
+          });
+        }
+      }
+
+      logUserAction({
+        action: 'INCOME_UPDATE',
+        entity: 'Transactions',
+        summary: `Updated income: ${updatedFields.sourceName} (${newAmount})`,
+        previousState: oldData || { id: incomeId },
+        nextState: updatedFields,
+        explicitUserId: userId,
+      });
+      return { success: true };
+    }
+
+    const batch = writeBatch(db);
+    const incomeRef = doc(db, 'users', userId, 'incomes', incomeId);
+    batch.update(incomeRef, {
+      ...updatedFields,
+      date: Timestamp.fromDate(new Date(newData.date)),
+      updatedAt: serverTimestamp(),
+    });
+
+    if (oldData?.accountId && oldData.accountId === newData.accountId) {
+      const diff = newAmount - oldAmount;
+      if (diff !== 0) {
+        batch.update(doc(db, 'users', userId, 'accounts', newData.accountId), {
+          balance: increment(diff),
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } else {
+      if (oldData?.accountId) {
+        batch.update(doc(db, 'users', userId, 'accounts', oldData.accountId), {
+          balance: increment(-oldAmount),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      if (newData.accountId) {
+        batch.update(doc(db, 'users', userId, 'accounts', newData.accountId), {
+          balance: increment(newAmount),
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
+
+    await batch.commit();
+    logUserAction({
+      action: 'INCOME_UPDATE',
+      entity: 'Transactions',
+      summary: `Updated income: ${updatedFields.sourceName} (${newAmount})`,
+      previousState: oldData || { id: incomeId },
+      nextState: updatedFields,
+      explicitUserId: userId,
+    });
+    return { success: true };
+  } catch (error) {
+    console.log('❌ Update income error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // ============ DELETE INCOME ============
 export const deleteIncome = async (incomeId, incomeData) => {
   try {

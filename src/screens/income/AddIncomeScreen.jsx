@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -22,16 +23,30 @@ import {
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAccounts } from '../../services/accountService';
-import { addIncome, INCOME_SOURCES } from '../../services/incomeService';
+import { addIncome, INCOME_SOURCES, updateIncome } from '../../services/incomeService';
 import { Theme } from '../../theme/theme';
 import { formatCurrency } from '../../utils/format';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const AddIncomeScreen = ({ navigation }) => {
-  const [amount, setAmount] = useState('');
-  const [selectedSource, setSelectedSource] = useState(INCOME_SOURCES[0]);
-  const [note, setNote] = useState('');
+const AddIncomeScreen = ({ navigation, route }) => {
+  const editData = route?.params?.income;
+  const isEdit = !!editData;
+
+  const parseInitialDate = () => {
+    const raw = editData?.date;
+    if (!raw) return new Date();
+    const d = raw?.toDate ? raw.toDate() : new Date(raw);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
+  const [amount, setAmount] = useState(editData?.amount ? String(editData.amount) : '');
+  const [selectedSource, setSelectedSource] = useState(
+    INCOME_SOURCES.find((s) => s.id === editData?.source) || INCOME_SOURCES[0]
+  );
+  const [note, setNote] = useState(editData?.note || '');
+  const [date, setDate] = useState(parseInitialDate);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -44,12 +59,28 @@ const AddIncomeScreen = ({ navigation }) => {
         const liquidAccounts = result.accounts.filter(a => a.type === 'BANK' || a.type === 'CASH');
         setAccounts(liquidAccounts);
         if (liquidAccounts.length > 0) {
-          setSelectedAccount(liquidAccounts.find(a => a.isDefault) || liquidAccounts[0]);
+          const matched = editData?.accountId
+            ? liquidAccounts.find(a => a.id === editData.accountId)
+            : null;
+          setSelectedAccount(matched || liquidAccounts.find(a => a.isDefault) || liquidAccounts[0]);
         }
       }
     };
     load();
-  }, []);
+  }, [editData?.accountId]);
+
+  const getFormattedDate = useCallback(() => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, [date]);
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -64,7 +95,7 @@ const AddIncomeScreen = ({ navigation }) => {
 
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    const result = await addIncome({
+    const incomePayload = {
       amount: parseFloat(amount),
       source: selectedSource.id,
       sourceName: selectedSource.name,
@@ -72,9 +103,13 @@ const AddIncomeScreen = ({ navigation }) => {
       accountId: selectedAccount.id,
       accountName: selectedAccount.name,
       note: note.trim(),
-      date: new Date().toISOString(),
+      date: date.toISOString(),
       paymentMode: selectedAccount.type === 'CASH' ? 'CASH' : 'UPI',
-    });
+    };
+
+    const result = isEdit
+      ? await updateIncome(editData.id, incomePayload, editData)
+      : await addIncome(incomePayload);
 
     if (result.success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -98,7 +133,7 @@ const AddIncomeScreen = ({ navigation }) => {
         >
           <Ionicons name="close" size={24} color={Theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Receive Funds</Text>
+        <Text style={styles.headerTitle}>{isEdit ? 'Edit Income' : 'Receive Funds'}</Text>
         <TouchableOpacity 
            style={[styles.saveBtnWrapper, loading && { opacity: 0.6 }]} 
            onPress={handleSave}
@@ -110,7 +145,7 @@ const AddIncomeScreen = ({ navigation }) => {
              end={{ x: 1, y: 0 }}
              style={styles.saveBtn}
            >
-             {loading ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={styles.saveBtnText}>Save</Text>}
+             {loading ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={styles.saveBtnText}>{isEdit ? 'Update' : 'Save'}</Text>}
            </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -207,10 +242,71 @@ const AddIncomeScreen = ({ navigation }) => {
                 />
             </Animated.View>
 
+            {/* Date Section */}
+            <Animated.View entering={FadeInUp.delay(450)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Date</Text>
+              <View style={styles.dateLayout}>
+                <TouchableOpacity
+                  style={[styles.dateChip, getFormattedDate() === 'Today' && styles.dateChipActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setDate(new Date());
+                  }}
+                >
+                  <Text style={[styles.dateChipText, getFormattedDate() === 'Today' && styles.dateChipTextActive]}>Today</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateChip, getFormattedDate() === 'Yesterday' && styles.dateChipActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    setDate(y);
+                  }}
+                >
+                  <Text style={[styles.dateChipText, getFormattedDate() === 'Yesterday' && styles.dateChipTextActive]}>Yesterday</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.customDateBtn,
+                    (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && styles.dateChipActive,
+                  ]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={16}
+                    color={(getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') ? '#FFF' : Theme.colors.success}
+                  />
+                  <Text
+                    style={[
+                      styles.dateChipText,
+                      (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && styles.dateChipTextActive,
+                    ]}
+                  >
+                    {getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday' ? getFormattedDate() : 'Custom'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+
             <View style={{ height: 100 }} />
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          maximumDate={new Date()}
+          onChange={(_event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) setDate(selectedDate);
+          }}
+        />
+      )}
 
       {/* Account Selection Modal */}
       <Modal visible={showAccountModal} animationType="slide" transparent>
@@ -368,6 +464,30 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     ...Theme.shadows.soft,
   },
+  dateLayout: { flexDirection: 'row', gap: 10 },
+  dateChip: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Theme.shadows.soft,
+  },
+  customDateBtn: {
+    flex: 1.3,
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Theme.shadows.soft,
+  },
+  dateChipActive: { backgroundColor: Theme.colors.success },
+  dateChipText: { fontSize: 14, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
+  dateChipTextActive: { color: '#FFF' },
 
   // Modal
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },

@@ -41,7 +41,12 @@ const AddExpenseScreen = ({ navigation, route }) => {
 
   const [amount, setAmount] = useState(editData?.amount?.toString() || '');
   const [note, setNote] = useState(editData?.note || '');
-  const [date, setDate] = useState(editData?.date ? new Date(editData.date) : new Date());
+  const [date, setDate] = useState(() => {
+    const raw = editData?.date;
+    if (!raw) return new Date();
+    const d = raw?.toDate ? raw.toDate() : new Date(raw);
+    return isNaN(d.getTime()) ? new Date() : d;
+  });
   const [selectedCategory, setSelectedCategory] = useState(
     editData
       ? {
