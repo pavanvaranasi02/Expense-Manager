@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -271,7 +270,11 @@ const ExpenseListScreen = ({ navigation }) => {
            <View style={styles.summaryTop}>
               <Text style={styles.filteredSummaryLabel}>{isFilterActive ? 'Results Total' : 'Period Summary'}</Text>
               <Text style={styles.filteredSummaryValue}>
-                {formatCurrency(filteredInc - filteredExp, isStealthMode)}
+                {(() => {
+                  const net = filteredInc - filteredExp;
+                  if (net < 0) return `-${formatCurrency(Math.abs(net), isStealthMode)}`;
+                  return formatCurrency(net, isStealthMode);
+                })()}
               </Text>
            </View>
            
@@ -306,17 +309,31 @@ const ExpenseListScreen = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchTransactions(); }} />}
       >
         <View style={styles.actionGrid}>
-          <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={() => navigation.navigate('AddExpenseModal')}>
-            <LinearGradient colors={['#FF6B6B', '#EE5253']} style={styles.actionGradient}>
-              <View style={styles.actionIcon}><Ionicons name="remove-circle-outline" size={22} color="#FFF" /></View>
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('AddExpenseModal')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: Theme.colors.errorLight }]}>
+              <Ionicons name="remove-circle-outline" size={20} color={Theme.colors.error} />
+            </View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.actionTitle}>Expense</Text>
-            </LinearGradient>
+              <Text style={styles.actionSub}>Log spending</Text>
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={() => navigation.navigate('AddIncomeModal')}>
-            <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
-              <View style={styles.actionIcon}><Ionicons name="add-circle-outline" size={22} color="#FFF" /></View>
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('AddIncomeModal')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: Theme.colors.successLight }]}>
+              <Ionicons name="add-circle-outline" size={20} color={Theme.colors.success} />
+            </View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.actionTitle}>Income</Text>
-            </LinearGradient>
+              <Text style={styles.actionSub}>Record inflow</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -366,7 +383,7 @@ const ExpenseListScreen = ({ navigation }) => {
                 <Text style={styles.chartTitle}>Weekly Velocity</Text>
                 <Text style={styles.chartSub}>7-day flow analysis</Text>
                 <BarChart
-                   data={chartData} width={SCREEN_WIDTH - 40} height={180} yAxisLabel="₹" fromZero
+                   data={chartData} width={SCREEN_WIDTH - 64} height={180} yAxisLabel="₹" fromZero
                    chartConfig={{ backgroundColor: '#FFF', backgroundGradientFrom: '#FFF', backgroundGradientTo: '#FFF', color: (opacity = 1) => `rgba(108, 99, 255, ${opacity})`, labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`, barPercentage: 0.5, propsForLabels: { fontSize: 8 }, decimalPlaces: 0 }}
                    style={styles.chart} showValuesOnTopOfBars
                 />
@@ -443,12 +460,29 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   clearBtn: { marginRight: 10 },
   configBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: Theme.colors.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border + '50', ...Theme.shadows.soft },
-  scrollContent: { paddingHorizontal: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 110 },
   actionGrid: { flexDirection: 'row', gap: 10, marginVertical: 12 },
-  actionCard: { flex: 1, height: 80, borderRadius: 20, overflow: 'hidden', ...Theme.shadows.card },
-  actionGradient: { flex: 1, padding: 14, justifyContent: 'center' },
-  actionIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
-  actionTitle: { color: '#FFF', fontSize: 13, fontWeight: Theme.typography.weight.extrabold },
+  actionCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.surface,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    gap: 10,
+    ...Theme.shadows.soft,
+  },
+  actionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionTitle: { color: Theme.colors.text, fontSize: 14, fontWeight: Theme.typography.weight.extrabold },
+  actionSub: { color: Theme.colors.textMuted, fontSize: 11, fontWeight: Theme.typography.weight.medium, marginTop: 1 },
   filterRow: { flexDirection: 'row', marginBottom: 15, gap: 6 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border + '20' },
   filterChipActive: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
@@ -472,24 +506,24 @@ const styles = StyleSheet.create({
   txnTime: { fontSize: 9, color: Theme.colors.textLight, marginTop: 1 },
   emptyState: { paddingVertical: 40, alignItems: 'center' },
   emptyText: { marginTop: 10, color: Theme.colors.textLight, fontWeight: Theme.typography.weight.bold },
-  chartBlock: { backgroundColor: Theme.colors.surface, padding: 16, borderRadius: 24, marginTop: 10, ...Theme.shadows.soft },
+  chartBlock: { backgroundColor: Theme.colors.surface, padding: 16, borderRadius: 24, marginTop: 10, overflow: 'hidden', ...Theme.shadows.soft },
   chartTitle: { fontSize: 15, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
   chartSub: { fontSize: 10, color: Theme.colors.textLight, marginBottom: 12 },
-  chart: { marginLeft: -15 },
+  chart: { marginLeft: -12 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: '900', color: '#1A1A2E' },
+  modalTitle: { fontSize: 18, fontWeight: '900', color: Theme.colors.text },
   filterSection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#64748B', marginBottom: 12, marginTop: 15 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: Theme.colors.textMuted, marginBottom: 12, marginTop: 15 },
   modalScroll: { marginBottom: 5 },
-  modalChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#F1F5F9', marginRight: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  modalChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: Theme.colors.border, marginRight: 8, borderWidth: 1, borderColor: Theme.colors.border },
   modalChipActive: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
-  modalChipText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
-  modalChipTextActive: { color: '#FFF' },
+  modalChipText: { fontSize: 13, fontWeight: '700', color: Theme.colors.textMuted },
+  modalChipTextActive: { color: Theme.colors.surface },
   dateRow: { flexDirection: 'row', gap: 10 },
-  dateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' },
-  dateBtnText: { fontSize: 13, fontWeight: '700', color: '#1E293B', marginLeft: 8 },
+  dateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.border, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: Theme.colors.border },
+  dateBtnText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text, marginLeft: 8 },
   applyBtn: { backgroundColor: Theme.colors.primary, padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 10 },
   applyBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
   clearAllBtn: { padding: 12, alignItems: 'center', marginTop: 5 },

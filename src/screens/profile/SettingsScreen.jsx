@@ -477,15 +477,20 @@ const SettingsScreen = ({ navigation }) => {
         {/* Family Settings Section */}
         {userProfile?.familyId && storageMode !== 'local' && (
           <>
-            <Text style={styles.sectionTitle}>Family Settings</Text>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+                <Ionicons name="people" size={16} color={Theme.colors.primary} />
+              </View>
+              <Text style={styles.sectionTitle}>FAMILY SETTINGS</Text>
+            </View>
             <View style={styles.card}>
               <View style={[styles.settingRow, styles.borderBottom]}>
                 <View
-                  style={[styles.settingIcon, { backgroundColor: "#E0E7FF" }]}
+                  style={[styles.settingIcon, { backgroundColor: Theme.colors.primaryLight }]}
                 >
-                  <Ionicons name="sync" size={20} color="#6C63FF" />
+                  <Ionicons name="sync" size={20} color={Theme.colors.primary} />
                 </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.settingLabel}>Sync to Personal</Text>
                   <Text style={styles.settingSubLabel}>
                     Family expenses you pay for will be added to your personal
@@ -513,7 +518,7 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  activeColor="#6C63FF"
+                  activeColor={Theme.colors.primary}
                 />
               </View>
 
@@ -524,12 +529,12 @@ const SettingsScreen = ({ navigation }) => {
                     <View
                       style={[
                         styles.settingIcon,
-                        { backgroundColor: "#DBEAFE" },
+                        { backgroundColor: Theme.colors.primaryLight },
                       ]}
                     >
-                      <Ionicons name="pencil" size={20} color="#3B82F6" />
+                      <Ionicons name="pencil" size={20} color={Theme.colors.primary} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.settingLabel}>Sync on Edit</Text>
                       <Text style={styles.settingSubLabel}>
                         Update personal expense when family expense is edited
@@ -554,20 +559,20 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      activeColor="#3B82F6"
+                      activeColor={Theme.colors.primary}
                     />
                   </View>
 
-                  <View style={styles.settingRow}>
+                  <View style={[styles.settingRow, styles.borderBottom]}>
                     <View
                       style={[
                         styles.settingIcon,
-                        { backgroundColor: "#FEE2E2" },
+                        { backgroundColor: Theme.colors.primaryLight },
                       ]}
                     >
-                      <Ionicons name="trash" size={20} color="#EF4444" />
+                      <Ionicons name="trash" size={20} color={Theme.colors.primary} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.settingLabel}>Sync on Delete</Text>
                       <Text style={styles.settingSubLabel}>
                         Delete personal expense when family expense is removed
@@ -594,7 +599,7 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      activeColor="#EF4444"
+                      activeColor={Theme.colors.primary}
                     />
                   </View>
                 </>
@@ -603,11 +608,11 @@ const SettingsScreen = ({ navigation }) => {
               {/* Allow Past Date Recurring Expenses */}
               <View style={[styles.settingRow, styles.borderBottom]}>
                 <View
-                  style={[styles.settingIcon, { backgroundColor: "#D1FAE5" }]}
+                  style={[styles.settingIcon, { backgroundColor: Theme.colors.primaryLight }]}
                 >
-                  <Ionicons name="calendar" size={20} color="#10B981" />
+                  <Ionicons name="calendar" size={20} color={Theme.colors.primary} />
                 </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.settingLabel}>
                     Allow Past Recurring Expenses
                   </Text>
@@ -636,16 +641,16 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  activeColor="#10B981"
+                  activeColor={Theme.colors.primary}
                 />
               </View>
 
               {/* Info Card */}
-              <View style={styles.infoBox}>
+              <View style={[styles.infoBox, { marginTop: 16 }]}>
                 <Ionicons
                   name="information-circle-outline"
                   size={18}
-                  color="#6C63FF"
+                  color={Theme.colors.primary}
                 />
                 <Text style={styles.infoText}>
                   Synced expenses are tagged with [Family] in your personal
@@ -658,8 +663,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* About & Updates Card */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#F1F5F9' }]}>
-            <Ionicons name="information-circle" size={16} color="#64748B" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="information-circle" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>ABOUT & UPDATES</Text>
         </View>
@@ -899,7 +904,14 @@ const styles = StyleSheet.create({
   },
 
 
-  settingRow: { flexDirection: "row", alignItems: "center", padding: 18 },
+  settingRow: { flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
+  settingIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   settingLabel: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
   settingSubLabel: {
@@ -909,7 +921,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  switchRow: { flexDirection: "row", alignItems: "center", padding: 18 },
+  switchRow: { flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
 
   infoBox: {
     flexDirection: "row",

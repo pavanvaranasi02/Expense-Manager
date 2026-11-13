@@ -73,13 +73,16 @@ const ProfileStack = () => (
 );
 
 // ===== Custom FAB Button =====
-const CustomTabBarButton = ({ children, onPress }) => (
+const CustomTabBarButton = ({ onPress, style }) => (
   <TouchableOpacity
-    style={styles.fabContainer}
+    style={[style, styles.fabContainer]}
     onPress={onPress}
     activeOpacity={0.8}
+    accessibilityLabel="Add transaction"
   >
-    <View style={styles.fab}>{children}</View>
+    <View style={styles.fab}>
+      <Ionicons name="add" size={28} color="#FFFFFF" />
+    </View>
   </TouchableOpacity>
 );
 
@@ -171,10 +174,7 @@ const MainTabNavigator = () => {
         name="Add"
         component={DummyScreen}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: () => (
-            <Ionicons name="add" size={28} color="#FFFFFF" />
-          ),
+          tabBarLabel: () => null,
           tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
         listeners={({ navigation }) => ({
