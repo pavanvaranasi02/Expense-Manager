@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAuthStore from '../store/useAuthStore';
+import useStorageStore from '../store/useStorageStore';
 
 // ===== Existing Screens =====
 import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
@@ -88,6 +89,8 @@ const DummyScreen = () => null;
 const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
   const showTabLabels = useAuthStore((state) => state.showTabLabels);
+  const storageMode = useStorageStore((state) => state.storageMode);
+  const isLocalMode = storageMode === 'local';
 
   return (
     <Tab.Navigator
@@ -116,7 +119,15 @@ const MainTabNavigator = () => {
           }
           
           return (
-            <View style={{ alignItems: 'center', justifyContent: 'center', height: '100%', width: 50 }}>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                width: 50,
+                opacity: route.name === 'Family' && isLocalMode ? 0.35 : 1,
+              }}
+            >
               <Ionicons 
                 name={iconName} 
                 size={focused ? size + 2 : size} 
@@ -175,8 +186,22 @@ const MainTabNavigator = () => {
           },
         })}
       />
-      {/* NEW: Family Tab (replaces Analytics) */}
-      <Tab.Screen name="Family" component={FamilyNavigator} />
+      {/* NEW: Family Tab (disabled in Local Storage mode) */}
+      <Tab.Screen
+        name="Family"
+        component={FamilyNavigator}
+        listeners={{
+          tabPress: (e) => {
+            if (isLocalMode) {
+              e.preventDefault();
+              Alert.alert(
+                'Family Disabled in Local Mode',
+                'Family sharing requires Cloud Storage. Switch to Cloud Storage in Settings to use Family features.'
+              );
+            }
+          },
+        }}
+      />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );

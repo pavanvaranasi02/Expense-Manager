@@ -11,6 +11,15 @@ import {
     writeBatch
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  getLocalDoc,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -38,6 +47,33 @@ export const INCOME_SOURCES = [
 export const addIncome = async (incomeData) => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.INCOMES, {
+        amount: parseFloat(incomeData.amount),
+        source: incomeData.source,
+        sourceName: incomeData.sourceName || incomeData.source,
+        sourceIcon: incomeData.sourceIcon || '📦',
+        accountId: incomeData.accountId,
+        accountName: incomeData.accountName,
+        note: incomeData.note?.trim() || '',
+        date: new Date(incomeData.date).toISOString(),
+        paymentMode: incomeData.paymentMode || 'UPI',
+        isRecurring: incomeData.isRecurring || false,
+      });
+
+      if (incomeData.accountId) {
+        const acc = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, incomeData.accountId);
+        if (acc) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, incomeData.accountId, {
+            balance: (acc.balance || 0) + parseFloat(incomeData.amount),
+          });
+        }
+      }
+
+      return { success: true, id: created.id };
+    }
+
     const batch = writeBatch(db);
 
     const incomeRef = doc(collection(db, 'users', userId, 'incomes'));
@@ -79,6 +115,42 @@ export const addIncome = async (incomeData) => {
 export const getIncomes = async (filters = {}) => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      let incomes = (await getLocalCollection(userId, LOCAL_COLLECTIONS.INCOMES)).map((i) => ({
+        ...i,
+        type: 'income',
+      }));
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        incomes = incomes.filter((i) => i.date && new Date(i.date) >= start);
+      }
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        incomes = incomes.filter((i) => i.date && new Date(i.date) <= end);
+      }
+      incomes.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+      if (filters.searchText) {
+        const search = filters.searchText.toLowerCase();
+        incomes = incomes.filter(
+          (i) =>
+            i.note?.toLowerCase().includes(search) ||
+            i.sourceName?.toLowerCase().includes(search)
+        );
+      }
+      if (filters.accountId) {
+        incomes = incomes.filter((i) => i.accountId === filters.accountId);
+      }
+      if (filters.paymentMode) {
+        incomes = incomes.filter((i) => i.paymentMode === filters.paymentMode);
+      }
+      if (filters.categoryId) {
+        return { success: true, incomes: [] };
+      }
+      return { success: true, incomes };
+    }
+
     let constraints = [];
 
     if (filters.startDate) {
@@ -140,6 +212,14 @@ export const getAllIncomes = async () => {
   try {
     const userId = getUserId();
 
+    if (isLocalMode()) {
+      const items = await getLocalCollection(userId, LOCAL_COLLECTIONS.INCOMES);
+      const incomes = items
+        .map((i) => ({ ...i, date: i.date ? new Date(i.date) : null }))
+        .sort((a, b) => (b.date || 0) - (a.date || 0));
+      return { success: true, incomes };
+    }
+
     const q = query(
       collection(db, 'users', userId, 'incomes'),
       orderBy('date', 'desc'),
@@ -160,6 +240,20 @@ export const getAllIncomes = async () => {
 export const deleteIncome = async (incomeId, incomeData) => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.INCOMES, incomeId);
+      if (incomeData?.accountId) {
+        const acc = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, incomeData.accountId);
+        if (acc) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, incomeData.accountId, {
+            balance: (acc.balance || 0) - parseFloat(incomeData.amount),
+          });
+        }
+      }
+      return { success: true };
+    }
+
     const batch = writeBatch(db);
 
     batch.delete(doc(db, 'users', userId, 'incomes', incomeId));

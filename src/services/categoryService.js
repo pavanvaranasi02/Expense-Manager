@@ -10,6 +10,14 @@ import {
     updateDoc,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -40,6 +48,13 @@ export const DEFAULT_CATEGORIES = [
 export const getAllCategories = async () => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      const custom = await getLocalCollection(userId, LOCAL_COLLECTIONS.CUSTOM_CATEGORIES);
+      custom.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      const customCategories = custom.map((c) => ({ ...c, isDefault: false }));
+      return { success: true, categories: [...DEFAULT_CATEGORIES, ...customCategories] };
+    }
 
     const q = query(
       collection(db, 'users', userId, 'custom_categories'),
@@ -75,6 +90,15 @@ export const addCustomCategory = async (categoryData) => {
       updatedAt: serverTimestamp(),
     };
 
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.CUSTOM_CATEGORIES, {
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true, id: created.id, category: { ...created, isDefault: false } };
+    }
+
     const docRef = await addDoc(
       collection(db, 'users', userId, 'custom_categories'),
       data
@@ -91,6 +115,10 @@ export const addCustomCategory = async (categoryData) => {
 export const updateCustomCategory = async (categoryId, data) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.CUSTOM_CATEGORIES, categoryId, data);
+      return { success: true };
+    }
     await updateDoc(
       doc(db, 'users', userId, 'custom_categories', categoryId),
       { ...data, updatedAt: serverTimestamp() }
@@ -105,6 +133,10 @@ export const updateCustomCategory = async (categoryId, data) => {
 export const deleteCustomCategory = async (categoryId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.CUSTOM_CATEGORIES, categoryId);
+      return { success: true };
+    }
     await deleteDoc(doc(db, 'users', userId, 'custom_categories', categoryId));
     return { success: true };
   } catch (error) {

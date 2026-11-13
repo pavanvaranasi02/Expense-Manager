@@ -27,6 +27,8 @@ import {
 } from "../../services/updateService";
 import UpdateModal from "../../components/UpdateModal";
 import useAuthStore from "../../store/useAuthStore";
+import useStorageStore from "../../store/useStorageStore";
+import { startBackgroundStorageSwitch } from "../../services/storageMigrationService";
 import * as Haptics from 'expo-haptics';
 import ModernToggle from "../../components/ModernToggle";
 import { getCurrencySymbol } from "../../constants/currencies";
@@ -44,6 +46,9 @@ const CURRENCIES = [
 const SettingsScreen = ({ navigation }) => {
   const userProfile = useAuthStore((state) => state.userProfile);
   const updateProfile = useAuthStore((state) => state.updateProfile);
+  const storageMode = useStorageStore((state) => state.storageMode);
+  const migrationStatus = useStorageStore((state) => state.migrationStatus);
+  const migrationProgress = useStorageStore((state) => state.migrationProgress);
 
   const [currency, setCurrency] = useState(userProfile?.currency || "INR");
   const [showInvestmentsInAssets, setShowInvestmentsInAssets] = useState(
@@ -93,6 +98,35 @@ const SettingsScreen = ({ navigation }) => {
     setNotificationSettings(updated);
     await updateNotificationPreferences(updated);
     await saveToFirebase("notificationSettings", updated);
+  };
+
+  const handleStorageSwitch = (targetMode) => {
+    if (targetMode === storageMode) return;
+    if (migrationStatus === 'downloading' || migrationStatus === 'uploading') {
+      Alert.alert(
+        "Sync in Progress",
+        "A storage migration is already running in the background. You can continue using the app normally."
+      );
+      return;
+    }
+
+    const isToLocal = targetMode === 'local';
+    Alert.alert(
+      isToLocal ? "Switch to Local Storage?" : "Switch to Cloud Storage?",
+      isToLocal
+        ? "All your cloud data (accounts, expenses, incomes, budgets, investments, EMIs, and settings) will be downloaded to this device in the background. You can continue using the app normally."
+        : "All your local data will be uploaded to the cloud in the background so it is backed up and synced. You can continue using the app normally.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: isToLocal ? "Download & Switch" : "Upload & Switch",
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            startBackgroundStorageSwitch(targetMode);
+          },
+        },
+      ]
+    );
   };
 
   // Update Checker State
@@ -189,6 +223,93 @@ const SettingsScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        {/* Data & Storage Section */}
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
+            <Ionicons name="server-outline" size={16} color="#6366F1" />
+          </View>
+          <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.storageGrid}>
+            <TouchableOpacity
+              style={[
+                styles.storageOption,
+                storageMode === 'cloud' && styles.storageOptionActiveCloud,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => handleStorageSwitch('cloud')}
+            >
+              <View style={styles.storageOptionTop}>
+                <View style={[styles.storageIconWrap, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="cloud-outline" size={20} color="#6366F1" />
+                </View>
+                {storageMode === 'cloud' && (
+                  <View style={[styles.storageActivePill, { backgroundColor: '#EEF2FF' }]}>
+                    <Text style={[styles.storageActivePillText, { color: '#6366F1' }]}>Active</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.storageTitle}>Cloud Storage</Text>
+              <Text style={styles.storageDesc}>Synced & backed up to Firebase</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.storageOption,
+                storageMode === 'local' && styles.storageOptionActiveLocal,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => handleStorageSwitch('local')}
+            >
+              <View style={styles.storageOptionTop}>
+                <View style={[styles.storageIconWrap, { backgroundColor: '#ECFDF5' }]}>
+                  <Ionicons name="phone-portrait-outline" size={20} color="#10B981" />
+                </View>
+                {storageMode === 'local' && (
+                  <View style={[styles.storageActivePill, { backgroundColor: '#ECFDF5' }]}>
+                    <Text style={[styles.storageActivePillText, { color: '#10B981' }]}>Active</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.storageTitle}>Local Storage</Text>
+              <Text style={styles.storageDesc}>Stored privately on this device</Text>
+            </TouchableOpacity>
+          </View>
+
+          {(migrationStatus === 'downloading' || migrationStatus === 'uploading') && (
+            <View style={styles.migrationBox}>
+              <View style={styles.migrationHeader}>
+                <ActivityIndicator size="small" color="#6366F1" />
+                <Text style={styles.migrationText}>
+                  {migrationProgress.label || 'Migrating data in background...'} (
+                  {migrationProgress.current}/{migrationProgress.total})
+                </Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${
+                        migrationProgress.total > 0
+                          ? Math.round(
+                              (migrationProgress.current / migrationProgress.total) * 100
+                            )
+                          : 15
+                      }%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.migrationHint}>
+                Running in background — feel free to keep using the app.
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Portfolio Settings */}
@@ -353,7 +474,7 @@ const SettingsScreen = ({ navigation }) => {
         </View>
 
         {/* Family Settings Section */}
-        {userProfile?.familyId && (
+        {userProfile?.familyId && storageMode !== 'local' && (
           <>
             <Text style={styles.sectionTitle}>Family Settings</Text>
             <View style={styles.card}>
@@ -854,6 +975,96 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     marginLeft: 10,
     letterSpacing: 0.5,
+  },
+  storageGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+  },
+  storageOption: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+  },
+  storageOptionActiveCloud: {
+    borderColor: '#6366F1',
+    backgroundColor: '#FFFFFF',
+  },
+  storageOptionActiveLocal: {
+    borderColor: '#10B981',
+    backgroundColor: '#FFFFFF',
+  },
+  storageOptionTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  storageIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  storageActivePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  storageActivePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  storageTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  storageDesc: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 3,
+    lineHeight: 15,
+  },
+  migrationBox: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+  },
+  migrationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  migrationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#4338CA',
+    flex: 1,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#C7D2FE',
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#6366F1',
+    borderRadius: 3,
+  },
+  migrationHint: {
+    fontSize: 11,
+    color: '#4F46E5',
+    marginTop: 6,
   },
 });
 

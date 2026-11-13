@@ -14,6 +14,14 @@ import {
     setDoc,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import useStorageStore from '../store/useStorageStore';
+import {
+  clearUserLocalData,
+  getLocalProfile,
+  isLocalMode,
+  loadStorageMode,
+  saveLocalProfile,
+} from './localStorageService';
 
 // ============ REGISTER WITH EMAIL ============
 export const registerWithEmail = async (name, email, password) => {
@@ -126,6 +134,14 @@ export const signInWithGoogle = async (idToken) => {
 // ============ GET USER PROFILE ============
 export const getUserProfile = async (userId) => {
   try {
+    const mode = await loadStorageMode(userId);
+    if (mode === 'local') {
+      const localProfile = await getLocalProfile(userId);
+      if (localProfile) {
+        return { success: true, profile: { id: userId, ...localProfile } };
+      }
+    }
+
     const userDoc = await getDoc(doc(db, 'users', userId));
     if (userDoc.exists()) {
       return { success: true, profile: { id: userId, ...userDoc.data() } };
@@ -140,6 +156,12 @@ export const getUserProfile = async (userId) => {
 // ============ UPDATE USER PROFILE ============
 export const updateUserProfile = async (userId, data) => {
   try {
+    if (isLocalMode()) {
+      await saveLocalProfile(userId, data, true);
+      console.log('✅ Profile updated locally for:', userId);
+      return { success: true };
+    }
+
     await setDoc(doc(db, 'users', userId), {
       ...data,
       updatedAt: serverTimestamp(),
@@ -156,8 +178,25 @@ export const updateUserProfile = async (userId, data) => {
 // ============ COMPLETE ONBOARDING ============
 export const completeOnboarding = async (userId) => {
   try {
+    if (isLocalMode()) {
+      await saveLocalProfile(
+        userId,
+        { onboardingComplete: true, storageMode: 'local' },
+        true
+      );
+      // Best-effort sync onboarding flag to Firestore if online
+      setDoc(
+        doc(db, 'users', userId),
+        { onboardingComplete: true, storageMode: 'local', updatedAt: serverTimestamp() },
+        { merge: true }
+      ).catch(() => {});
+      console.log('✅ Onboarding completed locally for:', userId);
+      return { success: true };
+    }
+
     await setDoc(doc(db, 'users', userId), {
       onboardingComplete: true,
+      storageMode: 'cloud',
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
@@ -172,7 +211,13 @@ export const completeOnboarding = async (userId) => {
 // ============ LOGOUT ============
 export const logoutUser = async () => {
   try {
+    const uid = auth.currentUser?.uid;
+    const wasLocal = isLocalMode();
     await signOut(auth);
+    if (uid && !wasLocal) {
+      await clearUserLocalData(uid, true);
+    }
+    useStorageStore.getState().resetStorageStore();
     console.log('✅ User logged out');
     return { success: true };
   } catch (error) {

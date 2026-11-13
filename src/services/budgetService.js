@@ -10,6 +10,14 @@ import {
     where,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -33,6 +41,15 @@ export const saveBudget = async (budgetData) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
+
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.BUDGETS, {
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true, id: created.id, budget: created };
+    }
 
     const docRef = await addDoc(collection(db, 'users', userId, 'budgets'), data);
     console.log('✅ Budget saved:', docRef.id);
@@ -63,8 +80,17 @@ export const saveBudgets = async (budgets, month, year) => {
         updatedAt: serverTimestamp(),
       };
 
-      const docRef = await addDoc(collection(db, 'users', userId, 'budgets'), data);
-      results.push({ id: docRef.id, ...data });
+      if (isLocalMode()) {
+        const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.BUDGETS, {
+          ...data,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        results.push(created);
+      } else {
+        const docRef = await addDoc(collection(db, 'users', userId, 'budgets'), data);
+        results.push({ id: docRef.id, ...data });
+      }
     }
 
     return { success: true, budgets: results };
@@ -77,6 +103,12 @@ export const saveBudgets = async (budgets, month, year) => {
 export const getBudgets = async (month, year) => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      const all = await getLocalCollection(userId, LOCAL_COLLECTIONS.BUDGETS);
+      const budgets = all.filter((b) => b.month === month && b.year === year);
+      return { success: true, budgets };
+    }
 
     const q = query(
       collection(db, 'users', userId, 'budgets'),
@@ -98,6 +130,11 @@ export const getAllBudgets = async () => {
   try {
     const userId = getUserId();
 
+    if (isLocalMode()) {
+      const budgets = await getLocalCollection(userId, LOCAL_COLLECTIONS.BUDGETS);
+      return { success: true, budgets };
+    }
+
     const snapshot = await getDocs(collection(db, 'users', userId, 'budgets'));
     const budgets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -111,6 +148,13 @@ export const getAllBudgets = async () => {
 export const updateBudget = async (budgetId, data) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.BUDGETS, budgetId, {
+        amount: parseFloat(data.amount),
+        alertAt: parseInt(data.alertAt) || 80,
+      });
+      return { success: true };
+    }
     await updateDoc(doc(db, 'users', userId, 'budgets', budgetId), {
       amount: parseFloat(data.amount),
       alertAt: parseInt(data.alertAt) || 80,
@@ -126,6 +170,10 @@ export const updateBudget = async (budgetId, data) => {
 export const deleteBudget = async (budgetId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.BUDGETS, budgetId);
+      return { success: true };
+    }
     await deleteDoc(doc(db, 'users', userId, 'budgets', budgetId));
     return { success: true };
   } catch (error) {

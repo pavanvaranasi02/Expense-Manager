@@ -1,37 +1,61 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
+import useStorageStore from '../store/useStorageStore';
 import useSyncStore from '../store/useSyncStore';
 
 const OfflineBanner = () => {
   const { isOnline, isSyncing, pendingCount } = useSyncStore();
-  const slideAnim = useRef(new Animated.Value(-50)).current;
+  const storageMode = useStorageStore((s) => s.storageMode);
+  const migrationStatus = useStorageStore((s) => s.migrationStatus);
+  const migrationProgress = useStorageStore((s) => s.migrationProgress);
+  const [slideAnim] = useState(() => new Animated.Value(-50));
+
+  const isMigrating =
+    migrationStatus === 'downloading' || migrationStatus === 'uploading';
+  const showOfflineOrPending =
+    storageMode !== 'local' && (!isOnline || pendingCount > 0);
+  const shouldShow = isMigrating || showOfflineOrPending;
 
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: !isOnline || pendingCount > 0 ? 0 : -50,
+      toValue: shouldShow ? 0 : -50,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [isOnline, pendingCount]);
+  }, [shouldShow, slideAnim]);
 
-  if (isOnline && pendingCount === 0) return null;
+  if (!shouldShow) return null;
 
   return (
     <Animated.View
       style={[
         styles.banner,
-        !isOnline ? styles.offlineBanner : styles.pendingBanner,
+        isMigrating
+          ? styles.migratingBanner
+          : !isOnline
+          ? styles.offlineBanner
+          : styles.pendingBanner,
         { transform: [{ translateY: slideAnim }] },
       ]}
     >
       <Ionicons
-        name={isSyncing ? 'sync' : !isOnline ? 'cloud-offline-outline' : 'time-outline'}
+        name={
+          isMigrating
+            ? 'cloud-download-outline'
+            : isSyncing
+            ? 'sync'
+            : !isOnline
+            ? 'cloud-offline-outline'
+            : 'time-outline'
+        }
         size={16}
         color="#FFFFFF"
       />
       <Text style={styles.bannerText}>
-        {isSyncing
+        {isMigrating
+          ? `${migrationProgress.label || 'Syncing storage...'} (${migrationProgress.current}/${migrationProgress.total})`
+          : isSyncing
           ? 'Syncing...'
           : !isOnline
           ? `Offline${pendingCount > 0 ? ` • ${pendingCount} pending` : ''}`
@@ -50,6 +74,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
   },
+  migratingBanner: { backgroundColor: '#6366F1' },
   offlineBanner: { backgroundColor: '#EF4444' },
   pendingBanner: { backgroundColor: '#F59E0B' },
   bannerText: {
