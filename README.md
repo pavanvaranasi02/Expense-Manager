@@ -164,12 +164,39 @@ ExpenseManager/
 
 ---
 
+## 🐳 Quick Start with Docker (Recommended)
+
+Run KOSH without installing Node.js or project dependencies locally. You only need **Docker** (with Docker Compose) and a **Firebase Project**.
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/pavanvaranasi02/Expense-Manager
+cd Expense-Manager
+
+# 2. Create .env and add your Firebase credentials
+cp .env.example .env
+
+# 3. Start the app
+docker compose up --build
+```
+
+- **Mobile (Expo Go):** Scan the QR code printed in the terminal with the **Expo Go** app (Android) or **Camera** app (iOS).
+- **Web Browser:** Run the web profile instead and open `http://localhost:8081`:
+  ```bash
+  docker compose --profile web up --build web
+  ```
+
+> [!NOTE]
+> Native emulator builds (`npm run android` / `npm run ios`) require running locally outside Docker (see [Setup & Installation](#-setup--installation) below).
+
+---
+
 ## 🚀 Setup & Installation
 
 Follow these steps to set up and run KOSH locally for the first time.
 
 ### 1. Prerequisites
-- **Node.js** (v18 or higher) and **npm**
+- **Node.js** (v22.13 or higher) and **npm**
 - **Git**
 - **Expo Go** app on your iOS/Android device (or Android Studio / Xcode for emulators/simulators)
 - A **Firebase Project** (with Authentication, Cloud Firestore, and Cloud Storage enabled)

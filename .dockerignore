@@ -1,0 +1,15 @@
+node_modules
+.expo
+.git
+.vscode
+android
+ios
+dist
+web-build
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.local-db
+firebase-export
