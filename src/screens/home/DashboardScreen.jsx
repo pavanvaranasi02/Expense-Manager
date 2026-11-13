@@ -482,7 +482,8 @@ const DashboardScreen = ({ navigation }) => {
           >
             <Text style={styles.heroLabel}>TOTAL NET WORTH</Text>
             <Text style={styles.heroAmount}>
-              {formatCurrency(netWorth, isStealthMode, cs)}
+              {netWorth < 0 && !isStealthMode ? '-' : ''}
+              {formatCurrency(Math.abs(netWorth), isStealthMode, cs)}
             </Text>
             
             <View style={styles.heroDivider} />
@@ -541,8 +542,8 @@ const DashboardScreen = ({ navigation }) => {
               {
                 label: "Accounts",
                 icon: "card",
-                color: Theme.colors.info,
-                bg: Theme.colors.infoLight,
+                color: Theme.colors.primary,
+                bg: Theme.colors.primaryLight,
                 onPress: () => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   navigation.navigate("Profile", { screen: "ManageAccounts" });
@@ -551,8 +552,8 @@ const DashboardScreen = ({ navigation }) => {
               {
                 label: "Analytics",
                 icon: "bar-chart",
-                color: Theme.colors.secondary,
-                bg: Theme.colors.secondaryLight,
+                color: Theme.colors.primary,
+                bg: Theme.colors.primaryLight,
                 onPress: () => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   navigation.navigate("AnalyticsMain");
@@ -601,8 +602,21 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.summaryGridDivider} />
               <View style={styles.summaryGridItem}>
                 <Text style={styles.summaryGridLabel}>Savings</Text>
-                <Text style={[styles.summaryGridValue, { color: Theme.colors.primary }]}>
-                  {formatCurrency(dashData?.savings || 0, isStealthMode, cs)}
+                <Text
+                  style={[
+                    styles.summaryGridValue,
+                    {
+                      color:
+                        (dashData?.savings || 0) < 0
+                          ? Theme.colors.error
+                          : (dashData?.savings || 0) > 0
+                          ? Theme.colors.success
+                          : Theme.colors.text,
+                    },
+                  ]}
+                >
+                  {(dashData?.savings || 0) < 0 && !isStealthMode ? '-' : ''}
+                  {formatCurrency(Math.abs(dashData?.savings || 0), isStealthMode, cs)}
                 </Text>
               </View>
             </View>
@@ -1182,27 +1196,27 @@ const styles = StyleSheet.create({
 
   // Hero Card
   heroCard: {
-    padding: 24,
-    borderRadius: 32,
+    padding: 20,
+    borderRadius: 24,
     ...Theme.shadows.premium,
   },
   heroLabel: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.75)',
     fontSize: 10,
     fontWeight: Theme.typography.weight.extrabold,
     letterSpacing: 1.5,
   },
   heroAmount: {
     color: '#FFF',
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: Theme.typography.weight.extrabold,
-    marginTop: 8,
-    letterSpacing: -1,
+    marginTop: 6,
+    letterSpacing: -0.8,
   },
   heroDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginVertical: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginVertical: 14,
   },
   heroStats: {
     flexDirection: 'row',
@@ -1243,17 +1257,17 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 16,
-    borderRadius: 24,
-    marginTop: -15, // Overlap effect
-    ...Theme.shadows.card,
-    borderWidth: 1.5,
+    borderRadius: 20,
+    marginTop: 16,
+    ...Theme.shadows.soft,
+    borderWidth: 1,
     borderColor: Theme.colors.border,
   },
   actionItem: { alignItems: "center", width: "23%" },
   actionIcon: {
     width: 48,
     height: 48,
-    borderRadius: 18,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: Theme.spacing.xs,
@@ -1267,9 +1281,9 @@ const styles = StyleSheet.create({
   // Cards
   unifiedCard: {
     backgroundColor: Theme.colors.surface,
-    borderRadius: 24,
-    padding: 20,
-    marginTop: 24,
+    borderRadius: 20,
+    padding: 18,
+    marginTop: 16,
     ...Theme.shadows.soft,
     borderWidth: 1,
     borderColor: Theme.colors.border,
@@ -1278,7 +1292,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   cardTitle: { 
     fontSize: 15, 
@@ -1311,8 +1325,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 32,
-    marginBottom: 16,
+    marginTop: 22,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
@@ -1449,11 +1463,11 @@ const styles = StyleSheet.create({
   // Investment
   investmentCard: {
     backgroundColor: Theme.colors.surface,
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-    ...Theme.shadows.card,
+    ...Theme.shadows.soft,
   },
   investmentRow: { flexDirection: "row", justifyContent: "space-between" },
   investmentCol: { flex: 1 },
@@ -1479,8 +1493,8 @@ const styles = StyleSheet.create({
   investmentMetaText: { fontSize: 13, color: Theme.colors.textMuted, fontWeight: '500' },
   investmentMetaNote: {
     fontSize: 11,
-    color: Theme.colors.warning,
-    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.textLight,
+    fontWeight: Theme.typography.weight.semibold,
     marginTop: 4,
   },
 

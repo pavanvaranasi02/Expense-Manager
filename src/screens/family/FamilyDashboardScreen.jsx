@@ -1,11 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
     ActivityIndicator,
-    Animated,
-    Easing,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -23,6 +21,7 @@ import { getFamilyBudget } from "../../services/familyBudgetService";
 import { getMonthlyFamilyExpenses } from "../../services/familyExpenseService";
 import { getFamily } from "../../services/familyService";
 import { getNotifications } from "../../services/notificationService";
+import { Theme } from "../../theme/theme";
 import useAuthStore from "../../store/useAuthStore";
 import useFamilyStore from "../../store/useFamilyStore";
 import useNotificationStore from "../../store/useNotificationStore";
@@ -48,24 +47,6 @@ const FamilyDashboardScreen = ({ navigation }) => {
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [totalSpent, setTotalSpent] = useState(0);
   const [budget, setBudget] = useState(null);
-
-  const spinAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 2000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, [spinAnim]);
-
-  const spin = spinAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
 
   const fetchData = async () => {
     try {
@@ -234,180 +215,49 @@ const FamilyDashboardScreen = ({ navigation }) => {
           {/* Quick Actions Grid - 4 per row */}
           <View style={styles.quickActionsGrid}>
             <Text style={styles.gridSectionTitle}>Quick Actions</Text>
-
-            {/* Row 1 */}
-            <View style={styles.quickActionsRow}>
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyInvite")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#F0EFFF" },
-                  ]}
-                >
-                  <Ionicons name="person-add" size={22} color="#6C63FF" />
-                </View>
-                <Text style={styles.gridActionText}>Invite</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyMembers")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#DBEAFE" },
-                  ]}
-                >
-                  <Ionicons name="people" size={22} color="#3B82F6" />
-                </View>
-                <Text style={styles.gridActionText}>Members</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("AddFamilyExpense")}
-              >
-                <View style={{ width: '100%', borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 2 }}>
-                  <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
-                    <Animated.View style={{ width: 250, height: 250, transform: [{ rotate: spin }] }}>
-                      <LinearGradient colors={['#9b3232', 'rgba(239,68,68,0)', 'rgba(239,68,68,0)', '#EF4444']} start={{x:0, y:0}} end={{x:1, y:1}} style={{ flex: 1 }} />
-                    </Animated.View>
-                  </View>
-                  <View style={{ width: '100%', backgroundColor: '#FFFFFF', borderRadius: 16, alignItems: 'center', paddingTop: 6, paddingBottom: 6 }}>
-                    <View style={[styles.gridActionIcon, { backgroundColor: "#D1FAE5", marginBottom: 4 }]}>
-                      <Ionicons name="add-circle" size={22} color="#10B981" />
-                    </View>
-                    <Text style={[styles.gridActionText, styles.expenseGridText]}>
-                      Expense
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyAnalytics")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#FEF3C7" },
-                  ]}
-                >
-                  <Ionicons name="bar-chart" size={22} color="#F59E0B" />
-                </View>
-                <Text style={styles.gridActionText}>Analytics</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Row 2 */}
-            <View style={styles.quickActionsRow}>
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyComparison")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#F0EFFF" },
-                  ]}
-                >
-                  <Ionicons name="trending-up" size={22} color="#6C63FF" />
-                </View>
-                <Text style={styles.gridActionText}>Compare</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyTemplates")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#D1FAE5" },
-                  ]}
-                >
-                  <Ionicons name="repeat" size={22} color="#10B981" />
-                </View>
-                <Text style={styles.gridActionText}>Recurring</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("ExportExpenses")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#DBEAFE" },
-                  ]}
-                >
-                  <Ionicons name="download" size={22} color="#3B82F6" />
-                </View>
-                <Text style={styles.gridActionText}>Export</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyExpenses")}
-              >
-                <View style={{ width: '100%', borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 2 }}>
-                  <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
-                    <Animated.View style={{ width: 250, height: 250, transform: [{ rotate: spin }] }}>
-                      <LinearGradient colors={['#EF4444', 'rgba(239,68,68,0)', 'rgba(239,68,68,0)', '#EF4444']} start={{x:0, y:0}} end={{x:1, y:1}} style={{ flex: 1 }} />
-                    </Animated.View>
-                  </View>
-                  <View style={{ width: '100%', backgroundColor: '#FFFFFF', borderRadius: 16, alignItems: 'center', paddingTop: 6, paddingBottom: 6 }}>
-                    <View style={[styles.gridActionIcon, { backgroundColor: "#FEE2E2", marginBottom: 4 }]}>
-                      <Ionicons name="receipt" size={22} color="#EF4444" />
-                    </View>
-                    <Text style={[styles.gridActionText, styles.expenseGridText]}>
-                      Expenses
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Row 3 */}
-            <View style={styles.quickActionsRow}>
-              <TouchableOpacity
-                style={styles.gridActionBtn}
-                onPress={() => navigation.navigate("FamilyBudget")}
-              >
-                <View
-                  style={[
-                    styles.gridActionIcon,
-                    { backgroundColor: "#FEF3C7" },
-                  ]}
-                >
-                  <Ionicons name="wallet" size={22} color="#F59E0B" />
-                </View>
-                <Text style={styles.gridActionText}>Budget</Text>
-              </TouchableOpacity>
-
-              {canManageMembers() && (
+            <View style={styles.quickActionsWrap}>
+              {[
+                { label: "Invite", icon: "person-add", screen: "FamilyInvite" },
+                { label: "Members", icon: "people", screen: "FamilyMembers" },
+                {
+                  label: "Expense",
+                  icon: "add-circle",
+                  screen: "AddFamilyExpense",
+                  bg: Theme.colors.successLight,
+                  color: Theme.colors.success,
+                },
+                { label: "Analytics", icon: "bar-chart", screen: "FamilyAnalytics" },
+                { label: "Compare", icon: "trending-up", screen: "FamilyComparison" },
+                { label: "Recurring", icon: "repeat", screen: "FamilyTemplates" },
+                { label: "Export", icon: "download", screen: "ExportExpenses" },
+                { label: "Expenses", icon: "receipt", screen: "FamilyExpenses" },
+                { label: "Budget", icon: "wallet", screen: "FamilyBudget" },
+                ...(canManageMembers()
+                  ? [{ label: "Invite Link", icon: "mail", screen: "FamilyInvite" }]
+                  : []),
+              ].map((action) => (
                 <TouchableOpacity
+                  key={action.label}
                   style={styles.gridActionBtn}
-                  onPress={() => navigation.navigate("FamilyInvite")}
+                  onPress={() => navigation.navigate(action.screen)}
                 >
                   <View
                     style={[
                       styles.gridActionIcon,
-                      { backgroundColor: "#E0E7FF" },
+                      { backgroundColor: action.bg || Theme.colors.primaryLight },
                     ]}
                   >
-                    <Ionicons name="mail" size={22} color="#6C63FF" />
+                    <Ionicons
+                      name={action.icon}
+                      size={22}
+                      color={action.color || Theme.colors.primary}
+                    />
                   </View>
-                  <Text style={styles.gridActionText}>Invite Link</Text>
+                  <Text style={styles.gridActionText} numberOfLines={1}>
+                    {action.label}
+                  </Text>
                 </TouchableOpacity>
-              )}
+              ))}
             </View>
           </View>
 
@@ -713,17 +563,17 @@ const styles = StyleSheet.create({
   gridSectionTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#1E293B",
+    color: Theme.colors.text,
     marginBottom: 16,
   },
-  quickActionsRow: {
+  quickActionsWrap: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    flexWrap: "wrap",
+    rowGap: 16,
   },
   gridActionBtn: {
     alignItems: "center",
-    width: "23%",
+    width: "25%",
   },
   gridActionIcon: {
     width: 50,
@@ -736,17 +586,8 @@ const styles = StyleSheet.create({
   gridActionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: Theme.colors.textMuted,
     textAlign: "center",
-  },
-  expenseGridBtn: {
-    borderWidth: 2,
-    borderColor: "#EF4444",
-    borderRadius: 18,
-  },
-  expenseGridText: {
-    color: "#EF4444",
-    fontWeight: "800",
   },
   comingSoonBadge: {
     position: "absolute",

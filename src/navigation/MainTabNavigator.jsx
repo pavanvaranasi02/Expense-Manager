@@ -5,6 +5,7 @@ import { Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAuthStore from '../store/useAuthStore';
 import useStorageStore from '../store/useStorageStore';
+import { Theme } from '../theme/theme';
 
 // ===== Existing Screens =====
 import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
@@ -72,13 +73,16 @@ const ProfileStack = () => (
 );
 
 // ===== Custom FAB Button =====
-const CustomTabBarButton = ({ children, onPress }) => (
+const CustomTabBarButton = ({ onPress, style }) => (
   <TouchableOpacity
-    style={styles.fabContainer}
+    style={[style, styles.fabContainer]}
     onPress={onPress}
     activeOpacity={0.8}
+    accessibilityLabel="Add transaction"
   >
-    <View style={styles.fab}>{children}</View>
+    <View style={styles.fab}>
+      <Ionicons name="add" size={28} color="#FFFFFF" />
+    </View>
   </TouchableOpacity>
 );
 
@@ -137,15 +141,12 @@ const MainTabNavigator = () => {
           );
         },
         tabBarShowLabel: showTabLabels,
-        tabBarActiveTintColor: 
-          route.name === 'Family' ? '#F59E0B' : 
-          route.name === 'Transactions' ? '#EF4444' : 
-          '#6366F1',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: Theme.colors.primary,
+        tabBarInactiveTintColor: Theme.colors.textLight,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: Theme.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#F1F5F9',
+          borderTopColor: Theme.colors.border,
           height: showTabLabels 
             ? 70 + Math.max(0, insets.bottom - 8)
             : 65 + Math.max(0, insets.bottom - 8),
@@ -173,10 +174,7 @@ const MainTabNavigator = () => {
         name="Add"
         component={DummyScreen}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: () => (
-            <Ionicons name="add" size={28} color="#FFFFFF" />
-          ),
+          tabBarLabel: () => null,
           tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
         listeners={({ navigation }) => ({
@@ -217,12 +215,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#6366F1',
+        shadowColor: '#6C63FF',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 10,

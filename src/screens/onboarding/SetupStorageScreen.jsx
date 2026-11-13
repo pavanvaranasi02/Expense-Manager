@@ -37,8 +37,8 @@ const STORAGE_OPTIONS = [
     title: 'Local Storage',
     subtitle: 'Private on this device only',
     icon: 'phone-portrait-outline',
-    color: Theme.colors.success,
-    bg: Theme.colors.successLight,
+    color: Theme.colors.primary,
+    bg: Theme.colors.primaryLight,
     points: [
       'All personal data stays strictly on-device',
       'Instant speed, works completely offline',

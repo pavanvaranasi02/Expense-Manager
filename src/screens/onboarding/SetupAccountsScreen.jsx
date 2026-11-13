@@ -186,7 +186,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                 <TextInput
                   style={styles.textInput}
                   placeholder={selectedType === 'CASH' ? 'Cash in Hand' : 'e.g., HDFC Savings'}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#94A3B8"
                   value={accountName}
                   onChangeText={setAccountName}
                 />
@@ -199,7 +199,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                   <TextInput
                     style={styles.textInput}
                     placeholder="e.g., HDFC, ICICI, SBI"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#94A3B8"
                     value={bankName}
                     onChangeText={setBankName}
                   />
@@ -215,7 +215,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                     <TextInput
                       style={styles.amountInput}
                       placeholder="0"
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor="#94A3B8"
                       value={balance}
                       onChangeText={setBalance}
                       keyboardType="numeric"
@@ -234,7 +234,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.amountInput}
                         placeholder="100000"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#94A3B8"
                         value={creditLimit}
                         onChangeText={setCreditLimit}
                         keyboardType="numeric"
@@ -249,7 +249,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.amountInput}
                         placeholder="0"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#94A3B8"
                         value={currentUsage}
                         onChangeText={setCurrentUsage}
                         keyboardType="numeric"
@@ -263,7 +263,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="1"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#94A3B8"
                         value={billDate}
                         onChangeText={setBillDate}
                         keyboardType="numeric"
@@ -275,7 +275,7 @@ const SetupAccountsScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="15"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#94A3B8"
                         value={dueDate}
                         onChangeText={setDueDate}
                         keyboardType="numeric"
@@ -325,59 +325,59 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
 
   progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  progressDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#E5E7EB' },
+  progressDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#F1F5F9' },
   progressActive: { backgroundColor: '#6C63FF', width: 14, height: 14, borderRadius: 7 },
   progressDone: { backgroundColor: '#10B981' },
-  progressLine: { width: 40, height: 2, backgroundColor: '#E5E7EB', marginHorizontal: 4 },
+  progressLine: { width: 40, height: 2, backgroundColor: '#F1F5F9', marginHorizontal: 4 },
   progressLineDone: { backgroundColor: '#10B981' },
 
   step: { fontSize: 13, color: '#6C63FF', fontWeight: '600' },
-  title: { fontSize: 26, fontWeight: '700', color: '#1A1A2E', marginTop: 4 },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 24 },
+  title: { fontSize: 26, fontWeight: '700', color: '#1E293B', marginTop: 4 },
+  subtitle: { fontSize: 14, color: '#64748B', marginTop: 4, marginBottom: 24 },
 
   addedAccount: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#D1FAE5',
     padding: 14, borderRadius: 12, marginBottom: 8,
   },
   addedEmoji: { fontSize: 24, marginRight: 12 },
-  addedName: { fontSize: 15, fontWeight: '600', color: '#1A1A2E' },
-  addedDetail: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  addedName: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
+  addedDetail: { fontSize: 12, color: '#64748B', marginTop: 2 },
 
-  sectionLabel: { fontSize: 15, fontWeight: '600', color: '#1A1A2E', marginTop: 16, marginBottom: 12 },
+  sectionLabel: { fontSize: 15, fontWeight: '600', color: '#1E293B', marginTop: 16, marginBottom: 12 },
 
   typeCard: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    padding: 16, borderRadius: 12, marginBottom: 8, borderWidth: 1.5, borderColor: '#E5E7EB',
+    padding: 16, borderRadius: 12, marginBottom: 8, borderWidth: 1.5, borderColor: '#F1F5F9',
   },
   typeEmoji: { fontSize: 24, marginRight: 14 },
-  typeLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
+  typeLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: '#1E293B' },
 
   form: {
     backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20,
-    marginTop: 8, borderWidth: 1.5, borderColor: '#E5E7EB',
+    marginTop: 8, borderWidth: 1.5, borderColor: '#F1F5F9',
   },
-  formTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E', marginBottom: 20 },
+  formTitle: { fontSize: 18, fontWeight: '600', color: '#1E293B', marginBottom: 20 },
 
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '500', color: '#374151', marginBottom: 6 },
   textInput: {
-    backgroundColor: '#F9FAFB', borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB',
-    paddingHorizontal: 14, height: 46, fontSize: 15, color: '#1A1A2E',
+    backgroundColor: '#F8F9FE', borderRadius: 10, borderWidth: 1.5, borderColor: '#F1F5F9',
+    paddingHorizontal: 14, height: 46, fontSize: 15, color: '#1E293B',
   },
   amountRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB',
-    borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB', paddingLeft: 14,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8F9FE',
+    borderRadius: 10, borderWidth: 1.5, borderColor: '#F1F5F9', paddingLeft: 14,
   },
-  rupee: { fontSize: 18, fontWeight: '600', color: '#6B7280' },
-  amountInput: { flex: 1, height: 46, fontSize: 15, color: '#1A1A2E', paddingHorizontal: 8 },
+  rupee: { fontSize: 18, fontWeight: '600', color: '#64748B' },
+  amountInput: { flex: 1, height: 46, fontSize: 15, color: '#1E293B', paddingHorizontal: 8 },
   dateRow: { flexDirection: 'row' },
 
   formBtnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: {
     flex: 1, height: 46, borderRadius: 10, justifyContent: 'center',
-    alignItems: 'center', backgroundColor: '#F3F4F6',
+    alignItems: 'center', backgroundColor: '#F1F5F9',
   },
-  cancelBtnText: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
+  cancelBtnText: { fontSize: 15, fontWeight: '600', color: '#64748B' },
   saveBtn: {
     flex: 1, height: 46, borderRadius: 10, justifyContent: 'center',
     alignItems: 'center', backgroundColor: '#6C63FF',

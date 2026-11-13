@@ -161,7 +161,7 @@ const SettingsScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="chevron-back" size={24} color="#111827" />
+            <Ionicons name="chevron-back" size={24} color="#1E293B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={{ width: 44 }} />
@@ -191,8 +191,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Currency Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
-            <Ionicons name="cash" size={16} color="#6366F1" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="cash" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>CURRENCY</Text>
         </View>
@@ -228,8 +228,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Data & Storage Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
-            <Ionicons name="server-outline" size={16} color="#6366F1" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="server-outline" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
         </View>
@@ -245,12 +245,12 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => handleStorageSwitch('cloud')}
             >
               <View style={styles.storageOptionTop}>
-                <View style={[styles.storageIconWrap, { backgroundColor: '#EEF2FF' }]}>
-                  <Ionicons name="cloud-outline" size={20} color="#6366F1" />
+                <View style={[styles.storageIconWrap, { backgroundColor: Theme.colors.primaryLight }]}>
+                  <Ionicons name="cloud-outline" size={20} color={Theme.colors.primary} />
                 </View>
                 {storageMode === 'cloud' && (
-                  <View style={[styles.storageActivePill, { backgroundColor: '#EEF2FF' }]}>
-                    <Text style={[styles.storageActivePillText, { color: '#6366F1' }]}>Active</Text>
+                  <View style={[styles.storageActivePill, { backgroundColor: Theme.colors.primaryLight }]}>
+                    <Text style={[styles.storageActivePillText, { color: Theme.colors.primary }]}>Active</Text>
                   </View>
                 )}
               </View>
@@ -267,12 +267,12 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => handleStorageSwitch('local')}
             >
               <View style={styles.storageOptionTop}>
-                <View style={[styles.storageIconWrap, { backgroundColor: '#ECFDF5' }]}>
-                  <Ionicons name="phone-portrait-outline" size={20} color="#10B981" />
+                <View style={[styles.storageIconWrap, { backgroundColor: Theme.colors.primaryLight }]}>
+                  <Ionicons name="phone-portrait-outline" size={20} color={Theme.colors.primary} />
                 </View>
                 {storageMode === 'local' && (
-                  <View style={[styles.storageActivePill, { backgroundColor: '#ECFDF5' }]}>
-                    <Text style={[styles.storageActivePillText, { color: '#10B981' }]}>Active</Text>
+                  <View style={[styles.storageActivePill, { backgroundColor: Theme.colors.primaryLight }]}>
+                    <Text style={[styles.storageActivePillText, { color: Theme.colors.primary }]}>Active</Text>
                   </View>
                 )}
               </View>
@@ -284,7 +284,7 @@ const SettingsScreen = ({ navigation }) => {
           {(migrationStatus === 'downloading' || migrationStatus === 'uploading') && (
             <View style={styles.migrationBox}>
               <View style={styles.migrationHeader}>
-                <ActivityIndicator size="small" color="#6366F1" />
+                <ActivityIndicator size="small" color="#6C63FF" />
                 <Text style={styles.migrationText}>
                   {migrationProgress.label || 'Migrating data in background...'} (
                   {migrationProgress.current}/{migrationProgress.total})
@@ -315,8 +315,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Portfolio Settings */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#ECFDF5' }]}>
-            <Ionicons name="stats-chart" size={16} color="#10B981" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="stats-chart" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>ASSETS & PORTFOLIO</Text>
         </View>
@@ -330,11 +330,11 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={showInvestmentsInAssets}
               onValueChange={handleInvestmentToggle}
-              activeColor="#10B981"
+              activeColor={Theme.colors.primary}
             />
           </View>
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={16} color="#10B981" />
+            <Ionicons name="information-circle" size={16} color={Theme.colors.primary} />
             <Text style={styles.infoText}>
               {showInvestmentsInAssets 
                 ? "Net Worth = Assets + Investments - Debts"
@@ -345,8 +345,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* UI Preferences Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#FEF2F2' }]}>
-            <Ionicons name="desktop" size={16} color="#EF4444" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="desktop" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>UI PREFERENCES</Text>
         </View>
@@ -360,15 +360,15 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={showTabLabels}
               onValueChange={handleLabelToggle}
-              activeColor="#6366F1"
+              activeColor={Theme.colors.primary}
             />
           </View>
         </View>
 
         {/* Privacy & Notifications */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#FFF7ED' }]}>
-            <Ionicons name="notifications" size={16} color="#F59E0B" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="notifications" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>PREFERENCES</Text>
         </View>
@@ -385,7 +385,7 @@ const SettingsScreen = ({ navigation }) => {
                 useAuthStore.getState().setStealthMode(val);
                 saveToFirebase("isStealthMode", val);
               }}
-              activeColor="#F59E0B"
+              activeColor={Theme.colors.primary}
             />
           </View>
           
@@ -397,7 +397,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled}
               onValueChange={(val) => handleNotificationToggle("enabled", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -409,7 +409,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.sipReminders}
               onValueChange={(val) => handleNotificationToggle("sipReminders", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -421,7 +421,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.rdReminders}
               onValueChange={(val) => handleNotificationToggle("rdReminders", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -433,7 +433,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.budgetAlerts}
               onValueChange={(val) => handleNotificationToggle("budgetAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -445,7 +445,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.creditCardAlerts}
               onValueChange={(val) => handleNotificationToggle("creditCardAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -457,7 +457,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.emiAlerts}
               onValueChange={(val) => handleNotificationToggle("emiAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -469,7 +469,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.dailyReminder}
               onValueChange={(val) => handleNotificationToggle("dailyReminder", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
         </View>
@@ -477,15 +477,20 @@ const SettingsScreen = ({ navigation }) => {
         {/* Family Settings Section */}
         {userProfile?.familyId && storageMode !== 'local' && (
           <>
-            <Text style={styles.sectionTitle}>Family Settings</Text>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+                <Ionicons name="people" size={16} color={Theme.colors.primary} />
+              </View>
+              <Text style={styles.sectionTitle}>FAMILY SETTINGS</Text>
+            </View>
             <View style={styles.card}>
               <View style={[styles.settingRow, styles.borderBottom]}>
                 <View
-                  style={[styles.settingIcon, { backgroundColor: "#F0EFFF" }]}
+                  style={[styles.settingIcon, { backgroundColor: Theme.colors.primaryLight }]}
                 >
-                  <Ionicons name="sync" size={20} color="#6C63FF" />
+                  <Ionicons name="sync" size={20} color={Theme.colors.primary} />
                 </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.settingLabel}>Sync to Personal</Text>
                   <Text style={styles.settingSubLabel}>
                     Family expenses you pay for will be added to your personal
@@ -513,7 +518,7 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  activeColor="#6366F1"
+                  activeColor={Theme.colors.primary}
                 />
               </View>
 
@@ -524,12 +529,12 @@ const SettingsScreen = ({ navigation }) => {
                     <View
                       style={[
                         styles.settingIcon,
-                        { backgroundColor: "#DBEAFE" },
+                        { backgroundColor: Theme.colors.primaryLight },
                       ]}
                     >
-                      <Ionicons name="pencil" size={20} color="#3B82F6" />
+                      <Ionicons name="pencil" size={20} color={Theme.colors.primary} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.settingLabel}>Sync on Edit</Text>
                       <Text style={styles.settingSubLabel}>
                         Update personal expense when family expense is edited
@@ -554,20 +559,20 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      activeColor="#3B82F6"
+                      activeColor={Theme.colors.primary}
                     />
                   </View>
 
-                  <View style={styles.settingRow}>
+                  <View style={[styles.settingRow, styles.borderBottom]}>
                     <View
                       style={[
                         styles.settingIcon,
-                        { backgroundColor: "#FEE2E2" },
+                        { backgroundColor: Theme.colors.primaryLight },
                       ]}
                     >
-                      <Ionicons name="trash" size={20} color="#EF4444" />
+                      <Ionicons name="trash" size={20} color={Theme.colors.primary} />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.settingLabel}>Sync on Delete</Text>
                       <Text style={styles.settingSubLabel}>
                         Delete personal expense when family expense is removed
@@ -594,7 +599,7 @@ const SettingsScreen = ({ navigation }) => {
                           });
                         }
                       }}
-                      activeColor="#EF4444"
+                      activeColor={Theme.colors.primary}
                     />
                   </View>
                 </>
@@ -603,11 +608,11 @@ const SettingsScreen = ({ navigation }) => {
               {/* Allow Past Date Recurring Expenses */}
               <View style={[styles.settingRow, styles.borderBottom]}>
                 <View
-                  style={[styles.settingIcon, { backgroundColor: "#D1FAE5" }]}
+                  style={[styles.settingIcon, { backgroundColor: Theme.colors.primaryLight }]}
                 >
-                  <Ionicons name="calendar" size={20} color="#10B981" />
+                  <Ionicons name="calendar" size={20} color={Theme.colors.primary} />
                 </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.settingLabel}>
                     Allow Past Recurring Expenses
                   </Text>
@@ -636,16 +641,16 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  activeColor="#10B981"
+                  activeColor={Theme.colors.primary}
                 />
               </View>
 
               {/* Info Card */}
-              <View style={styles.infoBox}>
+              <View style={[styles.infoBox, { marginTop: 16 }]}>
                 <Ionicons
                   name="information-circle-outline"
                   size={18}
-                  color="#6C63FF"
+                  color={Theme.colors.primary}
                 />
                 <Text style={styles.infoText}>
                   Synced expenses are tagged with [Family] in your personal
@@ -658,8 +663,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* About & Updates Card */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#F1F5F9' }]}>
-            <Ionicons name="information-circle" size={16} color="#64748B" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="information-circle" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>ABOUT & UPDATES</Text>
         </View>
@@ -689,10 +694,10 @@ const SettingsScreen = ({ navigation }) => {
               </Text>
             </View>
             {checkingUpdate ? (
-              <ActivityIndicator size="small" color="#6366F1" />
+              <ActivityIndicator size="small" color="#6C63FF" />
             ) : (
               <View style={styles.updateBadge}>
-                <Ionicons name="cloud-download-outline" size={14} color="#6366F1" />
+                <Ionicons name="cloud-download-outline" size={14} color="#6C63FF" />
                 <Text style={styles.updateBadgeText}>Check Now</Text>
               </View>
             )}
@@ -771,7 +776,7 @@ const SettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: "#F8F9FE" },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: "row",
@@ -780,19 +785,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1F5F9',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F8F9FE",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#1E293B", letterSpacing: -0.5 },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
   profileSummary: {
@@ -803,19 +808,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
   avatarMini: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarTextMini: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  profileName: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  profileEmail: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  profileName: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
+  profileEmail: { fontSize: 12, color: '#64748B', fontWeight: '500' },
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -845,7 +850,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: "900",
-    color: "#6B7280",
+    color: "#64748B",
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
@@ -855,7 +860,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F3F4F6",
+    borderColor: "#F1F5F9",
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -874,18 +879,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F9FE',
     borderWidth: 2,
     borderColor: 'transparent',
     position: 'relative',
   },
   activeCurrencyItem: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    backgroundColor: '#E0E7FF',
+    borderColor: '#6C63FF',
   },
-  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  currencyCode: { fontSize: 12, fontWeight: '800', color: '#6B7280', marginTop: 4 },
-  activeCurrencyText: { color: '#6366F1' },
+  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#1E293B' },
+  currencyCode: { fontSize: 12, fontWeight: '800', color: '#64748B', marginTop: 4 },
+  activeCurrencyText: { color: '#6C63FF' },
   checkBadge: {
     position: 'absolute',
     top: 8,
@@ -893,27 +898,34 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
 
-  settingRow: { flexDirection: "row", alignItems: "center", padding: 18 },
-  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  settingRow: { flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
+  settingIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   settingLabel: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
   settingSubLabel: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#94A3B8",
     marginTop: 2,
     fontWeight: '500',
   },
 
-  switchRow: { flexDirection: "row", alignItems: "center", padding: 18 },
+  switchRow: { flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
 
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E0E7FF",
     padding: 14,
     marginHorizontal: 18,
     marginBottom: 18,
@@ -922,7 +934,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: "#6366F1",
+    color: "#6C63FF",
     marginLeft: 10,
     flex: 1,
     fontWeight: '600',
@@ -934,7 +946,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
-  aboutValue: { fontSize: 13, color: "#6B7280", fontWeight: '600' },
+  aboutValue: { fontSize: 13, color: "#64748B", fontWeight: '600' },
   betaBadge: {
     backgroundColor: '#F1F5F9',
     paddingHorizontal: 10,
@@ -945,7 +957,7 @@ const styles = StyleSheet.create({
   updateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E0E7FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -956,7 +968,7 @@ const styles = StyleSheet.create({
   updateBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6366F1',
+    color: '#6C63FF',
   },
 
   dangerBtn: {
@@ -995,7 +1007,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.surface,
   },
   storageOptionActiveLocal: {
-    borderColor: Theme.colors.success,
+    borderColor: Theme.colors.primary,
     backgroundColor: Theme.colors.surface,
   },
   storageOptionTop: {
