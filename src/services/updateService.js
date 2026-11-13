@@ -6,7 +6,7 @@ export const GITHUB_REPO = "Expense-Manager";
 
 // App version from config or fallback
 export const CURRENT_APP_VERSION =
-  appConfig?.expo?.version || "1.3.5";
+  appConfig?.expo?.version || "1.3.6";
 
 /**
  * Normalizes tags like "expense_manager_v1.1", "v1.4.0", "1.4" into [major, minor, patch]
