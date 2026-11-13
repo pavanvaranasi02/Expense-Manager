@@ -161,7 +161,7 @@ const SettingsScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="chevron-back" size={24} color="#111827" />
+            <Ionicons name="chevron-back" size={24} color="#1E293B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={{ width: 44 }} />
@@ -284,7 +284,7 @@ const SettingsScreen = ({ navigation }) => {
           {(migrationStatus === 'downloading' || migrationStatus === 'uploading') && (
             <View style={styles.migrationBox}>
               <View style={styles.migrationHeader}>
-                <ActivityIndicator size="small" color="#6366F1" />
+                <ActivityIndicator size="small" color="#6C63FF" />
                 <Text style={styles.migrationText}>
                   {migrationProgress.label || 'Migrating data in background...'} (
                   {migrationProgress.current}/{migrationProgress.total})
@@ -397,7 +397,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled}
               onValueChange={(val) => handleNotificationToggle("enabled", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -409,7 +409,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.sipReminders}
               onValueChange={(val) => handleNotificationToggle("sipReminders", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -421,7 +421,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.rdReminders}
               onValueChange={(val) => handleNotificationToggle("rdReminders", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -433,7 +433,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.budgetAlerts}
               onValueChange={(val) => handleNotificationToggle("budgetAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -445,7 +445,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.creditCardAlerts}
               onValueChange={(val) => handleNotificationToggle("creditCardAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -457,7 +457,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.emiAlerts}
               onValueChange={(val) => handleNotificationToggle("emiAlerts", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
 
@@ -469,7 +469,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.dailyReminder}
               onValueChange={(val) => handleNotificationToggle("dailyReminder", val)}
-              activeColor="#6366F1"
+              activeColor="#6C63FF"
             />
           </View>
         </View>
@@ -481,7 +481,7 @@ const SettingsScreen = ({ navigation }) => {
             <View style={styles.card}>
               <View style={[styles.settingRow, styles.borderBottom]}>
                 <View
-                  style={[styles.settingIcon, { backgroundColor: "#F0EFFF" }]}
+                  style={[styles.settingIcon, { backgroundColor: "#E0E7FF" }]}
                 >
                   <Ionicons name="sync" size={20} color="#6C63FF" />
                 </View>
@@ -513,7 +513,7 @@ const SettingsScreen = ({ navigation }) => {
                       });
                     }
                   }}
-                  activeColor="#6366F1"
+                  activeColor="#6C63FF"
                 />
               </View>
 
@@ -689,10 +689,10 @@ const SettingsScreen = ({ navigation }) => {
               </Text>
             </View>
             {checkingUpdate ? (
-              <ActivityIndicator size="small" color="#6366F1" />
+              <ActivityIndicator size="small" color="#6C63FF" />
             ) : (
               <View style={styles.updateBadge}>
-                <Ionicons name="cloud-download-outline" size={14} color="#6366F1" />
+                <Ionicons name="cloud-download-outline" size={14} color="#6C63FF" />
                 <Text style={styles.updateBadgeText}>Check Now</Text>
               </View>
             )}
@@ -771,7 +771,7 @@ const SettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: "#F8F9FE" },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: "row",
@@ -780,19 +780,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1F5F9',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F8F9FE",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#1E293B", letterSpacing: -0.5 },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
   profileSummary: {
@@ -803,19 +803,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
   avatarMini: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarTextMini: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  profileName: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  profileEmail: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  profileName: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
+  profileEmail: { fontSize: 12, color: '#64748B', fontWeight: '500' },
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: "900",
-    color: "#6B7280",
+    color: "#64748B",
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F3F4F6",
+    borderColor: "#F1F5F9",
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -874,18 +874,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F9FE',
     borderWidth: 2,
     borderColor: 'transparent',
     position: 'relative',
   },
   activeCurrencyItem: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    backgroundColor: '#E0E7FF',
+    borderColor: '#6C63FF',
   },
-  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  currencyCode: { fontSize: 12, fontWeight: '800', color: '#6B7280', marginTop: 4 },
-  activeCurrencyText: { color: '#6366F1' },
+  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#1E293B' },
+  currencyCode: { fontSize: 12, fontWeight: '800', color: '#64748B', marginTop: 4 },
+  activeCurrencyText: { color: '#6C63FF' },
   checkBadge: {
     position: 'absolute',
     top: 8,
@@ -893,18 +893,18 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
 
   settingRow: { flexDirection: "row", alignItems: "center", padding: 18 },
-  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   settingLabel: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
   settingSubLabel: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: "#94A3B8",
     marginTop: 2,
     fontWeight: '500',
   },
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
 
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E0E7FF",
     padding: 14,
     marginHorizontal: 18,
     marginBottom: 18,
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: "#6366F1",
+    color: "#6C63FF",
     marginLeft: 10,
     flex: 1,
     fontWeight: '600',
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
-  aboutValue: { fontSize: 13, color: "#6B7280", fontWeight: '600' },
+  aboutValue: { fontSize: 13, color: "#64748B", fontWeight: '600' },
   betaBadge: {
     backgroundColor: '#F1F5F9',
     paddingHorizontal: 10,
@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
   updateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E0E7FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
   updateBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6366F1',
+    color: '#6C63FF',
   },
 
   dangerBtn: {

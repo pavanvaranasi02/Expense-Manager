@@ -22,7 +22,7 @@ const menuSections = [
   {
     title: 'FINANCES',
     items: [
-      { id: 'accounts', icon: 'wallet-outline', label: 'My Accounts', screen: 'ManageAccounts', color: '#6366F1' },
+      { id: 'accounts', icon: 'wallet-outline', label: 'My Accounts', screen: 'ManageAccounts', color: '#6C63FF' },
       { id: 'portfolio', icon: 'trending-up-outline', label: 'Portfolio & Investments', screen: 'Portfolio', color: '#10B981' },
       { id: 'budgets', icon: 'pie-chart-outline', label: 'Budgets', screen: 'BudgetList', color: '#8B5CF6' },
       { id: 'creditBill', icon: 'card-outline', label: 'Credit Card Bills', screen: 'CreditCardBill', color: '#EF4444' },
@@ -126,7 +126,7 @@ const ProfileScreen = ({ navigation }) => {
           
           <View style={styles.badgeRow}>
             <View style={styles.currencyBadge}>
-              <Ionicons name="cash-outline" size={12} color="#6366F1" style={{ marginRight: 4 }} />
+              <Ionicons name="cash-outline" size={12} color="#6C63FF" style={{ marginRight: 4 }} />
               <Text style={styles.currencyText}>{getCurrencyLabel()}</Text>
             </View>
             <View style={[styles.currencyBadge, { backgroundColor: '#F0FDF4' }]}>
@@ -161,7 +161,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* Premium Banner */}
         <TouchableOpacity style={styles.premiumCard}>
           <LinearGradient
-            colors={['#1F2937', '#111827']}
+            colors={['#1F2937', '#1E293B']}
             style={styles.premiumGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -191,7 +191,7 @@ const ProfileScreen = ({ navigation }) => {
                       <Ionicons name={item.icon} size={20} color={Theme.colors.primary} />
                     </View>
                     <Text style={styles.menuLabel}>{item.label}</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
                   </TouchableOpacity>
                   {idx < section.items.length - 1 && <View style={styles.menuDivider} />}
                 </View>
@@ -236,7 +236,7 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F8F9FE' },
   content: { paddingBottom: 100 },
 
   headerBackground: {
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
   avatarContainer: {
     marginTop: -45,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 45,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C63FF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -313,18 +313,18 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#FFFFFF',
   },
-  name: { fontSize: 24, fontWeight: '900', color: '#111827', marginTop: 12, letterSpacing: -0.5 },
-  email: { fontSize: 14, color: '#6B7280', marginTop: 2, fontWeight: '500' },
+  name: { fontSize: 24, fontWeight: '900', color: '#1E293B', marginTop: 12, letterSpacing: -0.5 },
+  email: { fontSize: 14, color: '#64748B', marginTop: 2, fontWeight: '500' },
   badgeRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   currencyBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E0E7FF',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  currencyText: { fontSize: 11, color: '#6366F1', fontWeight: '800', textTransform: 'uppercase' },
+  currencyText: { fontSize: 11, color: '#6C63FF', fontWeight: '800', textTransform: 'uppercase' },
 
   statsContainer: {
     flexDirection: 'row',
@@ -339,12 +339,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 10,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, height: '70%', backgroundColor: '#F3F4F6', alignSelf: 'center' },
-  statVal: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  statLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
+  statDivider: { width: 1, height: '70%', backgroundColor: '#F1F5F9', alignSelf: 'center' },
+  statVal: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
+  statLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', marginTop: 2 },
 
   premiumCard: {
     marginHorizontal: 20,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#9CA3AF',
+    color: '#94A3B8',
     marginBottom: 10,
     letterSpacing: 1.5,
     paddingLeft: 4,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1F5F9',
   },
   menuCard: {
     flexDirection: 'row',
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1F2937' },
-  menuDivider: { height: 1, backgroundColor: '#F9FAFB', marginHorizontal: 16 },
+  menuDivider: { height: 1, backgroundColor: '#F8F9FE', marginHorizontal: 16 },
 
   footer: { marginTop: 48, alignItems: 'center', paddingBottom: 40 },
   versionBadge: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   footerSlogan: { 
     fontSize: 11, 
-    color: '#9CA3AF', 
+    color: '#94A3B8', 
     marginTop: 10, 
     fontWeight: '700',
     letterSpacing: 0.5,
