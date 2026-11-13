@@ -166,35 +166,66 @@ ExpenseManager/
 
 ## 🚀 Setup & Installation
 
-### 1. Prerequisites
-- Node.js (v18+)
-- Expo Go app on your mobile device
-- Firebase Project
+Follow these steps to set up and run KOSH locally for the first time.
 
-### 2. Local Installation
+### 1. Prerequisites
+- **Node.js** (v18 or higher) and **npm**
+- **Git**
+- **Expo Go** app on your iOS/Android device (or Android Studio / Xcode for emulators/simulators)
+- A **Firebase Project** (with Authentication, Cloud Firestore, and Cloud Storage enabled)
+
+### 2. Clone & Install Dependencies
 ```bash
 # Clone the repository
 git clone https://github.com/pavanvaranasi02/Expense-Manager
+cd Expense-Manager
 
 # Install dependencies
 npm install
-
-# Start development server
-npx expo start
 ```
 
-### 3. Firebase Configuration
-Update `src/config/firebase.js` with your project credentials:
-```javascript
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "...",
-};
+### 3. Environment & Firebase Configuration
+Create a `.env` file in the project root from the provided template:
+```bash
+cp .env.example .env
 ```
+
+Open `.env` and fill in your Firebase project credentials (found in **Firebase Console → Project Settings → General → Your Apps → Web App**):
+```env
+EXPO_WEB_CLIENT_ID=
+EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+> [!NOTE]
+> `src/config/firebase.js` and `app.config.js` read these `EXPO_PUBLIC_FIREBASE_*` environment variables automatically—you do not need to hardcode credentials in `src/config/firebase.js`.
+> Make sure **Email/Password** authentication, **Cloud Firestore**, and **Cloud Storage** are enabled in your Firebase project.
+
+### 4. Start the App
+Start the Expo development server (use `--clear` after creating or updating `.env`):
+```bash
+npx expo start --clear
+```
+
+From the Expo CLI menu (or via npm scripts), you can launch the app on your preferred target:
+- **Mobile Device (Expo Go):** Scan the QR code using the Expo Go app (Android) or Camera app (iOS).
+- **Android Emulator / Device (Native Build):**
+  ```bash
+  npm run android
+  ```
+- **iOS Simulator / Device (Native Build, macOS only):**
+  ```bash
+  npm run ios
+  ```
+- **Web Browser:**
+  ```bash
+  npm run web
+  ```
 
 ---
 
