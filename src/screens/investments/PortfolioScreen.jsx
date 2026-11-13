@@ -1690,7 +1690,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* 9. Top-Up / Add Amount Modal */}
       <Modal visible={showAddAmountModal} animationType="slide" transparent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.modalOverlay}
         >
           <View style={[styles.modalContent, { maxHeight: "88%" }]}>

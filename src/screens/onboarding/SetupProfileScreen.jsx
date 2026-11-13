@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebase';
 import { updateUserProfile } from '../../services/authService';
 import useAuthStore from '../../store/useAuthStore';
+import { Theme } from '../../theme/theme';
 
 const CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
@@ -69,16 +70,19 @@ const SetupProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets={true}
           showsVerticalScrollIndicator={false}
         >
           {/* Progress */}
           <View style={styles.progressRow}>
+            <View style={[styles.progressDot, styles.progressDone]} />
+            <View style={[styles.progressLine, styles.progressLineDone]} />
             <View style={[styles.progressDot, styles.progressActive]} />
             <View style={styles.progressLine} />
             <View style={styles.progressDot} />
@@ -86,7 +90,7 @@ const SetupProfileScreen = ({ navigation }) => {
             <View style={styles.progressDot} />
           </View>
 
-          <Text style={styles.step}>Step 1 of 3</Text>
+          <Text style={styles.step}>Step 2 of 4</Text>
           <Text style={styles.title}>Your Profile</Text>
           <Text style={styles.subtitle}>Tell us a bit about yourself</Text>
 
@@ -175,17 +179,19 @@ const SetupProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  content: { flexGrow: 1, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 80 },
 
-  progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  progressDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#E5E7EB' },
-  progressActive: { backgroundColor: '#6C63FF', width: 14, height: 14, borderRadius: 7 },
-  progressLine: { width: 40, height: 2, backgroundColor: '#E5E7EB', marginHorizontal: 4 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: Theme.spacing.lg },
+  progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Theme.colors.primaryLight },
+  progressActive: { backgroundColor: Theme.colors.primary, width: 24 },
+  progressDone: { backgroundColor: Theme.colors.success },
+  progressLine: { width: 28, height: 2, backgroundColor: Theme.colors.primaryLight, marginHorizontal: Theme.spacing.xs },
+  progressLineDone: { backgroundColor: Theme.colors.success },
 
-  step: { fontSize: 13, color: '#6C63FF', fontWeight: '600' },
-  title: { fontSize: 26, fontWeight: '700', color: '#1A1A2E', marginTop: 4 },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 32 },
+  step: { fontSize: Theme.typography.size.xs, color: Theme.colors.primary, fontWeight: Theme.typography.weight.bold, textTransform: 'uppercase', letterSpacing: 0.8 },
+  title: { fontSize: Theme.typography.size.xxl, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text, marginTop: 4 },
+  subtitle: { fontSize: Theme.typography.size.sm, color: Theme.colors.textMuted, marginTop: 4, marginBottom: Theme.spacing.xl },
 
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 14, fontWeight: '500', color: '#1A1A2E', marginBottom: 6 },

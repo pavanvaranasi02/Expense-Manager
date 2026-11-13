@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import useStorageStore from '../store/useStorageStore';
 import useSyncStore from '../store/useSyncStore';
+import { Theme } from '../theme/theme';
 
 const OfflineBanner = () => {
   const { isOnline, isSyncing, pendingCount } = useSyncStore();
@@ -74,13 +75,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
   },
-  migratingBanner: { backgroundColor: '#6366F1' },
-  offlineBanner: { backgroundColor: '#EF4444' },
-  pendingBanner: { backgroundColor: '#F59E0B' },
+  migratingBanner: { backgroundColor: Theme.colors.primary },
+  offlineBanner: { backgroundColor: Theme.colors.error },
+  pendingBanner: { backgroundColor: Theme.colors.warning },
   bannerText: {
-    color: '#FFFFFF',
+    color: Theme.colors.surface,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: Theme.typography.weight.semibold,
   },
 });
 
