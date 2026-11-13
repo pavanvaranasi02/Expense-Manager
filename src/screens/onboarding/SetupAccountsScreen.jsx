@@ -106,16 +106,19 @@ const SetupAccountsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets={true}
           showsVerticalScrollIndicator={false}
         >
           {/* Progress */}
           <View style={styles.progressRow}>
+            <View style={[styles.progressDot, styles.progressDone]} />
+            <View style={[styles.progressLine, styles.progressLineDone]} />
             <View style={[styles.progressDot, styles.progressDone]} />
             <View style={[styles.progressLine, styles.progressLineDone]} />
             <View style={[styles.progressDot, styles.progressActive]} />
@@ -123,7 +126,7 @@ const SetupAccountsScreen = ({ navigation }) => {
             <View style={styles.progressDot} />
           </View>
 
-          <Text style={styles.step}>Step 2 of 3</Text>
+          <Text style={styles.step}>Step 3 of 4</Text>
           <Text style={styles.title}>Your Accounts</Text>
           <Text style={styles.subtitle}>Add your bank accounts, credit cards & cash</Text>
 

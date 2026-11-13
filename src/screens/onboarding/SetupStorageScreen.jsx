@@ -16,6 +16,7 @@ import {
 } from '../../services/localStorageService';
 import useAuthStore from '../../store/useAuthStore';
 import useStorageStore from '../../store/useStorageStore';
+import { Theme } from '../../theme/theme';
 
 const STORAGE_OPTIONS = [
   {
@@ -23,8 +24,8 @@ const STORAGE_OPTIONS = [
     title: 'Cloud Storage',
     subtitle: 'Synced & backed up automatically',
     icon: 'cloud-outline',
-    color: '#6366F1',
-    bg: '#EEF2FF',
+    color: Theme.colors.primary,
+    bg: Theme.colors.primaryLight,
     points: [
       'Automatic cloud backup across devices',
       'Offline queue syncs when back online',
@@ -34,12 +35,12 @@ const STORAGE_OPTIONS = [
   {
     id: 'local',
     title: 'Local Storage',
-    subtitle: '100% private on this device',
+    subtitle: 'Private on this device only',
     icon: 'phone-portrait-outline',
-    color: '#10B981',
-    bg: '#ECFDF5',
+    color: Theme.colors.success,
+    bg: Theme.colors.successLight,
     points: [
-      'All data stays strictly on your device',
+      'All personal data stays strictly on-device',
       'Instant speed, works completely offline',
       'Switch to Cloud anytime in Settings',
     ],
@@ -89,10 +90,20 @@ const SetupStorageScreen = ({ navigation }) => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.badge}>STORAGE PREFERENCE</Text>
-        <Text style={styles.title}>Where should we store your data?</Text>
+        <View style={styles.progressRow}>
+          <View style={[styles.progressDot, styles.progressActive]} />
+          <View style={styles.progressLine} />
+          <View style={styles.progressDot} />
+          <View style={styles.progressLine} />
+          <View style={styles.progressDot} />
+          <View style={styles.progressLine} />
+          <View style={styles.progressDot} />
+        </View>
+
+        <Text style={styles.step}>Step 1 of 4</Text>
+        <Text style={styles.title}>Storage Preference</Text>
         <Text style={styles.subtitle}>
-          Choose how your expenses, accounts, and budgets are saved. You can
+          Choose where your expenses, accounts, and budgets are saved. You can
           switch anytime in Settings.
         </Text>
 
@@ -104,23 +115,19 @@ const SetupStorageScreen = ({ navigation }) => {
                 key={opt.id}
                 style={[
                   styles.card,
-                  isSelected && {
-                    borderColor: opt.color,
-                    backgroundColor: '#FFFFFF',
-                    shadowColor: opt.color,
-                    shadowOpacity: 0.12,
-                    shadowRadius: 12,
-                    elevation: 4,
-                  },
+                  isSelected && [styles.cardSelected, { borderColor: opt.color }],
                 ]}
                 activeOpacity={0.85}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isSelected }}
+                accessibilityLabel={`${opt.title}: ${opt.subtitle}`}
                 onPress={() => setSelectedMode(opt.id)}
               >
                 <View style={styles.cardHeader}>
                   <View style={[styles.iconWrap, { backgroundColor: opt.bg }]}>
-                    <Ionicons name={opt.icon} size={24} color={opt.color} />
+                    <Ionicons name={opt.icon} size={22} color={opt.color} />
                   </View>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
+                  <View style={styles.cardTitleWrap}>
                     <Text style={styles.cardTitle}>{opt.title}</Text>
                     <Text style={styles.cardSubtitle}>{opt.subtitle}</Text>
                   </View>
@@ -134,7 +141,11 @@ const SetupStorageScreen = ({ navigation }) => {
                     ]}
                   >
                     {isSelected && (
-                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                      <Ionicons
+                        name="checkmark"
+                        size={14}
+                        color={Theme.colors.surface}
+                      />
                     )}
                   </View>
                 </View>
@@ -145,7 +156,7 @@ const SetupStorageScreen = ({ navigation }) => {
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={isSelected ? opt.color : '#9CA3AF'}
+                        color={isSelected ? opt.color : Theme.colors.textLight}
                       />
                       <Text style={styles.pointText}>{pt}</Text>
                     </View>
@@ -157,14 +168,24 @@ const SetupStorageScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.btn, loading && { opacity: 0.7 }]}
+          style={[styles.btn, loading && styles.btnDisabled]}
           onPress={handleContinue}
           disabled={loading}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Continue to profile setup"
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={Theme.colors.surface} />
           ) : (
-            <Text style={styles.btnText}>Continue →</Text>
+            <>
+              <Text style={styles.btnText}>Continue</Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={Theme.colors.surface}
+              />
+            </>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -173,61 +194,141 @@ const SetupStorageScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
-  content: { padding: 24, paddingTop: 32, paddingBottom: 40 },
-  badge: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6C63FF',
-    letterSpacing: 1,
-    marginBottom: 8,
+  container: {
+    flex: 1,
+    backgroundColor: Theme.colors.background,
   },
-  title: { fontSize: 26, fontWeight: '700', color: '#1A1A2E', lineHeight: 32 },
-  subtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
-    lineHeight: 20,
-    marginBottom: 24,
+  content: {
+    padding: Theme.spacing.lg,
+    paddingTop: Theme.spacing.md,
+    paddingBottom: Theme.spacing.xl,
   },
-  cards: { gap: 16, marginBottom: 28 },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center' },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: 'center',
+  progressRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Theme.spacing.lg,
   },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
-  cardSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
-  radio: {
+  progressDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Theme.colors.primaryLight,
+  },
+  progressActive: {
+    backgroundColor: Theme.colors.primary,
     width: 24,
-    height: 24,
-    borderRadius: 12,
+  },
+  progressLine: {
+    width: 28,
+    height: 2,
+    backgroundColor: Theme.colors.primaryLight,
+    marginHorizontal: Theme.spacing.xs,
+  },
+  step: {
+    fontSize: Theme.typography.size.xs,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: Theme.spacing.xs,
+  },
+  title: {
+    fontSize: Theme.typography.size.xxl,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.text,
+  },
+  subtitle: {
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.textMuted,
+    marginTop: Theme.spacing.xs,
+    lineHeight: 20,
+    marginBottom: Theme.spacing.lg,
+  },
+  cards: {
+    gap: Theme.spacing.md,
+    marginBottom: Theme.spacing.xl,
+  },
+  card: {
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.md,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
+    ...Theme.shadows.soft,
+  },
+  cardSelected: {
+    ...Theme.shadows.card,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: Theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardTitleWrap: {
+    flex: 1,
+    marginLeft: Theme.spacing.md,
+  },
+  cardTitle: {
+    fontSize: Theme.typography.size.base,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.text,
+  },
+  cardSubtitle: {
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.textMuted,
+    marginTop: 2,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: Theme.colors.textLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  points: { marginTop: 14, gap: 8, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-  pointRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  pointText: { fontSize: 13, color: '#4B5563', flex: 1 },
+  points: {
+    marginTop: Theme.spacing.md,
+    gap: Theme.spacing.sm,
+    paddingTop: Theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.divider,
+  },
+  pointRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  pointText: {
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.textMuted,
+    flex: 1,
+  },
   btn: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: Theme.colors.primary,
     height: 52,
-    borderRadius: 12,
+    borderRadius: Theme.radius.md,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: Theme.spacing.sm,
+    ...Theme.shadows.elevated,
   },
-  btnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  btnDisabled: {
+    opacity: 0.7,
+  },
+  btnText: {
+    color: Theme.colors.surface,
+    fontSize: Theme.typography.size.base,
+    fontWeight: Theme.typography.weight.semibold,
+  },
 });
 
 export default SetupStorageScreen;

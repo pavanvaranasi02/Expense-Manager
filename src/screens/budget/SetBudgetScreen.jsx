@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const SetBudgetScreen = ({ navigation }) => (
   <SafeAreaView style={s.c}>
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
     >
       <ScrollView

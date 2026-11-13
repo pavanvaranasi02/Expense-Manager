@@ -32,6 +32,7 @@ import { startBackgroundStorageSwitch } from "../../services/storageMigrationSer
 import * as Haptics from 'expo-haptics';
 import ModernToggle from "../../components/ModernToggle";
 import { getCurrencySymbol } from "../../constants/currencies";
+import { Theme } from "../../theme/theme";
 
 const { width } = Dimensions.get('window');
 
@@ -984,18 +985,18 @@ const styles = StyleSheet.create({
   storageOption: {
     flex: 1,
     padding: 14,
-    borderRadius: 16,
+    borderRadius: Theme.radius.lg,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
+    borderColor: Theme.colors.border,
+    backgroundColor: Theme.colors.background,
   },
   storageOptionActiveCloud: {
-    borderColor: '#6366F1',
-    backgroundColor: '#FFFFFF',
+    borderColor: Theme.colors.primary,
+    backgroundColor: Theme.colors.surface,
   },
   storageOptionActiveLocal: {
-    borderColor: '#10B981',
-    backgroundColor: '#FFFFFF',
+    borderColor: Theme.colors.success,
+    backgroundColor: Theme.colors.surface,
   },
   storageOptionTop: {
     flexDirection: 'row',
@@ -1006,64 +1007,64 @@ const styles = StyleSheet.create({
   storageIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: Theme.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   storageActivePill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: Theme.radius.full,
   },
   storageActivePillText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: Theme.typography.weight.extrabold,
     textTransform: 'uppercase',
   },
   storageTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontSize: Theme.typography.size.sm,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.text,
   },
   storageDesc: {
     fontSize: 11,
-    color: '#64748B',
+    color: Theme.colors.textMuted,
     marginTop: 3,
     lineHeight: 15,
   },
   migrationBox: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
     padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#EEF2FF',
+    borderRadius: Theme.radius.md,
+    backgroundColor: Theme.colors.primaryLight,
   },
   migrationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Theme.spacing.sm,
   },
   migrationText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#4338CA',
+    fontSize: Theme.typography.size.xs,
+    fontWeight: Theme.typography.weight.bold,
+    color: Theme.colors.primaryDark,
     flex: 1,
   },
   progressTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#C7D2FE',
-    marginTop: 8,
+    backgroundColor: Theme.colors.surface,
+    marginTop: Theme.spacing.sm,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#6366F1',
+    backgroundColor: Theme.colors.primary,
     borderRadius: 3,
   },
   migrationHint: {
     fontSize: 11,
-    color: '#4F46E5',
+    color: Theme.colors.primaryDark,
     marginTop: 6,
   },
 });
