@@ -44,7 +44,7 @@ const WelcomeScreen = ({ navigation }) => (
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => navigation.navigate('SetupProfile')}
+        onPress={() => navigation.navigate('SetupStorage')}
       >
         <Text style={styles.btnText}>Let's Get Started →</Text>
       </TouchableOpacity>

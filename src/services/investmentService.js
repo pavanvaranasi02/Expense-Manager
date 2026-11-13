@@ -13,6 +13,15 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { addIncome } from './incomeService';
+import {
+    addLocalDoc,
+    deleteLocalDoc,
+    getLocalCollection,
+    getLocalDoc,
+    isLocalMode,
+    LOCAL_COLLECTIONS,
+    updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -86,6 +95,15 @@ export const addInvestment = async (data) => {
       updatedAt: serverTimestamp(),
     };
 
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, {
+        ...investment,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true, id: created.id };
+    }
+
     const docRef = await addDoc(
       collection(db, 'users', userId, 'investments'),
       investment
@@ -103,6 +121,11 @@ export const addInvestment = async (data) => {
 export const getInvestments = async () => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const investments = await getLocalCollection(userId, LOCAL_COLLECTIONS.INVESTMENTS);
+      investments.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      return { success: true, investments };
+    }
     const q = query(
       collection(db, 'users', userId, 'investments'),
       orderBy('createdAt', 'desc')
@@ -132,6 +155,14 @@ export const updateInvestment = async (investmentId, data) => {
     if (data.maturityAmount !== undefined) updateData.maturityAmount = data.maturityAmount ? parseFloat(data.maturityAmount) : null;
     if (data.rdMonthlyAmount !== undefined) updateData.rdMonthlyAmount = data.rdMonthlyAmount ? parseFloat(data.rdMonthlyAmount) : null;
 
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true };
+    }
+
     await updateDoc(doc(db, 'users', userId, 'investments', investmentId), updateData);
     return { success: true };
   } catch (error) {
@@ -144,12 +175,17 @@ export const updateInvestment = async (investmentId, data) => {
 export const addInvestmentAmount = async (investmentId, amount, currentValue, note = '', customDate = null, updatedExchangeRate = null) => {
   try {
     const userId = getUserId();
-    const docRef = doc(db, 'users', userId, 'investments', investmentId);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
-
-    const data = docSnap.data();
+    let data = null;
+    let docRef = null;
+    if (isLocalMode()) {
+      data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (!data) return { success: false, error: 'Investment not found' };
+    } else {
+      docRef = doc(db, 'users', userId, 'investments', investmentId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
+      data = docSnap.data();
+    }
     const newInvested = (data.investedAmount || 0) + parseFloat(amount);
     const newCurrentValue = currentValue ? parseFloat(currentValue) : newInvested;
 
@@ -184,7 +220,14 @@ export const addInvestmentAmount = async (investmentId, amount, currentValue, no
       updatePayload.exchangeRate = parseFloat(updatedExchangeRate);
     }
 
-    await updateDoc(docRef, updatePayload);
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        ...updatePayload,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await updateDoc(docRef, updatePayload);
+    }
 
     console.log('✅ Investment amount added:', amount);
     return { success: true, newInvested, newCurrentValue };
@@ -215,9 +258,22 @@ export const confirmSip = async (investmentId, sipAmount, investedAmount) => {
       balanceAfter: newInvested,
     };
 
-    const docRef = doc(db, 'users', userId, 'investments', investmentId);
+    let data = null;
+    let docRef = null;
+    if (isLocalMode()) {
+      data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (!data) return { success: false, error: 'Investment not found' };
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        investedAmount: newInvested,
+        sipHistory: [...(data.sipHistory || []), sipEntry],
+        transactions: [...(data.transactions || []), transaction],
+      });
+      return { success: true };
+    }
+
+    docRef = doc(db, 'users', userId, 'investments', investmentId);
     const docSnap = await getDoc(docRef);
-    const data = docSnap.data();
+    data = docSnap.data();
 
     await updateDoc(docRef, {
       investedAmount: newInvested,
@@ -236,16 +292,25 @@ export const confirmSip = async (investmentId, sipAmount, investedAmount) => {
 export const skipSip = async (investmentId) => {
   try {
     const userId = getUserId();
-    const docRef = doc(db, 'users', userId, 'investments', investmentId);
-    const docSnap = await getDoc(docRef);
-    const data = docSnap.data();
-
     const sipEntry = {
       date: new Date().toISOString(),
       amount: 0,
       confirmed: false,
       skipped: true,
     };
+
+    if (isLocalMode()) {
+      const data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (!data) return { success: false, error: 'Investment not found' };
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        sipHistory: [...(data.sipHistory || []), sipEntry],
+      });
+      return { success: true };
+    }
+
+    const docRef = doc(db, 'users', userId, 'investments', investmentId);
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
 
     await updateDoc(docRef, {
       sipHistory: [...(data.sipHistory || []), sipEntry],
@@ -262,12 +327,17 @@ export const skipSip = async (investmentId) => {
 export const confirmRdPayment = async (investmentId, amount) => {
   try {
     const userId = getUserId();
-    const docRef = doc(db, 'users', userId, 'investments', investmentId);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
-
-    const data = docSnap.data();
+    let data = null;
+    let docRef = null;
+    if (isLocalMode()) {
+      data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (!data) return { success: false, error: 'Investment not found' };
+    } else {
+      docRef = doc(db, 'users', userId, 'investments', investmentId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
+      data = docSnap.data();
+    }
     const newInvested = (data.investedAmount || 0) + parseFloat(amount);
     const newCompleted = (data.rdCompletedMonths || 0) + 1;
 
@@ -290,7 +360,7 @@ export const confirmRdPayment = async (investmentId, amount) => {
     // Check if RD is complete
     const isComplete = data.rdTotalMonths && newCompleted >= data.rdTotalMonths;
 
-    await updateDoc(docRef, {
+    const rdPayload = {
       investedAmount: newInvested,
       currentValue: data.maturityAmount && isComplete
         ? parseFloat(data.maturityAmount)
@@ -300,7 +370,15 @@ export const confirmRdPayment = async (investmentId, amount) => {
       transactions: [...(data.transactions || []), transaction],
       isActive: !isComplete,
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        ...rdPayload,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await updateDoc(docRef, rdPayload);
+    }
 
     console.log(`✅ RD payment confirmed: Month ${newCompleted}`);
     return {
@@ -319,6 +397,14 @@ export const confirmRdPayment = async (investmentId, amount) => {
 export const deleteInvestment = async (investmentId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (data?.expenseId) {
+        await deleteLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, data.expenseId);
+      }
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      return { success: true };
+    }
     const docRef = doc(db, 'users', userId, 'investments', investmentId);
     const snap = await getDoc(docRef);
     
@@ -478,11 +564,18 @@ export const processMaturedInvestments = async (investments) => {
 
       if (incomeRes.success) {
         // 2. Mark investment as matured and inactive
-        await updateDoc(doc(db, 'users', userId, 'investments', inv.id), {
-          maturityCredited: true,
-          isActive: false,
-          updatedAt: serverTimestamp(),
-        });
+        if (isLocalMode()) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, inv.id, {
+            maturityCredited: true,
+            isActive: false,
+          });
+        } else {
+          await updateDoc(doc(db, 'users', userId, 'investments', inv.id), {
+            maturityCredited: true,
+            isActive: false,
+            updatedAt: serverTimestamp(),
+          });
+        }
         processedCount++;
       }
     }
@@ -498,12 +591,17 @@ export const processMaturedInvestments = async (investments) => {
 export const withdrawInvestmentAmount = async (investmentId, amount, newCurrentValue, note = '') => {
   try {
     const userId = getUserId();
-    const docRef = doc(db, 'users', userId, 'investments', investmentId);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
-
-    const data = docSnap.data();
+    let data = null;
+    let docRef = null;
+    if (isLocalMode()) {
+      data = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      if (!data) return { success: false, error: 'Investment not found' };
+    } else {
+      docRef = doc(db, 'users', userId, 'investments', investmentId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return { success: false, error: 'Investment not found' };
+      data = docSnap.data();
+    }
     const withdrawAmt = parseFloat(amount) || 0;
     const oldCurrent = data.currentValue || 0;
     const updatedCurrent = newCurrentValue !== null && newCurrentValue !== undefined
@@ -526,12 +624,20 @@ export const withdrawInvestmentAmount = async (investmentId, amount, newCurrentV
 
     const existingTxns = data.transactions || [];
 
-    await updateDoc(docRef, {
-      investedAmount: updatedInvested,
-      currentValue: updatedCurrent,
-      transactions: [...existingTxns, transaction],
-      updatedAt: serverTimestamp(),
-    });
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        investedAmount: updatedInvested,
+        currentValue: updatedCurrent,
+        transactions: [...existingTxns, transaction],
+      });
+    } else {
+      await updateDoc(docRef, {
+        investedAmount: updatedInvested,
+        currentValue: updatedCurrent,
+        transactions: [...existingTxns, transaction],
+        updatedAt: serverTimestamp(),
+      });
+    }
 
     return { success: true, newInvested: updatedInvested, newCurrentValue: updatedCurrent };
   } catch (error) {
@@ -565,6 +671,14 @@ export const updateInvestmentDetails = async (investmentId, details) => {
     if (details.rdPaymentDate !== undefined) updateData.rdPaymentDate = details.rdPaymentDate ? parseInt(details.rdPaymentDate) : null;
     if (details.isActive !== undefined) updateData.isActive = !!details.isActive;
 
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true };
+    }
+
     await updateDoc(doc(db, 'users', userId, 'investments', investmentId), updateData);
     return { success: true };
   } catch (error) {
@@ -579,6 +693,39 @@ export const batchAddInvestments = async (investmentsList) => {
     const userId = getUserId();
     if (!investmentsList || investmentsList.length === 0) {
       return { success: false, error: 'No investments to add' };
+    }
+
+    if (isLocalMode()) {
+      let count = 0;
+      for (const inv of investmentsList) {
+        await addLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, {
+          name: inv.name.trim(),
+          type: inv.type,
+          typeName: inv.typeName || inv.type,
+          typeIcon: inv.typeIcon || '💰',
+          platform: inv.platform?.trim() || null,
+          investedAmount: parseFloat(inv.investedAmount) || 0,
+          currentValue: parseFloat(inv.currentValue) || parseFloat(inv.investedAmount) || 0,
+          currency: inv.currency || 'INR',
+          exchangeRate: parseFloat(inv.exchangeRate) > 0 ? parseFloat(inv.exchangeRate) : 1,
+          interestRate: inv.interestRate ? parseFloat(inv.interestRate) : null,
+          startDate: inv.startDate || new Date().toISOString(),
+          note: inv.note?.trim() || '',
+          isActive: true,
+          transactions: [
+            {
+              id: `txn_${Date.now()}_${count}`,
+              type: 'INVEST',
+              amount: parseFloat(inv.investedAmount) || 0,
+              date: inv.startDate || new Date().toISOString(),
+              note: 'Initial import',
+              balanceAfter: parseFloat(inv.investedAmount) || 0,
+            },
+          ],
+        });
+        count++;
+      }
+      return { success: true, count };
     }
 
     const batch = writeBatch(db);

@@ -12,6 +12,15 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { addExpense } from './expenseService';
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  getLocalDoc,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -77,6 +86,15 @@ export const addEmi = async (data) => {
       updatedAt: serverTimestamp(),
     };
 
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, {
+        ...emi,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true, id: created.id };
+    }
+
     const docRef = await addDoc(collection(db, 'users', userId, 'emis'), emi);
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -89,6 +107,11 @@ export const addEmi = async (data) => {
 export const getEmis = async () => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const emis = await getLocalCollection(userId, LOCAL_COLLECTIONS.EMIS);
+      emis.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      return { success: true, emis };
+    }
     const q = query(
       collection(db, 'users', userId, 'emis'),
       orderBy('createdAt', 'desc')
@@ -106,12 +129,18 @@ export const getEmis = async () => {
 export const recordEmiPayment = async (emiId, paymentData) => {
   try {
     const userId = getUserId();
-    const emiRef = doc(db, 'users', userId, 'emis', emiId);
-    const snap = await getDoc(emiRef);
+    let emi = null;
+    let emiRef = null;
 
-    if (!snap.exists()) return { success: false, error: 'EMI record not found' };
-
-    const emi = snap.data();
+    if (isLocalMode()) {
+      emi = await getLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, emiId);
+      if (!emi) return { success: false, error: 'EMI record not found' };
+    } else {
+      emiRef = doc(db, 'users', userId, 'emis', emiId);
+      const snap = await getDoc(emiRef);
+      if (!snap.exists()) return { success: false, error: 'EMI record not found' };
+      emi = snap.data();
+    }
     const amount = parseFloat(paymentData.amount) || emi.monthlyAmount;
     const newCompleted = (emi.completedMonths || 0) + 1;
     const isCompleted = newCompleted >= emi.totalMonths;
@@ -154,7 +183,14 @@ export const recordEmiPayment = async (emiId, paymentData) => {
       updatedData.maturedDate = payDate;
     }
 
-    await updateDoc(emiRef, updatedData);
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, emiId, {
+        ...updatedData,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await updateDoc(emiRef, updatedData);
+    }
     return { success: true, isCompleted, completedMonths: newCompleted };
   } catch (error) {
     console.log('❌ Record EMI payment error:', error);
@@ -166,9 +202,19 @@ export const recordEmiPayment = async (emiId, paymentData) => {
 export const closeEmi = async (emiId, note = 'Pre-closed / Foreclosed early') => {
   try {
     const userId = getUserId();
-    const emiRef = doc(db, 'users', userId, 'emis', emiId);
     const nowIso = new Date().toISOString();
 
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, emiId, {
+        status: 'COMPLETED',
+        isActive: false,
+        maturedDate: nowIso,
+        closureNote: note,
+      });
+      return { success: true };
+    }
+
+    const emiRef = doc(db, 'users', userId, 'emis', emiId);
     await updateDoc(emiRef, {
       status: 'COMPLETED',
       isActive: false,
@@ -188,7 +234,6 @@ export const closeEmi = async (emiId, note = 'Pre-closed / Foreclosed early') =>
 export const updateEmi = async (emiId, data) => {
   try {
     const userId = getUserId();
-    const emiRef = doc(db, 'users', userId, 'emis', emiId);
     const updateData = { ...data, updatedAt: serverTimestamp() };
 
     if (data.monthlyAmount !== undefined) updateData.monthlyAmount = parseFloat(data.monthlyAmount) || 0;
@@ -203,6 +248,15 @@ export const updateEmi = async (emiId, data) => {
       }
     }
 
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, emiId, {
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: true };
+    }
+
+    const emiRef = doc(db, 'users', userId, 'emis', emiId);
     await updateDoc(emiRef, updateData);
     return { success: true };
   } catch (error) {
@@ -215,6 +269,10 @@ export const updateEmi = async (emiId, data) => {
 export const deleteEmi = async (emiId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.EMIS, emiId);
+      return { success: true };
+    }
     await deleteDoc(doc(db, 'users', userId, 'emis', emiId));
     return { success: true };
   } catch (error) {

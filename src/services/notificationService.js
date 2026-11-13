@@ -13,6 +13,17 @@ import {
     writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  getLocalProfile,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  saveLocalCollection,
+  saveLocalProfile,
+  updateLocalDoc,
+} from "./localStorageService";
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -35,6 +46,13 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
 export const getNotificationPreferences = async () => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const profile = await getLocalProfile(userId);
+      return {
+        ...DEFAULT_NOTIFICATION_SETTINGS,
+        ...(profile?.notificationSettings || {}),
+      };
+    }
     const snap = await getDoc(doc(db, "users", userId));
     if (snap.exists()) {
       const data = snap.data();
@@ -53,6 +71,10 @@ export const getNotificationPreferences = async () => {
 export const updateNotificationPreferences = async (newSettings) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await saveLocalProfile(userId, { notificationSettings: newSettings }, true);
+      return { success: true };
+    }
     await setDoc(
       doc(db, "users", userId),
       {
@@ -75,6 +97,14 @@ export const sendNotification = async (notificationData) => {
     const settings = await getNotificationPreferences();
     if (!settings.enabled) {
       return { success: true, disabled: true };
+    }
+
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, {
+        ...notificationData,
+        read: false,
+      });
+      return { success: true, notificationId: created.id };
     }
 
     const notificationRef = doc(
@@ -231,6 +261,31 @@ export const sendSipNotification = async (
     }
 
     const userId = getUserId();
+    const notification = {
+      type: "SIP_DUE",
+      title: `SIP Due: ${investmentName}`,
+      body: `₹${sipAmount.toLocaleString("en-IN")} SIP payment due on ${sipDate}th`,
+      actionRoute: "Portfolio",
+      priority: "medium",
+      persistent: true, // Can't be deleted
+      metadata: {
+        investmentName,
+        sipAmount,
+        sipDate,
+        investmentId,
+      },
+      read: false,
+    };
+
+    if (isLocalMode()) {
+      const existing = await getLocalCollection(userId, LOCAL_COLLECTIONS.NOTIFICATIONS);
+      if (existing.some((n) => n.type === "SIP_DUE" && n.metadata?.investmentId === investmentId)) {
+        return { success: true, existing: true };
+      }
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, notification);
+      return { success: true, notificationId: created.id };
+    }
+
     const notificationRef = doc(
       collection(db, "users", userId, "notifications"),
     );
@@ -248,24 +303,10 @@ export const sendSipNotification = async (
       return { success: true, existing: true };
     }
 
-    const notification = {
-      type: "SIP_DUE",
-      title: `SIP Due: ${investmentName}`,
-      body: `₹${sipAmount.toLocaleString("en-IN")} SIP payment due on ${sipDate}th`,
-      actionRoute: "Portfolio",
-      priority: "medium",
-      persistent: true, // Can't be deleted
-      metadata: {
-        investmentName,
-        sipAmount,
-        sipDate,
-        investmentId,
-      },
-      read: false,
+    await setDoc(notificationRef, {
+      ...notification,
       createdAt: serverTimestamp(),
-    };
-
-    await setDoc(notificationRef, notification);
+    });
     return { success: true, notificationId: notificationRef.id };
   } catch (error) {
     console.log("❌ Send SIP notification error:", error);
@@ -288,6 +329,30 @@ export const sendRdNotification = async (
     }
 
     const userId = getUserId();
+    if (isLocalMode()) {
+      const existing = await getLocalCollection(userId, LOCAL_COLLECTIONS.NOTIFICATIONS);
+      if (existing.some((n) => n.type === "RD_DUE" && n.metadata?.investmentId === investmentId)) {
+        return { success: true, existing: true };
+      }
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, {
+        type: "RD_DUE",
+        title: `RD Payment Due: ${investmentName}`,
+        body: `₹${rdAmount.toLocaleString("en-IN")} installment (${currentMonth + 1}/${totalMonths}) due soon`,
+        actionRoute: "Portfolio",
+        priority: "medium",
+        persistent: true,
+        metadata: {
+          investmentName,
+          rdAmount,
+          currentMonth,
+          totalMonths,
+          investmentId,
+        },
+        read: false,
+      });
+      return { success: true, notificationId: created.id };
+    }
+
     const notificationRef = doc(
       collection(db, "users", userId, "notifications"),
     );
@@ -426,6 +491,18 @@ export const getNotifications = async () => {
   try {
     const userId = getUserId();
 
+    if (isLocalMode()) {
+      const notifications = await getLocalCollection(
+        userId,
+        LOCAL_COLLECTIONS.NOTIFICATIONS
+      );
+      notifications.sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+      const unreadCount = notifications.filter((n) => !n.read).length;
+      return { success: true, notifications, unreadCount };
+    }
+
     const q = query(
       collection(db, "users", userId, "notifications"),
       orderBy("createdAt", "desc"),
@@ -461,6 +538,12 @@ export const getNotifications = async () => {
 export const markAsRead = async (notificationId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, notificationId, {
+        read: true,
+      });
+      return { success: true };
+    }
     await updateDoc(doc(db, "users", userId, "notifications", notificationId), {
       read: true,
     });
@@ -475,6 +558,13 @@ export const markAsRead = async (notificationId) => {
 export const markAllAsRead = async () => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      const all = await getLocalCollection(userId, LOCAL_COLLECTIONS.NOTIFICATIONS);
+      const updated = all.map((n) => ({ ...n, read: true }));
+      await saveLocalCollection(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, updated);
+      return { success: true };
+    }
 
     const q = query(
       collection(db, "users", userId, "notifications"),
@@ -500,6 +590,10 @@ export const markAllAsRead = async () => {
 export const deleteNotification = async (notificationId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, notificationId);
+      return { success: true };
+    }
     await deleteDoc(doc(db, "users", userId, "notifications", notificationId));
     return { success: true };
   } catch (error) {
@@ -512,6 +606,10 @@ export const deleteNotification = async (notificationId) => {
 export const clearAllNotifications = async () => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await saveLocalCollection(userId, LOCAL_COLLECTIONS.NOTIFICATIONS, []);
+      return { success: true };
+    }
     const snapshot = await getDocs(
       collection(db, "users", userId, "notifications"),
     );

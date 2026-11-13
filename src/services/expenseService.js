@@ -14,6 +14,15 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import {
+    addLocalDoc,
+    deleteLocalDoc,
+    getLocalCollection,
+    getLocalDoc,
+    isLocalMode,
+    LOCAL_COLLECTIONS,
+    updateLocalDoc,
+} from './localStorageService';
+import {
     addToCache,
     COLLECTIONS,
     enqueue,
@@ -34,6 +43,22 @@ const getUserId = () => {
 const isOnline = async () => {
   const state = await NetInfo.fetch();
   return state.isConnected && state.isInternetReachable !== false;
+};
+
+const adjustLocalAccountForExpense = async (userId, accountId, paymentMode, isCredit, delta) => {
+  if (!accountId) return;
+  const acc = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId);
+  if (!acc) return;
+  if (paymentMode === 'CREDIT_CARD' || isCredit) {
+    await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId, {
+      currentUsage: (acc.currentUsage || 0) + delta,
+      availableCredit: (acc.availableCredit || 0) - delta,
+    });
+  } else {
+    await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId, {
+      balance: (acc.balance || 0) - delta,
+    });
+  }
 };
 
 // ── Serialize dates so they are safe for navigation params & AsyncStorage ──
@@ -63,7 +88,8 @@ export const serializeExpense = (expense) => {
 export const addExpense = async (expenseData) => {
   try {
     const userId = getUserId();
-    const online = await isOnline();
+    const localMode = isLocalMode();
+    const online = localMode ? false : await isOnline();
 
     const amount = parseFloat(expenseData.amount);
     const now = new Date().toISOString();
@@ -83,8 +109,20 @@ export const addExpense = async (expenseData) => {
       tags: expenseData.tags || [],
       createdAt: now,
       updatedAt: now,
-      _pendingSync: !online, // mark if saved offline
+      _pendingSync: localMode ? false : !online, // mark if saved offline
     };
+
+    if (localMode) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, expense);
+      await adjustLocalAccountForExpense(
+        userId,
+        expenseData.accountId,
+        expenseData.paymentMode,
+        expense.isCredit,
+        amount
+      );
+      return { success: true, id: created.id, offline: false };
+    }
 
     // Generate a temporary local ID
     const tempId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -165,7 +203,8 @@ export const addExpense = async (expenseData) => {
 export const updateExpense = async (expenseId, newData, oldData) => {
   try {
     const userId = getUserId();
-    const online = await isOnline();
+    const localMode = isLocalMode();
+    const online = localMode ? false : await isOnline();
     const now = new Date().toISOString();
 
     const amount = parseFloat(newData.amount);
@@ -182,8 +221,31 @@ export const updateExpense = async (expenseId, newData, oldData) => {
       date: new Date(newData.date).toISOString(),
       isCredit: newData.paymentMode === 'CREDIT_CARD',
       updatedAt: now,
-      _pendingSync: !online,
+      _pendingSync: localMode ? false : !online,
     };
+
+    if (localMode) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, expenseId, updatedFields);
+      if (oldData?.accountId) {
+        await adjustLocalAccountForExpense(
+          userId,
+          oldData.accountId,
+          oldData.paymentMode,
+          oldData.isCredit,
+          -parseFloat(oldData.amount)
+        );
+      }
+      if (newData.accountId) {
+        await adjustLocalAccountForExpense(
+          userId,
+          newData.accountId,
+          newData.paymentMode,
+          newData.paymentMode === 'CREDIT_CARD',
+          amount
+        );
+      }
+      return { success: true, offline: false };
+    }
 
     // Optimistically update local cache immediately
     await updateInCache(COLLECTIONS.EXPENSES, expenseId, updatedFields);
@@ -256,6 +318,19 @@ export const updateExpense = async (expenseId, newData, oldData) => {
 export const deleteExpense = async (expenseId, expenseData) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, expenseId);
+      if (expenseData?.accountId) {
+        await adjustLocalAccountForExpense(
+          userId,
+          expenseData.accountId,
+          expenseData.paymentMode,
+          expenseData.isCredit,
+          -parseFloat(expenseData.amount)
+        );
+      }
+      return { success: true, offline: false };
+    }
     const online = await isOnline();
 
     // Optimistically remove from cache immediately
@@ -306,6 +381,36 @@ export const deleteExpense = async (expenseId, expenseData) => {
 export const getExpenses = async (filters = {}) => {
   try {
     const userId = getUserId();
+
+    if (isLocalMode()) {
+      let expenses = await getLocalCollection(userId, LOCAL_COLLECTIONS.EXPENSES);
+      if (filters.startDate) {
+        expenses = expenses.filter((e) => e.date && new Date(e.date) >= new Date(filters.startDate));
+      }
+      if (filters.endDate) {
+        expenses = expenses.filter((e) => e.date && new Date(e.date) <= new Date(filters.endDate));
+      }
+      if (filters.categoryId) {
+        expenses = expenses.filter((e) => e.categoryId === filters.categoryId);
+      }
+      if (filters.paymentMode) {
+        expenses = expenses.filter((e) => e.paymentMode === filters.paymentMode);
+      }
+      if (filters.accountId) {
+        expenses = expenses.filter((e) => e.accountId === filters.accountId);
+      }
+      if (filters.searchText) {
+        const search = filters.searchText.toLowerCase();
+        expenses = expenses.filter(
+          (e) =>
+            e.note?.toLowerCase().includes(search) ||
+            e.categoryName?.toLowerCase().includes(search)
+        );
+      }
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+      return { success: true, expenses, fromCache: false };
+    }
+
     const online = await isOnline();
 
     if (online) {
@@ -430,6 +535,11 @@ export const getMonthlyExpenses = async (month, year) => {
 export const getExpense = async (expenseId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const found = await getLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, expenseId);
+      if (found) return { success: true, expense: found, fromCache: false };
+      return { success: false, error: 'Expense not found' };
+    }
     const online = await isOnline();
 
     if (online) {
@@ -467,10 +577,17 @@ export const getDashboardData = async (month, year) => {
     const expResult = await getExpenses({ startDate, endDate });
     const expenses = expResult.expenses || [];
 
-    const online = await isOnline();
+    const localMode = isLocalMode();
+    const online = localMode ? false : await isOnline();
     let incomes = [];
 
-    if (online) {
+    if (localMode) {
+      const allIncomes = await getLocalCollection(userId, LOCAL_COLLECTIONS.INCOMES);
+      incomes = allIncomes.filter((i) => {
+        const d = new Date(i.date);
+        return d >= startDate && d <= endDate;
+      });
+    } else if (online) {
       const { getDocs: _getDocs, collection: _col, query: _q, where: _where } = await import('firebase/firestore');
       const incomeQuery = query(
         collection(db, 'users', userId, 'incomes'),

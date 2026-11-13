@@ -4,6 +4,7 @@ import Toast from 'react-native-toast-message';
 import { getQueue } from '../services/offlineQueue';
 import { syncOfflineQueue } from '../services/syncService';
 import useSyncStore from '../store/useSyncStore';
+import useStorageStore from '../store/useStorageStore';
 
 const useNetworkSync = () => {
   const {
@@ -22,12 +23,17 @@ const useNetworkSync = () => {
 
   // ── Refresh pending count from queue ──────────────────
   const refreshPendingCount = async () => {
+    if (useStorageStore.getState().storageMode === 'local') {
+      setPendingCount(0);
+      return;
+    }
     const queue = await getQueue();
     setPendingCount(queue.length);
   };
 
   // ── Run sync when we come back online ─────────────────
   const runSync = async () => {
+    if (useStorageStore.getState().storageMode === 'local') return;
     if (syncInProgress.current) return;
 
     const queue = await getQueue();
@@ -74,6 +80,11 @@ const useNetworkSync = () => {
     const unsubscribe = NetInfo.addEventListener(async (state) => {
       const online = state.isConnected && state.isInternetReachable !== false;
       setOnline(online);
+
+      if (useStorageStore.getState().storageMode === 'local') {
+        wasOnline.current = online;
+        return;
+      }
 
       if (online && !wasOnline.current) {
         // Transitioned from offline → online

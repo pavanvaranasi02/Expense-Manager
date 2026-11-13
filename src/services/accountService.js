@@ -10,6 +10,15 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import {
+  addLocalDoc,
+  deleteLocalDoc,
+  getLocalCollection,
+  getLocalDoc,
+  isLocalMode,
+  LOCAL_COLLECTIONS,
+  updateLocalDoc,
+} from './localStorageService';
 
 const getUserId = () => {
   const uid = auth.currentUser?.uid;
@@ -58,6 +67,16 @@ export const addAccount = async (accountData) => {
       updatedAt: serverTimestamp(),
     };
 
+    if (isLocalMode()) {
+      const created = await addLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, {
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      console.log('✅ Account added locally:', created.id);
+      return { success: true, id: created.id };
+    }
+
     const docRef = await addDoc(collection(db, 'users', userId, 'accounts'), data);
     console.log('✅ Account added:', docRef.id);
     return { success: true, id: docRef.id };
@@ -71,6 +90,11 @@ export const addAccount = async (accountData) => {
 export const getAccounts = async () => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      const accounts = await getLocalCollection(userId, LOCAL_COLLECTIONS.ACCOUNTS);
+      accounts.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      return { success: true, accounts };
+    }
     const q = query(collection(db, 'users', userId, 'accounts'), orderBy('createdAt', 'asc'));
     const snapshot = await getDocs(q);
     const accounts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -86,6 +110,10 @@ export const getAccounts = async () => {
 export const updateAccount = async (accountId, data) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId, data);
+      return { success: true };
+    }
     await updateDoc(doc(db, 'users', userId, 'accounts', accountId), {
       ...data,
       updatedAt: serverTimestamp(),
@@ -100,6 +128,10 @@ export const updateAccount = async (accountId, data) => {
 export const deleteAccount = async (accountId) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId);
+      return { success: true };
+    }
     await deleteDoc(doc(db, 'users', userId, 'accounts', accountId));
     return { success: true };
   } catch (error) {
@@ -114,6 +146,56 @@ export const payCreditCardBill = async (cardId, paymentAmount, payFromAccountId 
     const amount = parseFloat(paymentAmount);
 
     if (!amount || amount <= 0) return { success: false, error: 'Invalid payment amount' };
+
+    if (isLocalMode()) {
+      const cardData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId);
+      if (!cardData) return { success: false, error: 'Credit card not found' };
+
+      const currentUsage = cardData.currentUsage || 0;
+      const actualPayment = Math.min(amount, currentUsage);
+      const newUsage = currentUsage - actualPayment;
+      const newAvailable = (cardData.creditLimit || 0) - newUsage;
+      const isFullPayment = newUsage <= 0;
+      const remainingBill = Math.max(0, newUsage);
+
+      const paymentEntry = {
+        id: `bill_${Date.now()}`,
+        amount: actualPayment,
+        date: new Date().toISOString(),
+        isFullPayment,
+        remainingAfter: remainingBill,
+        paidFromAccountId: payFromAccountId,
+        expenseId: expenseId,
+      };
+
+      const existingHistory = cardData.billPaymentHistory || [];
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId, {
+        currentUsage: newUsage,
+        availableCredit: newAvailable,
+        lastBillPaidAmount: actualPayment,
+        lastBillPaidDate: new Date().toISOString(),
+        unpaidBillAmount: remainingBill,
+        billPaymentReminder: !isFullPayment,
+        billPaymentHistory: [...existingHistory, paymentEntry],
+      });
+
+      if (payFromAccountId && !expenseId) {
+        const bankData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payFromAccountId);
+        if (bankData) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payFromAccountId, {
+            balance: (bankData.balance || 0) - actualPayment,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        amountPaid: actualPayment,
+        remainingBill,
+        isFullPayment,
+        paymentId: paymentEntry.id,
+      };
+    }
 
     // Get credit card data
     const cardRef = doc(db, 'users', userId, 'accounts', cardId);
@@ -191,6 +273,44 @@ export const revertCreditCardPayment = async (cardId, paymentId) => {
   try {
     const userId = getUserId();
 
+    if (isLocalMode()) {
+      const cardData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId);
+      if (!cardData) return { success: false, error: 'Credit card not found' };
+
+      const history = cardData.billPaymentHistory || [];
+      const paymentIndex = history.findIndex((p) => p.id === paymentId);
+      if (paymentIndex === -1) return { success: false, error: 'Payment record not found' };
+
+      const payment = history[paymentIndex];
+      const amountToRevert = payment.amount;
+      const newHistory = [...history];
+      newHistory.splice(paymentIndex, 1);
+
+      const newUsage = (cardData.currentUsage || 0) + amountToRevert;
+      const newAvailable = (cardData.creditLimit || 0) - newUsage;
+      const lastPayment = newHistory.length > 0 ? newHistory[newHistory.length - 1] : null;
+
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId, {
+        currentUsage: newUsage,
+        availableCredit: newAvailable,
+        lastBillPaidAmount: lastPayment ? lastPayment.amount : 0,
+        lastBillPaidDate: lastPayment ? lastPayment.date : null,
+        unpaidBillAmount: newUsage,
+        billPaymentHistory: newHistory,
+      });
+
+      if (payment.paidFromAccountId && !payment.expenseId) {
+        const bankData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payment.paidFromAccountId);
+        if (bankData) {
+          await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payment.paidFromAccountId, {
+            balance: (bankData.balance || 0) + amountToRevert,
+          });
+        }
+      }
+
+      return { success: true, expenseId: payment.expenseId };
+    }
+
     // Get credit card data
     const cardRef = doc(db, 'users', userId, 'accounts', cardId);
     const cardSnap = await getDocs(query(collection(db, 'users', userId, 'accounts')));
@@ -260,6 +380,12 @@ export const revertCreditCardPayment = async (cardId, paymentId) => {
 export const setBillReminder = async (cardId, remind) => {
   try {
     const userId = getUserId();
+    if (isLocalMode()) {
+      await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId, {
+        billPaymentReminder: remind,
+      });
+      return { success: true };
+    }
     await updateDoc(doc(db, 'users', userId, 'accounts', cardId), {
       billPaymentReminder: remind,
       updatedAt: serverTimestamp(),
