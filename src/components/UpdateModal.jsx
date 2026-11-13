@@ -10,6 +10,66 @@ import {
 } from "react-native";
 import { openUpdateRelease } from "../services/updateService";
 
+const renderInlineMarkdown = (text, baseStyle) => {
+  const cleaned = (text || "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  const parts = cleaned.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <Text key={idx} style={[baseStyle, styles.mdBold]}>
+          {part.slice(2, -2)}
+        </Text>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+      return (
+        <Text key={idx} style={[baseStyle, styles.mdCode]}>
+          {part.slice(1, -1)}
+        </Text>
+      );
+    }
+    return part;
+  });
+};
+
+const renderReleaseNotes = (markdown) => {
+  const lines = (markdown || "").split(/\r?\n/);
+  return lines.map((rawLine, index) => {
+    const line = rawLine.trim();
+    if (!line) {
+      return <View key={index} style={{ height: 6 }} />;
+    }
+    const headingMatch = line.match(/^(#{1,4})\s+(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      return (
+        <Text
+          key={index}
+          style={level <= 2 ? styles.mdH2 : styles.mdH3}
+        >
+          {renderInlineMarkdown(headingMatch[2], level <= 2 ? styles.mdH2 : styles.mdH3)}
+        </Text>
+      );
+    }
+    const bulletMatch = line.match(/^[-*•]\s+(.*)$/);
+    if (bulletMatch) {
+      return (
+        <View key={index} style={styles.mdBulletRow}>
+          <Text style={styles.mdBulletDot}>•</Text>
+          <Text style={[styles.notesBody, { flex: 1 }]}>
+            {renderInlineMarkdown(bulletMatch[1], styles.notesBody)}
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <Text key={index} style={styles.notesBody}>
+        {renderInlineMarkdown(line, styles.notesBody)}
+      </Text>
+    );
+  });
+};
+
 const UpdateModal = ({ visible, updateInfo, onClose }) => {
   if (!updateInfo) return null;
 
@@ -131,9 +191,25 @@ const UpdateModal = ({ visible, updateInfo, onClose }) => {
                 style={styles.notesScroll}
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.notesBody}>{releaseNotes}</Text>
+                {renderReleaseNotes(releaseNotes)}
               </ScrollView>
             </View>
+          )}
+
+          {hasUpdate && (apkAsset?.downloadUrl || updateInfo.releaseUrl) && (
+            <TouchableOpacity
+              style={styles.downloadLinkBox}
+              onPress={() => {
+                openUpdateRelease(updateInfo);
+                onClose();
+              }}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.downloadLinkLabel}>DIRECT DOWNLOAD LINK</Text>
+              <Text style={styles.downloadLinkUrl} numberOfLines={2} selectable>
+                {apkAsset?.downloadUrl || updateInfo.releaseUrl}
+              </Text>
+            </TouchableOpacity>
           )}
 
           {/* Action Buttons */}
@@ -368,6 +444,63 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     fontSize: 13,
     fontWeight: "600",
+  },
+  downloadLinkBox: {
+    width: "100%",
+    backgroundColor: "#EEF2FF",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#C7D2FE",
+  },
+  downloadLinkLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#4F46E5",
+    letterSpacing: 0.6,
+    marginBottom: 4,
+  },
+  downloadLinkUrl: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#312E81",
+  },
+  mdH2: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  mdH3: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  mdBulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginBottom: 4,
+  },
+  mdBulletDot: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#4F46E5",
+    fontWeight: "800",
+  },
+  mdBold: {
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  mdCode: {
+    fontWeight: "600",
+    color: "#4F46E5",
+    backgroundColor: "#EEF2FF",
   },
 });
 

@@ -12,6 +12,7 @@ import {
     writeBatch
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { logUserAction } from './activityLogService';
 import { addIncome } from './incomeService';
 import {
     addLocalDoc,
@@ -101,6 +102,14 @@ export const addInvestment = async (data) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
+      logUserAction({
+        action: 'INVESTMENT_ADD',
+        entity: 'Investments',
+        summary: `Added investment: ${investment.name || investment.type || 'Investment'}`,
+        previousState: {},
+        nextState: created,
+        explicitUserId: userId,
+      });
       return { success: true, id: created.id };
     }
 
@@ -110,6 +119,14 @@ export const addInvestment = async (data) => {
     );
 
     console.log('✅ Investment added:', docRef.id);
+    logUserAction({
+      action: 'INVESTMENT_ADD',
+      entity: 'Investments',
+      summary: `Added investment: ${investment.name || investment.type || 'Investment'}`,
+      previousState: {},
+      nextState: { id: docRef.id, ...investment },
+      explicitUserId: userId,
+    });
     return { success: true, id: docRef.id };
   } catch (error) {
     console.log('❌ Add investment error:', error);
@@ -156,14 +173,31 @@ export const updateInvestment = async (investmentId, data) => {
     if (data.rdMonthlyAmount !== undefined) updateData.rdMonthlyAmount = data.rdMonthlyAmount ? parseFloat(data.rdMonthlyAmount) : null;
 
     if (isLocalMode()) {
+      const prevInv = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
       await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
         ...updateData,
         updatedAt: new Date().toISOString(),
+      });
+      logUserAction({
+        action: 'INVESTMENT_UPDATE',
+        entity: 'Investments',
+        summary: `Updated investment: ${data.name || prevInv?.name || investmentId}`,
+        previousState: prevInv || { id: investmentId },
+        nextState: updateData,
+        explicitUserId: userId,
       });
       return { success: true };
     }
 
     await updateDoc(doc(db, 'users', userId, 'investments', investmentId), updateData);
+    logUserAction({
+      action: 'INVESTMENT_UPDATE',
+      entity: 'Investments',
+      summary: `Updated investment: ${data.name || investmentId}`,
+      previousState: { id: investmentId },
+      nextState: updateData,
+      explicitUserId: userId,
+    });
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -403,6 +437,14 @@ export const deleteInvestment = async (investmentId) => {
         await deleteLocalDoc(userId, LOCAL_COLLECTIONS.EXPENSES, data.expenseId);
       }
       await deleteLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
+      logUserAction({
+        action: 'INVESTMENT_DELETE',
+        entity: 'Investments',
+        summary: `Deleted investment: ${data?.name || investmentId}`,
+        previousState: data || { id: investmentId },
+        nextState: {},
+        explicitUserId: userId,
+      });
       return { success: true };
     }
     const docRef = doc(db, 'users', userId, 'investments', investmentId);
@@ -424,7 +466,16 @@ export const deleteInvestment = async (investmentId) => {
       }
     }
 
+    const deletedData = snap.exists() ? snap.data() : { id: investmentId };
     await deleteDoc(docRef);
+    logUserAction({
+      action: 'INVESTMENT_DELETE',
+      entity: 'Investments',
+      summary: `Deleted investment: ${deletedData?.name || investmentId}`,
+      previousState: deletedData,
+      nextState: {},
+      explicitUserId: userId,
+    });
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -672,14 +723,31 @@ export const updateInvestmentDetails = async (investmentId, details) => {
     if (details.isActive !== undefined) updateData.isActive = !!details.isActive;
 
     if (isLocalMode()) {
+      const prevInv = await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId);
       await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, investmentId, {
         ...updateData,
         updatedAt: new Date().toISOString(),
+      });
+      logUserAction({
+        action: 'INVESTMENT_UPDATE',
+        entity: 'Investments',
+        summary: `Updated investment: ${details?.name || prevInv?.name || investmentId}`,
+        previousState: prevInv || { id: investmentId },
+        nextState: updateData,
+        explicitUserId: userId,
       });
       return { success: true };
     }
 
     await updateDoc(doc(db, 'users', userId, 'investments', investmentId), updateData);
+    logUserAction({
+      action: 'INVESTMENT_UPDATE',
+      entity: 'Investments',
+      summary: `Updated investment: ${details?.name || investmentId}`,
+      previousState: { id: investmentId },
+      nextState: updateData,
+      explicitUserId: userId,
+    });
     return { success: true };
   } catch (error) {
     console.log('❌ Update investment details error:', error);

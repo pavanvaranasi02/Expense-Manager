@@ -11,6 +11,7 @@ import {
     writeBatch
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { logUserAction } from './activityLogService';
 import {
   addLocalDoc,
   deleteLocalDoc,
@@ -71,6 +72,14 @@ export const addIncome = async (incomeData) => {
         }
       }
 
+      logUserAction({
+        action: 'INCOME_ADD',
+        entity: 'Transactions',
+        summary: `Added income: ${incomeData.sourceName || incomeData.source || 'Income'} (${parseFloat(incomeData.amount)})`,
+        previousState: {},
+        nextState: created,
+        explicitUserId: userId,
+      });
       return { success: true, id: created.id };
     }
 
@@ -104,6 +113,14 @@ export const addIncome = async (incomeData) => {
 
     await batch.commit();
     console.log('✅ Income added:', incomeRef.id);
+    logUserAction({
+      action: 'INCOME_ADD',
+      entity: 'Transactions',
+      summary: `Added income: ${incomeData.sourceName || incomeData.source || 'Income'} (${parseFloat(incomeData.amount)})`,
+      previousState: {},
+      nextState: { id: incomeRef.id, ...incomeData },
+      explicitUserId: userId,
+    });
     return { success: true, id: incomeRef.id };
   } catch (error) {
     console.log('❌ Add income error:', error);
@@ -251,6 +268,14 @@ export const deleteIncome = async (incomeId, incomeData) => {
           });
         }
       }
+      logUserAction({
+        action: 'INCOME_DELETE',
+        entity: 'Transactions',
+        summary: `Deleted income: ${incomeData?.sourceName || incomeData?.source || 'Income'}`,
+        previousState: incomeData || { id: incomeId },
+        nextState: {},
+        explicitUserId: userId,
+      });
       return { success: true };
     }
 
@@ -266,6 +291,14 @@ export const deleteIncome = async (incomeId, incomeData) => {
     }
 
     await batch.commit();
+    logUserAction({
+      action: 'INCOME_DELETE',
+      entity: 'Transactions',
+      summary: `Deleted income: ${incomeData?.sourceName || incomeData?.source || 'Income'}`,
+      previousState: incomeData || { id: incomeId },
+      nextState: {},
+      explicitUserId: userId,
+    });
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };

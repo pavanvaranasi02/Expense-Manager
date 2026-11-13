@@ -23,6 +23,7 @@ import AddAccountScreen from '../screens/profile/AddAccountScreen';
 import CreditCardBillScreen from '../screens/profile/CreditCardBillScreen';
 import ManageAccountsScreen from '../screens/profile/ManageAccountsScreen';
 import ManageCategoriesScreen from '../screens/profile/ManageCategoriesScreen';
+import ActivityLogsScreen from '../screens/profile/ActivityLogsScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 
 // Analytics (now accessible from Dashboard)
@@ -68,6 +69,7 @@ const ProfileStack = () => (
     <Stack.Screen name="ManageCategories" component={ManageCategoriesScreen} />
     <Stack.Screen name="BudgetList" component={BudgetListScreen} />
     <Stack.Screen name="SetBudget" component={SetBudgetScreen} />
+    <Stack.Screen name="ActivityLogs" component={ActivityLogsScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
   </Stack.Navigator>
 );

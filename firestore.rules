@@ -1,0 +1,524 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users/{userId}
+    // Document ID: Firebase Auth UID
+    // Fields:
+    //   - name: string (required, 1..100 chars)
+    //   - email: string (required, valid email, <= 254 chars)
+    //   - phone: string | null (optional, <= 32 chars)
+    //   - role: string (required, 'USER' | 'ADMIN'; immutable for non-admins)
+    //   - currency: string (required, 1..10 chars)
+    //   - currencySymbol: string (optional, <= 10 chars)
+    //   - authProvider: string (optional, 'email' | 'google')
+    //   - profileImage: string | null (optional, <= 500000 chars)
+    //   - storageMode: string (optional, 'local' | 'cloud')
+    //   - onboardingComplete: bool (optional)
+    //   - showInvestmentsInAssets: bool (optional)
+    //   - showTabLabels: bool (optional)
+    //   - isStealthMode: bool (optional)
+    //   - familyId: string | null (optional, <= 128 chars)
+    //   - notificationSettings: map (optional)
+    //   - isActive: bool (optional)
+    //   - createdAt: timestamp (required on create, immutable)
+    //   - updatedAt: timestamp (optional)
+    //   - lastLoginAt: timestamp (optional)
+    //
+    // Collection: users/{userId}/activity_logs/{logId}
+    // Fields:
+    //   - id: string (required, 1..128 chars, immutable)
+    //   - userId: string (required, == userId, immutable)
+    //   - action: string (required, 1..64 chars)
+    //   - entity: string (required, 1..64 chars)
+    //   - summary: string (required, 1..500 chars)
+    //   - isLocal: bool (required)
+    //   - storageMode: string (optional, <= 20 chars)
+    //   - previousState: map (optional)
+    //   - nextState: map (optional)
+    //   - source: string (optional, <= 64 chars)
+    //   - createdAt: string | timestamp (required, immutable)
+    //   - createdAtMs: number (required, immutable)
+    //
+    // Collection: users/{userId}/notifications/{notifId}
+    // Fields:
+    //   - title: string (required, 1..200 chars)
+    //   - message: string (required, 1..1000 chars)
+    //   - type: string (required, 1..64 chars)
+    //   - read: bool (required)
+    //   - metadata: map (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: users/{userId}/accounts/{accountId}
+    //   - name (string), type (string), balance (number), color (string), icon (string), etc.
+    //
+    // Collection: users/{userId}/expenses/{expenseId}
+    //   - amount (number > 0), categoryId (string), categoryName (string),
+    //     categoryIcon (string), paymentMode (string), isCredit (bool), date (timestamp), etc.
+    //
+    // Collection: users/{userId}/incomes/{incomeId}
+    //   - amount (number > 0), source (string), sourceName (string),
+    //     accountId (string), accountName (string), date (timestamp), etc.
+    //
+    // Collection: users/{userId}/budgets/{budgetId}
+    //   - type ('OVERALL'|'CATEGORY'), categoryId (string), categoryName (string),
+    //     amount (number >= 0), month (number 0..11), year (number), alertAt (number), etc.
+    //
+    // Collection: users/{userId}/custom_categories/{categoryId}
+    //   - name (string), icon (string), color (string), isDefault (bool), createdAt (timestamp)
+    //
+    // Collection: users/{userId}/investments/{investmentId}
+    //   - name (string), type (string), currency (string), exchangeRate (number),
+    //     investedAmount (number), currentValue (number), isActive (bool), etc.
+    //
+    // Collection: users/{userId}/emis/{emiId}
+    //   - name (string), monthlyAmount (number), totalMonths (number),
+    //     completedMonths (number), totalAmount (number), status (string), isActive (bool), etc.
+    //
+    // Collection: familyCodes/{inviteCode}
+    //   - familyId (string, required), createdAt (timestamp, required)
+    //
+    // Collection: families/{familyId}
+    //   - name (string), inviteCode (string), ownerId (string, immutable),
+    //     coAdminId (string|null), memberCount (number 1..6), members (list <= 6),
+    //     createdAt (timestamp, immutable), updatedAt (timestamp)
+    //
+    // Subcollections: families/{familyId}/{expenses|templates|budgets|budgetAlerts}/{docId}
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalBool(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is bool;
+    }
+
+    function isValidOptionalNumber(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        request.resource.data[field] is number;
+    }
+
+    function isValidOptionalList(field, maxSize) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is list &&
+         request.resource.data[field].size() <= maxSize);
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 254 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function createdAtUnchanged() {
+      return !('createdAt' in resource.data) ||
+        request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function userFamilyId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId;
+    }
+
+    function isFamilyMember(familyId) {
+      return isAuthenticated() &&
+        (userFamilyId() == familyId || resource.data.ownerId == request.auth.uid);
+    }
+
+    function isFamilySubcollectionMember(familyId) {
+      return isAuthenticated() &&
+        (userFamilyId() == familyId ||
+         get(/databases/$(database)/documents/families/$(familyId)).data.ownerId == request.auth.uid);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().size() <= 40 &&
+        hasRequiredFields(['name', 'email', 'role', 'currency']) &&
+        validStringLength('name', 1, 100) &&
+        isValidEmail(data.email) &&
+        data.role in ['USER', 'ADMIN'] &&
+        validStringLength('currency', 1, 10) &&
+        isValidOptionalString('phone', 0, 32) &&
+        isValidOptionalString('currencySymbol', 0, 10) &&
+        isValidOptionalString('authProvider', 1, 32) &&
+        isValidOptionalString('profileImage', 0, 500000) &&
+        isValidOptionalString('storageMode', 1, 20) &&
+        isValidOptionalString('familyId', 1, 128) &&
+        isValidOptionalBool('onboardingComplete') &&
+        isValidOptionalBool('showInvestmentsInAssets') &&
+        isValidOptionalBool('showTabLabels') &&
+        isValidOptionalBool('isStealthMode') &&
+        isValidOptionalBool('isActive') &&
+        (!('notificationSettings' in data) || data.notificationSettings is map);
+    }
+
+    function isValidActivityLog(data, userId) {
+      return data.keys().size() <= 20 &&
+        hasRequiredFields(['id', 'userId', 'action', 'entity', 'summary', 'isLocal', 'createdAt', 'createdAtMs']) &&
+        data.userId == userId &&
+        validStringLength('id', 1, 128) &&
+        validStringLength('action', 1, 64) &&
+        validStringLength('entity', 1, 64) &&
+        validStringLength('summary', 1, 500) &&
+        data.isLocal is bool &&
+        (data.createdAt is string || data.createdAt is timestamp) &&
+        data.createdAtMs is number &&
+        isValidOptionalString('storageMode', 1, 20) &&
+        isValidOptionalString('source', 1, 64) &&
+        (!('previousState' in data) || data.previousState is map) &&
+        (!('nextState' in data) || data.nextState is map);
+    }
+
+    function isValidNotification(data) {
+      return data.keys().size() <= 15 &&
+        hasRequiredFields(['title', 'message', 'type', 'read', 'createdAt']) &&
+        validStringLength('title', 1, 200) &&
+        validStringLength('message', 1, 1000) &&
+        validStringLength('type', 1, 64) &&
+        data.read is bool &&
+        data.createdAt is timestamp &&
+        (!('metadata' in data) || data.metadata is map);
+    }
+
+    function isValidAccount(data) {
+      return data.keys().size() <= 35 &&
+        hasRequiredFields(['name', 'type', 'balance']) &&
+        validStringLength('name', 1, 100) &&
+        data.type in ['BANK', 'CASH', 'CREDIT_CARD', 'OTHER'] &&
+        data.balance is number &&
+        isValidOptionalString('bankName', 0, 100) &&
+        isValidOptionalString('accountNumber', 0, 32) &&
+        isValidOptionalString('debitCardLast4', 0, 8) &&
+        isValidOptionalString('color', 1, 20) &&
+        isValidOptionalString('icon', 1, 50) &&
+        isValidOptionalBool('hasDebitCard') &&
+        isValidOptionalBool('isDefault') &&
+        isValidOptionalNumber('creditLimit') &&
+        isValidOptionalNumber('currentUsage') &&
+        isValidOptionalNumber('availableCredit') &&
+        isValidOptionalNumber('billGenerationDate') &&
+        isValidOptionalNumber('billDueDate') &&
+        isValidOptionalNumber('interestRate') &&
+        isValidOptionalNumber('userSpendLimit') &&
+        isValidOptionalNumber('alertAt') &&
+        isValidOptionalNumber('lastBillPaidAmount') &&
+        isValidOptionalNumber('unpaidBillAmount') &&
+        isValidOptionalList('billPaymentHistory', 500);
+    }
+
+    function isValidExpense(data) {
+      return data.keys().size() <= 25 &&
+        hasRequiredFields(['amount', 'categoryId', 'categoryName', 'paymentMode', 'date']) &&
+        data.amount is number && data.amount > 0 &&
+        validStringLength('categoryId', 1, 100) &&
+        validStringLength('categoryName', 1, 100) &&
+        isValidOptionalString('categoryIcon', 1, 32) &&
+        isValidOptionalString('accountId', 1, 128) &&
+        isValidOptionalString('accountName', 1, 100) &&
+        validStringLength('paymentMode', 1, 32) &&
+        isValidOptionalBool('isCredit') &&
+        data.date is timestamp &&
+        isValidOptionalString('note', 0, 500) &&
+        isValidOptionalList('tags', 30) &&
+        isValidOptionalBool('_pendingSync');
+    }
+
+    function isValidIncome(data) {
+      return data.keys().size() <= 20 &&
+        hasRequiredFields(['amount', 'source', 'sourceName', 'accountId', 'accountName', 'date']) &&
+        data.amount is number && data.amount > 0 &&
+        validStringLength('source', 1, 100) &&
+        validStringLength('sourceName', 1, 100) &&
+        isValidOptionalString('sourceIcon', 1, 32) &&
+        validStringLength('accountId', 1, 128) &&
+        validStringLength('accountName', 1, 100) &&
+        data.date is timestamp &&
+        isValidOptionalString('note', 0, 500);
+    }
+
+    function isValidBudget(data) {
+      return data.keys().size() <= 15 &&
+        hasRequiredFields(['type', 'categoryId', 'categoryName', 'amount', 'month', 'year']) &&
+        data.type in ['OVERALL', 'CATEGORY'] &&
+        validStringLength('categoryId', 1, 100) &&
+        validStringLength('categoryName', 1, 100) &&
+        data.amount is number && data.amount >= 0 &&
+        data.month is number && data.month >= 0 && data.month <= 11 &&
+        data.year is number && data.year >= 2000 && data.year <= 2100 &&
+        isValidOptionalNumber('alertAt');
+    }
+
+    function isValidCustomCategory(data) {
+      return data.keys().size() <= 10 &&
+        hasRequiredFields(['name', 'icon', 'color']) &&
+        validStringLength('name', 1, 60) &&
+        validStringLength('icon', 1, 32) &&
+        validStringLength('color', 1, 20) &&
+        isValidOptionalBool('isDefault');
+    }
+
+    function isValidInvestment(data) {
+      return data.keys().size() <= 40 &&
+        hasRequiredFields(['name', 'type', 'currency', 'exchangeRate', 'investedAmount', 'currentValue', 'isActive']) &&
+        validStringLength('name', 1, 120) &&
+        validStringLength('type', 1, 50) &&
+        isValidOptionalString('typeName', 1, 60) &&
+        isValidOptionalString('typeIcon', 1, 32) &&
+        isValidOptionalString('platform', 0, 100) &&
+        validStringLength('currency', 1, 10) &&
+        data.exchangeRate is number && data.exchangeRate > 0 &&
+        data.investedAmount is number && data.investedAmount >= 0 &&
+        data.currentValue is number && data.currentValue >= 0 &&
+        isValidOptionalNumber('interestRate') &&
+        isValidOptionalString('startDate', 1, 64) &&
+        isValidOptionalString('note', 0, 500) &&
+        data.isActive is bool &&
+        isValidOptionalNumber('sipAmount') &&
+        isValidOptionalNumber('sipDate') &&
+        isValidOptionalList('sipHistory', 500) &&
+        isValidOptionalNumber('rdMonthlyAmount') &&
+        isValidOptionalNumber('rdTotalMonths') &&
+        isValidOptionalNumber('rdCompletedMonths') &&
+        isValidOptionalNumber('rdPaymentDate') &&
+        isValidOptionalList('rdPaymentHistory', 500) &&
+        isValidOptionalNumber('maturityAmount') &&
+        isValidOptionalString('maturityDate', 0, 64) &&
+        isValidOptionalString('paidFromAccountId', 0, 128) &&
+        isValidOptionalBool('autoMaturityCredit') &&
+        isValidOptionalBool('maturityCredited') &&
+        isValidOptionalList('transactions', 500);
+    }
+
+    function isValidEmi(data) {
+      return data.keys().size() <= 30 &&
+        hasRequiredFields(['name', 'monthlyAmount', 'totalMonths', 'completedMonths', 'totalAmount', 'status', 'isActive']) &&
+        validStringLength('name', 1, 120) &&
+        data.monthlyAmount is number && data.monthlyAmount >= 0 &&
+        data.totalMonths is number && data.totalMonths > 0 &&
+        data.completedMonths is number && data.completedMonths >= 0 &&
+        data.totalAmount is number && data.totalAmount >= 0 &&
+        isValidOptionalNumber('interestRate') &&
+        isValidOptionalNumber('processingFee') &&
+        isValidOptionalString('linkedAccountId', 0, 128) &&
+        isValidOptionalString('linkedAccountName', 0, 100) &&
+        isValidOptionalString('linkedAccountType', 1, 32) &&
+        isValidOptionalNumber('debitDay') &&
+        isValidOptionalString('startDate', 1, 64) &&
+        isValidOptionalString('endDate', 0, 64) &&
+        isValidOptionalString('maturedDate', 0, 64) &&
+        data.status in ['ACTIVE', 'COMPLETED', 'CANCELLED'] &&
+        data.isActive is bool &&
+        isValidOptionalString('note', 0, 500) &&
+        isValidOptionalList('paymentHistory', 500);
+    }
+
+    function isValidFamilyCode(data, inviteCode) {
+      return data.keys().size() <= 5 &&
+        inviteCode.size() >= 4 && inviteCode.size() <= 16 &&
+        hasRequiredFields(['familyId', 'createdAt']) &&
+        validStringLength('familyId', 1, 128) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidFamily(data) {
+      return data.keys().size() <= 15 &&
+        hasRequiredFields(['name', 'inviteCode', 'ownerId', 'memberCount', 'members']) &&
+        validStringLength('name', 1, 100) &&
+        validStringLength('inviteCode', 4, 16) &&
+        validStringLength('ownerId', 1, 128) &&
+        isValidOptionalString('coAdminId', 0, 128) &&
+        data.memberCount is number && data.memberCount >= 1 && data.memberCount <= 6 &&
+        data.members is list && data.members.size() >= 1 && data.members.size() <= 6;
+    }
+
+    function isValidFamilySubdoc(data) {
+      return data.keys().size() <= 30;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. User Profile: Owner-only read/write, with RBAC role protection
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        isValidUser(request.resource.data) &&
+        request.resource.data.role == 'USER';
+      allow update: if isOwner(userId) &&
+        isValidUser(request.resource.data) &&
+        request.resource.data.role == resource.data.role &&
+        createdAtUnchanged();
+      allow delete: if isOwner(userId);
+
+      // 2. Activity Logs: STRICTLY private to that user
+      match /activity_logs/{logId} {
+        allow get: if isOwner(userId) && resource.data.userId == userId;
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidActivityLog(request.resource.data, userId);
+        allow update: if isOwner(userId) &&
+          isValidActivityLog(request.resource.data, userId) &&
+          areImmutableFieldsUnchanged(['id', 'userId', 'createdAt', 'createdAtMs']);
+        allow delete: if isOwner(userId) && resource.data.userId == userId;
+      }
+
+      // 3. Notifications: Owner read/update/delete; any authenticated user can create
+      match /notifications/{notifId} {
+        allow read: if isOwner(userId);
+        allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+        allow update: if isOwner(userId) &&
+          isValidNotification(request.resource.data) &&
+          createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      // 4. Strictly Owner-Only Personal Financial Subcollections
+      match /accounts/{accountId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAccount(request.resource.data);
+        allow update: if isOwner(userId) && isValidAccount(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidExpense(request.resource.data);
+        allow update: if isOwner(userId) && isValidExpense(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /incomes/{incomeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidIncome(request.resource.data);
+        allow update: if isOwner(userId) && isValidIncome(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /budgets/{budgetId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidBudget(request.resource.data);
+        allow update: if isOwner(userId) && isValidBudget(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /custom_categories/{categoryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCustomCategory(request.resource.data);
+        allow update: if isOwner(userId) && isValidCustomCategory(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /investments/{investmentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInvestment(request.resource.data);
+        allow update: if isOwner(userId) && isValidInvestment(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+
+      match /emis/{emiId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidEmi(request.resource.data);
+        allow update: if isOwner(userId) && isValidEmi(request.resource.data) && createdAtUnchanged();
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // 5. Family Invite Codes: Authenticated users can read/create/delete
+    match /familyCodes/{inviteCode} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidFamilyCode(request.resource.data, inviteCode);
+      allow delete: if isAuthenticated();
+    }
+
+    // 6. Families & Family Subcollections
+    match /families/{familyId} {
+      // Allow authenticated users to get a family doc (for joining via familyCodes)
+      allow get: if isAuthenticated();
+      allow list: if isFamilyMember(familyId);
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        isValidFamily(request.resource.data);
+      // Allow family members/owner OR an authenticated user joining the family to update,
+      // while protecting immutable ownerId & createdAt and preventing non-owners from changing inviteCode/coAdminId.
+      allow update: if isAuthenticated() &&
+        isValidFamily(request.resource.data) &&
+        areImmutableFieldsUnchanged(['ownerId', 'createdAt']) &&
+        (
+          isFamilyMember(familyId) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberCount', 'updatedAt'])
+        );
+      allow delete: if isFamilyMember(familyId);
+
+      match /expenses/{expenseId} {
+        allow read: if isFamilySubcollectionMember(familyId);
+        allow create, update: if isFamilySubcollectionMember(familyId) && isValidFamilySubdoc(request.resource.data);
+        allow delete: if isFamilySubcollectionMember(familyId);
+      }
+
+      match /templates/{templateId} {
+        allow read: if isFamilySubcollectionMember(familyId);
+        allow create, update: if isFamilySubcollectionMember(familyId) && isValidFamilySubdoc(request.resource.data);
+        allow delete: if isFamilySubcollectionMember(familyId);
+      }
+
+      match /budgets/{budgetId} {
+        allow read: if isFamilySubcollectionMember(familyId);
+        allow create, update: if isFamilySubcollectionMember(familyId) && isValidFamilySubdoc(request.resource.data);
+        allow delete: if isFamilySubcollectionMember(familyId);
+      }
+
+      match /budgetAlerts/{alertId} {
+        allow read: if isFamilySubcollectionMember(familyId);
+        allow create, update: if isFamilySubcollectionMember(familyId) && isValidFamilySubdoc(request.resource.data);
+        allow delete: if isFamilySubcollectionMember(familyId);
+      }
+    }
+
+    // 7. Default Deny-All Fallback
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
