@@ -69,6 +69,7 @@ const menuSections = [
     title: 'CUSTOMIZATION',
     items: [
       { id: 'categories', icon: 'grid-outline', label: 'Categories', screen: 'ManageCategories', color: '#F59E0B' },
+      { id: 'activityLogs', icon: 'document-text-outline', label: 'Activity Logs', screen: 'ActivityLogs', color: '#6C63FF' },
       { id: 'settings', icon: 'settings-outline', label: 'Settings', screen: 'Settings', color: '#64748B' },
     ]
   },

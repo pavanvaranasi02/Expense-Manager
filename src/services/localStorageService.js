@@ -18,6 +18,7 @@ export const LOCAL_COLLECTIONS = {
   INVESTMENTS: 'investments',
   EMIS: 'emis',
   NOTIFICATIONS: 'notifications',
+  ACTIVITY_LOGS: 'activity_logs',
 };
 
 const assertCurrentUser = (userId) => {

@@ -13,6 +13,7 @@ import {
     writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { logUserAction } from './activityLogService';
 import {
     addLocalDoc,
     deleteLocalDoc,
@@ -121,6 +122,14 @@ export const addExpense = async (expenseData) => {
         expense.isCredit,
         amount
       );
+      logUserAction({
+        action: 'EXPENSE_ADD',
+        entity: 'Transactions',
+        summary: `Added expense: ${expenseData.categoryName || 'Expense'} (${amount})`,
+        previousState: {},
+        nextState: created,
+        explicitUserId: userId,
+      });
       return { success: true, id: created.id, offline: false };
     }
 
@@ -165,6 +174,14 @@ export const addExpense = async (expenseData) => {
       await addToCache(COLLECTIONS.EXPENSES, realExpense);
 
       console.log('✅ Expense added online:', expenseRef.id);
+      logUserAction({
+        action: 'EXPENSE_ADD',
+        entity: 'Transactions',
+        summary: `Added expense: ${expenseData.categoryName || 'Expense'} (${amount})`,
+        previousState: {},
+        nextState: realExpense,
+        explicitUserId: userId,
+      });
       return { success: true, id: expenseRef.id, offline: false };
 
     } else {
@@ -244,6 +261,14 @@ export const updateExpense = async (expenseId, newData, oldData) => {
           amount
         );
       }
+      logUserAction({
+        action: 'EXPENSE_UPDATE',
+        entity: 'Transactions',
+        summary: `Updated expense: ${newData.categoryName || oldData?.categoryName || 'Expense'}`,
+        previousState: oldData || {},
+        nextState: updatedFields,
+        explicitUserId: userId,
+      });
       return { success: true, offline: false };
     }
 
@@ -289,6 +314,14 @@ export const updateExpense = async (expenseId, newData, oldData) => {
 
       await batch.commit();
       await updateInCache(COLLECTIONS.EXPENSES, expenseId, { _pendingSync: false });
+      logUserAction({
+        action: 'EXPENSE_UPDATE',
+        entity: 'Transactions',
+        summary: `Updated expense: ${newData.categoryName || oldData?.categoryName || 'Expense'}`,
+        previousState: oldData || {},
+        nextState: updatedFields,
+        explicitUserId: userId,
+      });
 
       return { success: true, offline: false };
     } else {
@@ -329,6 +362,14 @@ export const deleteExpense = async (expenseId, expenseData) => {
           -parseFloat(expenseData.amount)
         );
       }
+      logUserAction({
+        action: 'EXPENSE_DELETE',
+        entity: 'Transactions',
+        summary: `Deleted expense: ${expenseData?.categoryName || 'Expense'}`,
+        previousState: expenseData || {},
+        nextState: {},
+        explicitUserId: userId,
+      });
       return { success: true, offline: false };
     }
     const online = await isOnline();
@@ -354,6 +395,14 @@ export const deleteExpense = async (expenseId, expenseData) => {
       }
 
       await batch.commit();
+      logUserAction({
+        action: 'EXPENSE_DELETE',
+        entity: 'Transactions',
+        summary: `Deleted expense: ${expenseData?.categoryName || 'Expense'}`,
+        previousState: expenseData || {},
+        nextState: {},
+        explicitUserId: userId,
+      });
       return { success: true, offline: false };
     } else {
       await enqueue({
