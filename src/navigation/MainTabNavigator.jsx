@@ -5,6 +5,7 @@ import { Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAuthStore from '../store/useAuthStore';
 import useStorageStore from '../store/useStorageStore';
+import { Theme } from '../theme/theme';
 
 // ===== Existing Screens =====
 import ExpenseDetailScreen from '../screens/expenses/ExpenseDetailScreen';
@@ -137,15 +138,12 @@ const MainTabNavigator = () => {
           );
         },
         tabBarShowLabel: showTabLabels,
-        tabBarActiveTintColor: 
-          route.name === 'Family' ? '#F59E0B' : 
-          route.name === 'Transactions' ? '#EF4444' : 
-          '#6366F1',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: Theme.colors.primary,
+        tabBarInactiveTintColor: Theme.colors.textLight,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: Theme.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#F1F5F9',
+          borderTopColor: Theme.colors.border,
           height: showTabLabels 
             ? 70 + Math.max(0, insets.bottom - 8)
             : 65 + Math.max(0, insets.bottom - 8),

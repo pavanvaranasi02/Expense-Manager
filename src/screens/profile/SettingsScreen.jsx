@@ -191,8 +191,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Currency Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
-            <Ionicons name="cash" size={16} color="#6366F1" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="cash" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>CURRENCY</Text>
         </View>
@@ -228,8 +228,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Data & Storage Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
-            <Ionicons name="server-outline" size={16} color="#6366F1" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="server-outline" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
         </View>
@@ -245,12 +245,12 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => handleStorageSwitch('cloud')}
             >
               <View style={styles.storageOptionTop}>
-                <View style={[styles.storageIconWrap, { backgroundColor: '#EEF2FF' }]}>
-                  <Ionicons name="cloud-outline" size={20} color="#6366F1" />
+                <View style={[styles.storageIconWrap, { backgroundColor: Theme.colors.primaryLight }]}>
+                  <Ionicons name="cloud-outline" size={20} color={Theme.colors.primary} />
                 </View>
                 {storageMode === 'cloud' && (
-                  <View style={[styles.storageActivePill, { backgroundColor: '#EEF2FF' }]}>
-                    <Text style={[styles.storageActivePillText, { color: '#6366F1' }]}>Active</Text>
+                  <View style={[styles.storageActivePill, { backgroundColor: Theme.colors.primaryLight }]}>
+                    <Text style={[styles.storageActivePillText, { color: Theme.colors.primary }]}>Active</Text>
                   </View>
                 )}
               </View>
@@ -267,12 +267,12 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => handleStorageSwitch('local')}
             >
               <View style={styles.storageOptionTop}>
-                <View style={[styles.storageIconWrap, { backgroundColor: '#ECFDF5' }]}>
-                  <Ionicons name="phone-portrait-outline" size={20} color="#10B981" />
+                <View style={[styles.storageIconWrap, { backgroundColor: Theme.colors.primaryLight }]}>
+                  <Ionicons name="phone-portrait-outline" size={20} color={Theme.colors.primary} />
                 </View>
                 {storageMode === 'local' && (
-                  <View style={[styles.storageActivePill, { backgroundColor: '#ECFDF5' }]}>
-                    <Text style={[styles.storageActivePillText, { color: '#10B981' }]}>Active</Text>
+                  <View style={[styles.storageActivePill, { backgroundColor: Theme.colors.primaryLight }]}>
+                    <Text style={[styles.storageActivePillText, { color: Theme.colors.primary }]}>Active</Text>
                   </View>
                 )}
               </View>
@@ -315,8 +315,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Portfolio Settings */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#ECFDF5' }]}>
-            <Ionicons name="stats-chart" size={16} color="#10B981" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="stats-chart" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>ASSETS & PORTFOLIO</Text>
         </View>
@@ -330,11 +330,11 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={showInvestmentsInAssets}
               onValueChange={handleInvestmentToggle}
-              activeColor="#10B981"
+              activeColor={Theme.colors.primary}
             />
           </View>
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={16} color="#10B981" />
+            <Ionicons name="information-circle" size={16} color={Theme.colors.primary} />
             <Text style={styles.infoText}>
               {showInvestmentsInAssets 
                 ? "Net Worth = Assets + Investments - Debts"
@@ -345,8 +345,8 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* UI Preferences Section */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#FEF2F2' }]}>
-            <Ionicons name="desktop" size={16} color="#EF4444" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="desktop" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>UI PREFERENCES</Text>
         </View>
@@ -360,15 +360,15 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={showTabLabels}
               onValueChange={handleLabelToggle}
-              activeColor="#6366F1"
+              activeColor={Theme.colors.primary}
             />
           </View>
         </View>
 
         {/* Privacy & Notifications */}
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIcon, { backgroundColor: '#FFF7ED' }]}>
-            <Ionicons name="notifications" size={16} color="#F59E0B" />
+          <View style={[styles.sectionIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+            <Ionicons name="notifications" size={16} color={Theme.colors.primary} />
           </View>
           <Text style={styles.sectionTitle}>PREFERENCES</Text>
         </View>
@@ -385,7 +385,7 @@ const SettingsScreen = ({ navigation }) => {
                 useAuthStore.getState().setStealthMode(val);
                 saveToFirebase("isStealthMode", val);
               }}
-              activeColor="#F59E0B"
+              activeColor={Theme.colors.primary}
             />
           </View>
           
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.surface,
   },
   storageOptionActiveLocal: {
-    borderColor: Theme.colors.success,
+    borderColor: Theme.colors.primary,
     backgroundColor: Theme.colors.surface,
   },
   storageOptionTop: {

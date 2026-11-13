@@ -9,32 +9,24 @@ const ONBOARDING_STEPS = [
     title: 'Storage Preference',
     desc: 'Choose Cloud sync or private Local storage',
     icon: 'server-outline',
-    color: Theme.colors.primary,
-    bg: Theme.colors.primaryLight,
   },
   {
     num: '2',
     title: 'Your Profile',
     desc: 'Name and default currency preference',
     icon: 'person-outline',
-    color: Theme.colors.info,
-    bg: Theme.colors.infoLight,
   },
   {
     num: '3',
     title: 'Your Accounts',
     desc: 'Bank accounts, credit cards, and cash',
     icon: 'wallet-outline',
-    color: Theme.colors.success,
-    bg: Theme.colors.successLight,
   },
   {
     num: '4',
     title: 'Monthly Budgets',
     desc: 'Set spending limits and stay on track',
     icon: 'pie-chart-outline',
-    color: Theme.colors.warning,
-    bg: Theme.colors.warningLight,
   },
 ];
 
@@ -59,8 +51,8 @@ const WelcomeScreen = ({ navigation }) => (
               index < ONBOARDING_STEPS.length - 1 && styles.stepBorder,
             ]}
           >
-            <View style={[styles.stepIcon, { backgroundColor: step.bg }]}>
-              <Ionicons name={step.icon} size={20} color={step.color} />
+            <View style={[styles.stepIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+              <Ionicons name={step.icon} size={20} color={Theme.colors.primary} />
             </View>
             <View style={styles.stepText}>
               <Text style={styles.stepTitle}>{step.title}</Text>

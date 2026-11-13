@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { logoutUser } from '../../services/authService';
 import { CURRENT_APP_VERSION } from '../../services/updateService';
 import useAuthStore from '../../store/useAuthStore';
+import { Theme } from '../../theme/theme';
 
 const menuSections = [
   {
@@ -91,7 +92,7 @@ const ProfileScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Header Gradient Background */}
         <LinearGradient
-          colors={['#6366F1', '#4F46E5']}
+          colors={[Theme.colors.primary, Theme.colors.primaryDark]}
           style={styles.headerBackground}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -186,8 +187,8 @@ const ProfileScreen = ({ navigation }) => {
                     style={styles.menuCard}
                     onPress={() => item.screen && navigation.navigate(item.screen)}
                   >
-                    <View style={[styles.menuIcon, { backgroundColor: item.color + '15' }]}>
-                      <Ionicons name={item.icon} size={20} color={item.color} />
+                    <View style={[styles.menuIcon, { backgroundColor: Theme.colors.primaryLight }]}>
+                      <Ionicons name={item.icon} size={20} color={Theme.colors.primary} />
                     </View>
                     <Text style={styles.menuLabel}>{item.label}</Text>
                     <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
