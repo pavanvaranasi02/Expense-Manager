@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "KOSH",
     slug: "kosh",
-    version: "1.3.6",
+    version: "1.3.7",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     icon: "./assets/ExpenseManager.jpg",
