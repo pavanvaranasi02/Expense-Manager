@@ -14,7 +14,7 @@ service cloud.firestore {
     //   - email: string (required, valid email, <= 254 chars)
     //   - phone: string | null (optional, <= 32 chars)
     //   - role: string (required, 'USER' | 'ADMIN'; immutable for non-admins)
-    //   - currency: string (required, 1..10 chars)
+    //   - currency: string (optional, 1..10 chars)
     //   - currencySymbol: string (optional, <= 10 chars)
     //   - authProvider: string (optional, 'email' | 'google')
     //   - profileImage: string | null (optional, <= 500000 chars)
@@ -48,9 +48,12 @@ service cloud.firestore {
     // Collection: users/{userId}/notifications/{notifId}
     // Fields:
     //   - title: string (required, 1..200 chars)
-    //   - message: string (required, 1..1000 chars)
+    //   - body: string (required if message absent, 1..1000 chars)
+    //   - message: string (required if body absent, 1..1000 chars)
     //   - type: string (required, 1..64 chars)
     //   - read: bool (required)
+    //   - familyId: string (optional, 1..128 chars)
+    //   - actionRoute: string (optional, 1..128 chars)
     //   - metadata: map (optional)
     //   - createdAt: timestamp (required, immutable)
     //
@@ -63,11 +66,11 @@ service cloud.firestore {
     //
     // Collection: users/{userId}/incomes/{incomeId}
     //   - amount (number > 0), source (string), sourceName (string),
-    //     accountId (string), accountName (string), date (timestamp), etc.
+    //     accountId (string|null, optional), accountName (string, optional), date (timestamp), etc.
     //
     // Collection: users/{userId}/budgets/{budgetId}
     //   - type ('OVERALL'|'CATEGORY'), categoryId (string), categoryName (string),
-    //     amount (number >= 0), month (number 0..11), year (number), alertAt (number), etc.
+    //     amount (number >= 0), month (number 0..12), year (number), alertAt (number), etc.
     //
     // Collection: users/{userId}/custom_categories/{categoryId}
     //   - name (string), icon (string), color (string), isDefault (bool), createdAt (timestamp)
@@ -124,6 +127,7 @@ service cloud.firestore {
 
     function isValidOptionalBool(field) {
       return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
         request.resource.data[field] is bool;
     }
 
@@ -135,6 +139,7 @@ service cloud.firestore {
 
     function isValidOptionalList(field, maxSize) {
       return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
         (request.resource.data[field] is list &&
          request.resource.data[field].size() <= maxSize);
     }
@@ -175,11 +180,11 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.keys().size() <= 40 &&
-        hasRequiredFields(['name', 'email', 'role', 'currency']) &&
+        hasRequiredFields(['name', 'email', 'role']) &&
         validStringLength('name', 1, 100) &&
         isValidEmail(data.email) &&
         data.role in ['USER', 'ADMIN'] &&
-        validStringLength('currency', 1, 10) &&
+        isValidOptionalString('currency', 1, 10) &&
         isValidOptionalString('phone', 0, 32) &&
         isValidOptionalString('currencySymbol', 0, 10) &&
         isValidOptionalString('authProvider', 1, 32) &&
@@ -213,12 +218,15 @@ service cloud.firestore {
 
     function isValidNotification(data) {
       return data.keys().size() <= 15 &&
-        hasRequiredFields(['title', 'message', 'type', 'read', 'createdAt']) &&
+        hasRequiredFields(['title', 'type', 'read', 'createdAt']) &&
         validStringLength('title', 1, 200) &&
-        validStringLength('message', 1, 1000) &&
+        (('body' in data && validStringLength('body', 1, 1000)) ||
+         ('message' in data && validStringLength('message', 1, 1000))) &&
         validStringLength('type', 1, 64) &&
         data.read is bool &&
         data.createdAt is timestamp &&
+        isValidOptionalString('familyId', 1, 128) &&
+        isValidOptionalString('actionRoute', 1, 128) &&
         (!('metadata' in data) || data.metadata is map);
     }
 
@@ -256,7 +264,7 @@ service cloud.firestore {
         validStringLength('categoryName', 1, 100) &&
         isValidOptionalString('categoryIcon', 1, 32) &&
         isValidOptionalString('accountId', 1, 128) &&
-        isValidOptionalString('accountName', 1, 100) &&
+        isValidOptionalString('accountName', 0, 100) &&
         validStringLength('paymentMode', 1, 32) &&
         isValidOptionalBool('isCredit') &&
         data.date is timestamp &&
@@ -267,13 +275,13 @@ service cloud.firestore {
 
     function isValidIncome(data) {
       return data.keys().size() <= 20 &&
-        hasRequiredFields(['amount', 'source', 'sourceName', 'accountId', 'accountName', 'date']) &&
+        hasRequiredFields(['amount', 'source', 'sourceName', 'date']) &&
         data.amount is number && data.amount > 0 &&
         validStringLength('source', 1, 100) &&
         validStringLength('sourceName', 1, 100) &&
         isValidOptionalString('sourceIcon', 1, 32) &&
-        validStringLength('accountId', 1, 128) &&
-        validStringLength('accountName', 1, 100) &&
+        isValidOptionalString('accountId', 1, 128) &&
+        isValidOptionalString('accountName', 0, 100) &&
         data.date is timestamp &&
         isValidOptionalString('note', 0, 500);
     }
@@ -285,7 +293,7 @@ service cloud.firestore {
         validStringLength('categoryId', 1, 100) &&
         validStringLength('categoryName', 1, 100) &&
         data.amount is number && data.amount >= 0 &&
-        data.month is number && data.month >= 0 && data.month <= 11 &&
+        data.month is number && data.month >= 0 && data.month <= 12 &&
         data.year is number && data.year >= 2000 && data.year <= 2100 &&
         isValidOptionalNumber('alertAt');
     }
@@ -304,15 +312,15 @@ service cloud.firestore {
         hasRequiredFields(['name', 'type', 'currency', 'exchangeRate', 'investedAmount', 'currentValue', 'isActive']) &&
         validStringLength('name', 1, 120) &&
         validStringLength('type', 1, 50) &&
-        isValidOptionalString('typeName', 1, 60) &&
-        isValidOptionalString('typeIcon', 1, 32) &&
+        isValidOptionalString('typeName', 0, 60) &&
+        isValidOptionalString('typeIcon', 0, 32) &&
         isValidOptionalString('platform', 0, 100) &&
         validStringLength('currency', 1, 10) &&
         data.exchangeRate is number && data.exchangeRate > 0 &&
         data.investedAmount is number && data.investedAmount >= 0 &&
         data.currentValue is number && data.currentValue >= 0 &&
         isValidOptionalNumber('interestRate') &&
-        isValidOptionalString('startDate', 1, 64) &&
+        (isValidOptionalString('startDate', 0, 64) || data.startDate is timestamp) &&
         isValidOptionalString('note', 0, 500) &&
         data.isActive is bool &&
         isValidOptionalNumber('sipAmount') &&

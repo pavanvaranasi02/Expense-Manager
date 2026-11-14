@@ -23,6 +23,7 @@ import BalanceHero from "../../components/ui/BalanceHero";
 import EmptyState from "../../components/ui/EmptyState";
 import MetricStrip from "../../components/ui/MetricStrip";
 import SectionHeader from "../../components/ui/SectionHeader";
+import SurfaceCard from "../../components/ui/SurfaceCard";
 import { Analytics } from "../../config/firebase";
 import { getAccounts } from "../../services/accountService";
 import {
@@ -32,6 +33,8 @@ import {
 } from "../../services/budgetService";
 import { getCurrencySymbol } from "../../constants/currencies";
 import { getDashboardData } from "../../services/expenseService";
+import { getMonthlyFamilyExpenses } from "../../services/familyExpenseService";
+import { getFamily } from "../../services/familyService";
 import { calculateAccountTotals } from "../../services/financialCalculationService";
 import {
   calculateInvestmentTotals,
@@ -46,7 +49,9 @@ import {
   sendSipNotification,
 } from "../../services/notificationService";
 import useAuthStore from "../../store/useAuthStore";
+import useFamilyStore from "../../store/useFamilyStore";
 import useNotificationStore from "../../store/useNotificationStore";
+import useStorageStore from "../../store/useStorageStore";
 import { formatCurrency } from "../../utils/format";
 
 const DashboardScreen = ({ navigation }) => {
@@ -54,6 +59,9 @@ const DashboardScreen = ({ navigation }) => {
   const userProfile = useAuthStore((s) => s.userProfile);
   const isStealthMode = useAuthStore((s) => s.isStealthMode);
   const toggleStealthMode = useAuthStore((s) => s.toggleStealthMode);
+  const storageMode = useStorageStore((s) => s.storageMode);
+  const isLocalMode = storageMode === "local";
+  const { family, members, setFamily, setMembers } = useFamilyStore();
   const { unreadCount, setNotifications, setUnreadCount } =
     useNotificationStore();
 
@@ -66,6 +74,7 @@ const DashboardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [investmentTotals, setInvestmentTotals] = useState(null);
+  const [familyMonthlySpent, setFamilyMonthlySpent] = useState(0);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
   const [newBudgetAmount, setNewBudgetAmount] = useState("");
@@ -104,6 +113,25 @@ const DashboardScreen = ({ navigation }) => {
         setInvestmentTotals(invTotals);
       }
 
+      const activeFamilyId = userProfile?.familyId || family?.id;
+      if (!isLocalMode && activeFamilyId) {
+        const [famRes, famExpRes] = await Promise.all([
+          getFamily(activeFamilyId).catch(() => null),
+          getMonthlyFamilyExpenses(activeFamilyId, month, year).catch(() => null),
+        ]);
+        if (famRes?.success && famRes.family) {
+          setFamily(famRes.family);
+          setMembers(famRes.family.members || []);
+        }
+        if (famExpRes?.success && Array.isArray(famExpRes.expenses)) {
+          const famTotal = famExpRes.expenses.reduce(
+            (sum, e) => sum + (e.amount || 0),
+            0,
+          );
+          setFamilyMonthlySpent(famTotal);
+        }
+      }
+
       generateAlerts(
         accResult.accounts || [],
         budgetResult.budgets || [],
@@ -128,6 +156,18 @@ const DashboardScreen = ({ navigation }) => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchDashboardData();
+  };
+
+  const handleOpenFamily = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (isLocalMode) {
+      Alert.alert(
+        "Family Disabled in Local Mode",
+        "Family sharing requires Cloud Storage. Switch to Cloud Storage in Settings to use Family features.",
+      );
+      return;
+    }
+    navigation.navigate("Family");
   };
 
   const generateAlerts = async (accs, budgs, data, investments = []) => {
@@ -382,9 +422,33 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={styles.userNameText}>{userName}</Text>
             </View>
             <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={[
+                  styles.headerIconBtn,
+                  isStealthMode && {
+                    backgroundColor: Theme.colors.primaryLight,
+                    borderColor: 'rgba(19, 78, 74, 0.22)',
+                  },
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  toggleStealthMode();
+                }}
+                activeOpacity={0.8}
+                accessibilityLabel={isStealthMode ? "Disable stealth mode" : "Enable stealth mode"}
+              >
+                <Ionicons
+                  name={isStealthMode ? "eye-off-outline" : "eye-outline"}
+                  size={18}
+                  color={isStealthMode ? Theme.colors.primary : Theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
               <NotificationBell
                 unreadCount={unreadCount}
                 onPress={() => navigation.navigate("Notifications")}
+                style={[styles.headerIconBtn, { shadowOpacity: 0, elevation: 0 }]}
+                iconSize={18}
+                iconColor={Theme.colors.textSecondary}
               />
               <TouchableOpacity
                 style={styles.avatarBtn}
@@ -459,6 +523,60 @@ const DashboardScreen = ({ navigation }) => {
               },
             ]}
           />
+
+          {/* Standout Family Hub Card */}
+          {(() => {
+            const hasFamily = !isLocalMode && Boolean(userProfile?.familyId || family?.id);
+            const memberCount = members?.length || family?.memberCount || 0;
+            return (
+              <View style={styles.familySection}>
+                <SectionHeader
+                  title="Family Hub"
+                  actionLabel={hasFamily ? "Open" : "Get Started"}
+                  onAction={handleOpenFamily}
+                />
+                <SurfaceCard
+                  onPress={handleOpenFamily}
+                  padding={16}
+                  style={styles.familyCard}
+                >
+                  <View style={styles.familyCardRow}>
+                    <View style={styles.familyIconWrap}>
+                      <Ionicons name="people" size={22} color={Theme.colors.primary} />
+                    </View>
+                    <View style={styles.familyCardBody}>
+                      <View style={styles.familyTitleRow}>
+                        <Text style={styles.familyCardTitle} numberOfLines={1}>
+                          {hasFamily ? family?.name || "Family Dashboard" : "Shared Family Finances"}
+                        </Text>
+                        {hasFamily && memberCount > 0 ? (
+                          <View style={styles.familyBadge}>
+                            <Text style={styles.familyBadgeText}>
+                              {memberCount} {memberCount === 1 ? "member" : "members"}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={styles.familyBadge}>
+                            <Text style={styles.familyBadgeText}>Up to 6</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.familyCardSub} numberOfLines={2}>
+                        {hasFamily
+                          ? `This month's shared spend: ${formatCurrency(familyMonthlySpent, isStealthMode, cs)}`
+                          : isLocalMode
+                          ? "Switch to Cloud Storage in Settings to share expenses & budgets"
+                          : "Track shared expenses, split bills & manage family budgets together"}
+                      </Text>
+                    </View>
+                    <View style={styles.familyChevron}>
+                      <Ionicons name="chevron-forward" size={18} color={Theme.colors.primary} />
+                    </View>
+                  </View>
+                </SurfaceCard>
+              </View>
+            );
+          })()}
 
           {/* Investment Portfolio */}
           {investmentTotals && investmentTotals.activeCount > 0 && (
@@ -1451,6 +1569,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: Theme.typography.weight.bold,
     color: Theme.colors.surface,
+  },
+  familySection: {
+    marginTop: 20,
+  },
+  familyCard: {
+    borderColor: Theme.colors.primaryLight,
+    backgroundColor: Theme.colors.surface,
+  },
+  familyCardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  familyIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  familyCardBody: {
+    flex: 1,
+    gap: 4,
+  },
+  familyTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  familyCardTitle: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 15,
+    color: Theme.colors.text,
+    flexShrink: 1,
+  },
+  familyBadge: {
+    backgroundColor: Theme.colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  familyBadgeText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: 11,
+    color: Theme.colors.primary,
+  },
+  familyCardSub: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Theme.colors.textMuted,
+  },
+  familyChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
