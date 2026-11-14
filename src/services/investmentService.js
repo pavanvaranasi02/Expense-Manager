@@ -841,6 +841,181 @@ export const batchAddInvestments = async (investmentsList) => {
   }
 };
 
+// ============ UPSERT HOLDINGS FROM CHRONOLOGICAL TRADEBOOK CSVs ============
+export const importTradebookHoldings = async (holdings, onProgress = null) => {
+  try {
+    const userId = getUserId();
+    if (!holdings || holdings.length === 0) {
+      return { success: false, error: 'No holdings to import' };
+    }
+
+    const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    const total = holdings.length;
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    const failedDetails = [];
+    const localMode = isLocalMode();
+    const investmentsCol = !localMode ? collection(db, 'users', userId, 'investments') : null;
+
+    for (let i = 0; i < total; i++) {
+      const h = holdings[i];
+
+      try {
+        if (h.action === 'update' && h.existingInvestmentId) {
+          const existing = localMode
+            ? await getLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, h.existingInvestmentId)
+            : (await getDoc(doc(db, 'users', userId, 'investments', h.existingInvestmentId))).data();
+
+          if (existing) {
+            const existingTxns = Array.isArray(existing.transactions) ? existing.transactions : [];
+            const seenTradeIds = new Set(
+              existingTxns.map((t) => (t.tradeId ? String(t.tradeId) : null)).filter(Boolean)
+            );
+            const newTxns = (h.transactions || []).filter(
+              (t) => !t.tradeId || !seenTradeIds.has(String(t.tradeId))
+            );
+
+            if (newTxns.length === 0 && (h.transactions || []).length > 0) {
+              skipped++;
+            } else {
+              const mergedTxns = [...existingTxns, ...newTxns].sort(
+                (a, b) => (Date.parse(a.date) || 0) - (Date.parse(b.date) || 0)
+              );
+
+              const deltaInvested =
+                h.netInvestedDelta !== undefined ? h.netInvestedDelta : parseFloat(h.investedAmount) || 0;
+              const deltaCurrent =
+                h.netCurrentDelta !== undefined ? h.netCurrentDelta : parseFloat(h.currentValue) || 0;
+
+              const nextInvested = Math.max(0, round2((Number(existing.investedAmount) || 0) + deltaInvested));
+              const nextCurrent = Math.max(0, round2((Number(existing.currentValue) || 0) + deltaCurrent));
+
+              const existingStartMs = existing.startDate ? Date.parse(existing.startDate) : Infinity;
+              const incomingStartMs = h.startDate ? Date.parse(h.startDate) : Infinity;
+              const earliestStart =
+                incomingStartMs < existingStartMs ? h.startDate : existing.startDate || h.startDate;
+
+              const patch = {
+                investedAmount: nextInvested,
+                currentValue: nextCurrent,
+                transactions: mergedTxns,
+                startDate: earliestStart || new Date().toISOString(),
+                ...(h.isin ? { isin: h.isin } : {}),
+                ...(h.platform && !existing.platform ? { platform: h.platform } : {}),
+              };
+
+              if (localMode) {
+                await updateLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, h.existingInvestmentId, {
+                  ...patch,
+                  updatedAt: new Date().toISOString(),
+                });
+              } else {
+                await updateDoc(doc(db, 'users', userId, 'investments', h.existingInvestmentId), {
+                  ...patch,
+                  updatedAt: serverTimestamp(),
+                });
+              }
+              updated++;
+            }
+          } else {
+            failed++;
+            failedDetails.push({ name: h.name, error: 'Existing investment not found' });
+          }
+        } else {
+          const newInvBase = {
+            name: h.name.trim(),
+            type: h.type || 'other',
+            typeName: h.typeName || h.type || 'Other',
+            typeIcon: h.typeIcon || '💰',
+            platform: h.platform?.trim() || null,
+            ...(h.isin ? { isin: h.isin } : {}),
+            investedAmount: Math.max(0, round2(parseFloat(h.investedAmount) || 0)),
+            currentValue: Math.max(
+              0,
+              round2(parseFloat(h.currentValue) ?? parseFloat(h.investedAmount) ?? 0)
+            ),
+            currency: h.currency || 'INR',
+            exchangeRate: parseFloat(h.exchangeRate) > 0 ? parseFloat(h.exchangeRate) : 1,
+            interestRate: h.interestRate ? parseFloat(h.interestRate) : null,
+            startDate: h.startDate || new Date().toISOString(),
+            note: h.note?.trim() || '',
+            isActive: true,
+            transactions: Array.isArray(h.transactions) && h.transactions.length > 0
+              ? h.transactions
+              : [
+                  {
+                    id: `txn_${Date.now()}_${i}`,
+                    type: 'INVEST',
+                    amount: Math.max(0, round2(parseFloat(h.investedAmount) || 0)),
+                    date: h.startDate || new Date().toISOString(),
+                    note: 'Initial import',
+                    balanceAfter: Math.max(0, round2(parseFloat(h.investedAmount) || 0)),
+                  },
+                ],
+          };
+
+          if (localMode) {
+            await addLocalDoc(userId, LOCAL_COLLECTIONS.INVESTMENTS, {
+              ...newInvBase,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          } else {
+            await addDoc(investmentsCol, {
+              ...newInvBase,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+          }
+          created++;
+        }
+      } catch (itemErr) {
+        failed++;
+        failedDetails.push({ name: h.name, error: itemErr?.message || 'Unknown error' });
+        console.log(`❌ Failed importing holding ${h.name}:`, itemErr);
+      }
+
+      if (onProgress) {
+        onProgress({
+          current: i + 1,
+          total,
+          created,
+          updated,
+          skipped,
+          failed,
+          currentName: h.name,
+          action: h.action,
+        });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    logUserAction({
+      action: 'INVESTMENT_BULK_IMPORT',
+      entity: 'Investments',
+      summary: `Imported holdings: ${created} added, ${updated} updated, ${skipped} skipped, ${failed} failed`,
+      previousState: {},
+      nextState: { created, updated, skipped, failed, total },
+      explicitUserId: userId,
+    });
+
+    return {
+      success: created > 0 || updated > 0 || failed === 0,
+      created,
+      updated,
+      skipped,
+      failed,
+      failedDetails,
+      total,
+    };
+  } catch (error) {
+    console.log('❌ Import tradebook holdings error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // ============ GET ALL INVESTMENT TRANSACTIONS (FOR TIMELINE/HISTORY) ============
 export const getAllInvestmentTransactions = (investments) => {
   const allTxns = [];
