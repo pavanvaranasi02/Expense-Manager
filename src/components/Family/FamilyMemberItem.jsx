@@ -64,7 +64,7 @@ const FamilyMemberItem = ({
               style={[styles.actionBtn, styles.removeBtn]} 
               onPress={() => onRemove(member.userId)}
             >
-              <Ionicons name="close" size={16} color="#EF4444" />
+              <Ionicons name="close" size={16} color="#B91C1C" />
             </TouchableOpacity>
           )}
         </View>
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   info: {
     flex: 1,
@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   youBadge: {
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -106,8 +106,8 @@ const styles = StyleSheet.create({
   },
   youText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
   roleBadge: {
     alignSelf: 'flex-start',
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   actions: {
     flexDirection: 'row',

@@ -6,11 +6,11 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from 'expo-haptics';
 
-const ModernToggle = ({ value, onValueChange, activeColor = "#6366F1" }) => {
+const ModernToggle = ({ value, onValueChange, activeColor = "#134E4A" }) => {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       backgroundColor: withTiming(
-        value ? activeColor : "#E5E7EB",
+        value ? activeColor : "#E5E2DC",
         { duration: 250 }
       ),
     };

@@ -268,6 +268,9 @@ export const addLocalDoc = async (userId, collectionName, data, customId = null)
   const items = await getLocalCollection(userId, collectionName);
   const now = new Date().toISOString();
   const id = customId || generateLocalId(collectionName.slice(0, 3));
+  if (items.some((item) => item && item.id === id)) {
+    throw new Error(`Duplicate document id "${id}" in ${collectionName}`);
+  }
   const docItem = serializeForLocal({
     ...data,
     id,
@@ -275,7 +278,10 @@ export const addLocalDoc = async (userId, collectionName, data, customId = null)
     updatedAt: data.updatedAt || now,
   });
   const next = [docItem, ...items];
-  await saveLocalCollection(userId, collectionName, next);
+  const saved = await saveLocalCollection(userId, collectionName, next);
+  if (!saved) {
+    throw new Error(`Failed to persist ${collectionName} locally`);
+  }
   useStorageStore.getState().markCollectionDirty(collectionName);
   return docItem;
 };
@@ -297,7 +303,10 @@ export const updateLocalDoc = async (userId, collectionName, docId, updates) => 
     return item;
   });
   if (!found) return null;
-  await saveLocalCollection(userId, collectionName, next);
+  const saved = await saveLocalCollection(userId, collectionName, next);
+  if (!saved) {
+    throw new Error(`Failed to persist update to ${collectionName}`);
+  }
   useStorageStore.getState().markCollectionDirty(collectionName);
   return next.find((item) => item.id === docId);
 };
@@ -305,7 +314,13 @@ export const updateLocalDoc = async (userId, collectionName, docId, updates) => 
 export const deleteLocalDoc = async (userId, collectionName, docId) => {
   const items = await getLocalCollection(userId, collectionName);
   const next = items.filter((item) => item.id !== docId);
-  await saveLocalCollection(userId, collectionName, next);
+  if (next.length === items.length) {
+    return false;
+  }
+  const saved = await saveLocalCollection(userId, collectionName, next);
+  if (!saved) {
+    throw new Error(`Failed to persist deletion in ${collectionName}`);
+  }
   useStorageStore.getState().markCollectionDirty(collectionName);
   return true;
 };

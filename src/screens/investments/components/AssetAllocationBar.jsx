@@ -29,7 +29,7 @@ const AssetAllocationBar = ({
       <View style={styles.progressBar}>
         {breakdown.map((item) => {
           const typeConfig = INVESTMENT_TYPES.find((t) => t.id === item.type);
-          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#6C63FF");
+          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#134E4A");
           const pct = Math.max(item.percentage || 0, 2); // Minimum 2% so small slices show visually
           return (
             <View
@@ -51,7 +51,7 @@ const AssetAllocationBar = ({
       <View style={styles.chipsRow}>
         {breakdown.map((item) => {
           const typeConfig = INVESTMENT_TYPES.find((t) => t.id === item.type);
-          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#6C63FF");
+          const color = item.color || typeConfig?.color || (item.isForeign ? "#0EA5E9" : "#134E4A");
           const isSelected = selectedCategory === item.type;
 
           return (
@@ -72,7 +72,7 @@ const AssetAllocationBar = ({
               <Text
                 style={[
                   styles.chipName,
-                  isSelected && { color: "#1E293B", fontWeight: "700" },
+                  isSelected && { color: "#18181B", fontFamily: 'Manrope_700Bold' },
                 ]}
                 numberOfLines={1}
               >
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -109,22 +109,22 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#475569",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   clearFilter: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
   progressBar: {
     flexDirection: "row",
     height: 8,
     borderRadius: 4,
     overflow: "hidden",
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     marginBottom: 12,
   },
   progressSegment: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   dot: {
     width: 6,
@@ -153,14 +153,14 @@ const styles = StyleSheet.create({
   },
   chipName: {
     fontSize: 11,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     marginRight: 4,
   },
   chipPct: {
     fontSize: 11,
     color: "#0F172A",
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

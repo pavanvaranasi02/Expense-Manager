@@ -34,14 +34,14 @@ const InviteCodeCard = ({ inviteCode, familyName, onRegenerate, canRegenerate = 
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionBtn} onPress={handleCopy}>
-          <Ionicons name="copy-outline" size={20} color="#6C63FF" />
+          <Ionicons name="copy-outline" size={20} color="#134E4A" />
           <Text style={styles.actionText}>Copy</Text>
         </TouchableOpacity>
 
         <View style={styles.divider} />
 
         <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={20} color="#6C63FF" />
+          <Ionicons name="share-social-outline" size={20} color="#134E4A" />
           <Text style={styles.actionText}>Share</Text>
         </TouchableOpacity>
 
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -77,24 +77,24 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     letterSpacing: 1,
     marginBottom: 12,
   },
   codeContainer: {
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E2DC',
     borderStyle: 'dashed',
   },
   code: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
     letterSpacing: 4,
   },
   actions: {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#ECEAE4',
   },
   actionBtn: {
     flexDirection: 'row',
@@ -113,18 +113,18 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#134E4A',
     marginLeft: 6,
   },
   divider: {
     width: 1,
     height: 24,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#E5E2DC',
   },
   hint: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#71717A',
     marginTop: 16,
     textAlign: 'center',
   },

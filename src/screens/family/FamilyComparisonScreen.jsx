@@ -72,13 +72,13 @@ const FamilyComparisonScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Monthly Comparison</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -100,7 +100,7 @@ const FamilyComparisonScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Monthly Comparison</Text>
         <View style={{ width: 44 }} />
@@ -128,11 +128,11 @@ const FamilyComparisonScreen = ({ navigation }) => {
                 propsForDots: {
                   r: '5',
                   strokeWidth: '2',
-                  stroke: '#6C63FF',
+                  stroke: '#134E4A',
                 },
                 propsForBackgroundLines: {
                   strokeDasharray: '',
-                  stroke: '#F1F5F9',
+                  stroke: '#ECEAE4',
                 },
               }}
               bezier
@@ -232,12 +232,12 @@ const FamilyComparisonScreen = ({ navigation }) => {
                     <Ionicons
                       name={cat.trend === 'up' ? 'trending-up' : 'trending-down'}
                       size={16}
-                      color={cat.trend === 'up' ? '#EF4444' : '#10B981'}
+                      color={cat.trend === 'up' ? '#B91C1C' : '#047857'}
                     />
                     <Text
                       style={[
                         styles.changeText,
-                        { color: cat.trend === 'up' ? '#EF4444' : '#10B981' },
+                        { color: cat.trend === 'up' ? '#B91C1C' : '#047857' },
                       ]}
                     >
                       {cat.changePercent > 0 ? '+' : ''}
@@ -270,7 +270,7 @@ const FamilyComparisonScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -280,20 +280,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   loadingContainer: {
     flex: 1,
@@ -309,21 +309,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 12,
   },
   chartCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 10,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   insightBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   insightIcon: {
     width: 36,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   insightText: {
     flex: 1,
     fontSize: 14,
-    color: '#1E293B',
+    color: '#18181B',
     lineHeight: 20,
   },
   categoryCard: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 12,
   },
   categoryBars: {
@@ -389,13 +389,13 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#71717A',
     width: 80,
   },
   barContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     borderRadius: 4,
     overflow: 'hidden',
     marginHorizontal: 8,
@@ -405,15 +405,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   barCurrent: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
   },
   barPrevious: {
     backgroundColor: '#CBD5E1',
   },
   barValue: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     width: 80,
     textAlign: 'right',
   },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -435,20 +435,20 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#71717A',
     textAlign: 'center',
   },
 });

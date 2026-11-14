@@ -119,7 +119,7 @@ const WithdrawModal = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -160,7 +160,7 @@ const WithdrawModal = ({
               />
             </View>
             {isForeign && parseFloat(amount) > 0 && (
-              <Text style={{ fontSize: 12, color: "#0284C7", fontWeight: "600", marginTop: 4, marginBottom: 8 }}>
+              <Text style={{ fontSize: 12, color: "#0284C7", fontFamily: 'Manrope_600SemiBold', marginTop: 4, marginBottom: 8 }}>
                 ≈ {currencySymbol}{(parseFloat(amount) * rate).toLocaleString("en-IN")} credited in base currency
               </Text>
             )}
@@ -222,12 +222,12 @@ const WithdrawModal = ({
               <Ionicons
                 name={creditAccount ? "wallet" : "business-outline"}
                 size={18}
-                color={creditAccount ? "#4F46E5" : "#64748B"}
+                color={creditAccount ? "#0F766E" : "#71717A"}
               />
               <Text
                 style={[
                   styles.accountSelectorText,
-                  !creditAccount && { color: "#94A3B8" },
+                  !creditAccount && { color: "#71717A" },
                 ]}
               >
                 {creditAccount ? creditAccount.name : "None (Do not credit bank)"}
@@ -235,7 +235,7 @@ const WithdrawModal = ({
               <Ionicons
                 name={showAccountList ? "chevron-up" : "chevron-down"}
                 size={16}
-                color="#94A3B8"
+                color="#71717A"
               />
             </TouchableOpacity>
 
@@ -282,7 +282,7 @@ const WithdrawModal = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. Partial profit booking, emergency cash"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               value={note}
               onChangeText={setNote}
             />
@@ -327,19 +327,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   infoRow: {
     flexDirection: "row",
@@ -358,17 +358,17 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
   },
   infoVal: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   label: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
     marginBottom: 6,
     marginTop: 10,
@@ -378,21 +378,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 12,
     paddingHorizontal: 14,
     marginBottom: 8,
   },
   rupee: {
     fontSize: 22,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     paddingVertical: 10,
   },
@@ -403,22 +403,22 @@ const styles = StyleSheet.create({
   },
   shortcutBtn: {
     flex: 1,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     paddingVertical: 6,
     borderRadius: 8,
     alignItems: "center",
   },
   shortcutText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
   accountSelector: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -428,12 +428,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: "#0F172A",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   accountDropdown: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     marginTop: 6,
     overflow: "hidden",
@@ -445,25 +445,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   accountOptionSelected: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
   },
   accountOptionText: {
     fontSize: 13,
     color: "#0F172A",
-    fontWeight: "500",
+    fontFamily: 'Manrope_500Medium',
   },
   accountBalanceText: {
     fontSize: 12,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
   },
   input: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   confirmBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   ScrollView,
@@ -12,13 +11,27 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppButton from '../../components/ui/AppButton';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingState from '../../components/ui/LoadingState';
+import ScreenHeader from '../../components/ui/ScreenHeader';
+import SurfaceCard from '../../components/ui/SurfaceCard';
 import { deleteBudget, getBudgets, saveBudget, updateBudget } from '../../services/budgetService';
 import { DEFAULT_CATEGORIES } from '../../services/categoryService';
+import { Theme } from '../../theme/theme';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+const getCategoryIconName = (categoryId) => {
+  if (categoryId === 'overall') return 'wallet-outline';
+  const cat = DEFAULT_CATEGORIES.find((c) => c.id === categoryId);
+  const raw = cat?.icon || '';
+  if (raw.length > 2 && !/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(raw)) return raw;
+  return 'pricetag-outline';
+};
 
 const BudgetListScreen = ({ navigation }) => {
   const now = new Date();
@@ -32,20 +45,24 @@ const BudgetListScreen = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
 
-  const fetchBudgets = async () => {
-    setLoading(true);
-    const result = await getBudgets(month, year);
-    if (result.success) {
-      setBudgets(result.budgets);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchBudgets();
+    let mounted = true;
+    (async () => {
+      const result = await getBudgets(month, year);
+      if (mounted) {
+        if (result.success) {
+          setBudgets(result.budgets);
+        }
+        setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, [month, year]);
 
   const changeMonth = (direction) => {
+    setLoading(true);
     let newMonth = month + direction;
     let newYear = year;
     if (newMonth > 12) { newMonth = 1; newYear++; }
@@ -86,10 +103,11 @@ const BudgetListScreen = ({ navigation }) => {
     if (editingBudget) {
       const result = await updateBudget(editingBudget.id, { amount: budgetAmount });
       if (result.success) {
-        setBudgets(prev =>
-          prev.map(b => b.id === editingBudget.id
-            ? { ...b, amount: parseFloat(budgetAmount) }
-            : b
+        setBudgets((prev) =>
+          prev.map((b) =>
+            b.id === editingBudget.id
+              ? { ...b, amount: parseFloat(budgetAmount) }
+              : b
           )
         );
         setShowModal(false);
@@ -97,8 +115,7 @@ const BudgetListScreen = ({ navigation }) => {
         Alert.alert('Error', result.error);
       }
     } else {
-      // Check if budget already exists for this category
-      const exists = budgets.find(b => b.categoryId === selectedCategory.id);
+      const exists = budgets.find((b) => b.categoryId === selectedCategory.id);
       if (exists) {
         Alert.alert('Exists', 'Budget for this category already exists. Edit it instead.');
         setSaving(false);
@@ -114,7 +131,7 @@ const BudgetListScreen = ({ navigation }) => {
       });
 
       if (result.success) {
-        setBudgets(prev => [...prev, result.budget]);
+        setBudgets((prev) => [...prev, result.budget]);
         setShowModal(false);
       } else {
         Alert.alert('Error', result.error);
@@ -131,11 +148,12 @@ const BudgetListScreen = ({ navigation }) => {
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete', style: 'destructive',
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             const result = await deleteBudget(budget.id);
             if (result.success) {
-              setBudgets(prev => prev.filter(b => b.id !== budget.id));
+              setBudgets((prev) => prev.filter((b) => b.id !== budget.id));
             }
           },
         },
@@ -143,132 +161,139 @@ const BudgetListScreen = ({ navigation }) => {
     );
   };
 
-  const getCategoryIcon = (categoryId) => {
-    if (categoryId === 'overall') return '💰';
-    const cat = DEFAULT_CATEGORIES.find(c => c.id === categoryId);
-    return cat?.icon || '📦';
-  };
-
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
 
   const allCategories = [
     { id: 'overall', name: 'Overall Monthly' },
-    ...DEFAULT_CATEGORIES.map(c => ({ id: c.id, name: c.name })),
+    ...DEFAULT_CATEGORIES.map((c) => ({ id: c.id, name: c.name })),
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Budgets</Text>
-        <TouchableOpacity onPress={handleAddBudget} style={styles.addHeaderBtn}>
-          <Ionicons name="add" size={24} color="#6C63FF" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenHeader
+        title="Budgets"
+        subtitle="Monthly spending limits"
+        showBack
+        navigation={navigation}
+        rightActions={
+          <TouchableOpacity onPress={handleAddBudget} style={styles.addHeaderBtn}>
+            <Ionicons name="add" size={20} color={Theme.colors.primary} />
+          </TouchableOpacity>
+        }
+      />
 
-      {/* Month Selector */}
-      <View style={styles.monthSelector}>
-        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.monthArrow}>
-          <Ionicons name="chevron-back" size={20} color="#6C63FF" />
+      <View style={styles.monthBar}>
+        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.monthArrow} hitSlop={8}>
+          <Ionicons name="chevron-back" size={18} color={Theme.colors.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.monthText}>{MONTHS[month - 1]} {year}</Text>
-        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.monthArrow}>
-          <Ionicons name="chevron-forward" size={20} color="#6C63FF" />
+        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.monthArrow} hitSlop={8}>
+          <Ionicons name="chevron-forward" size={18} color={Theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#6C63FF" style={{ marginTop: 40 }} />
-        ) : budgets.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>💰</Text>
-            <Text style={styles.emptyTitle}>No budgets for {MONTHS[month - 1]}</Text>
-            <Text style={styles.emptyText}>Set spending limits to stay on track</Text>
-            <TouchableOpacity style={styles.emptyBtn} onPress={handleAddBudget}>
-              <Text style={styles.emptyBtnText}>+ Set Budget</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            {/* Total */}
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Total Budget</Text>
-              <Text style={styles.totalAmount}>₹{totalBudget.toLocaleString('en-IN')}</Text>
-              <Text style={styles.totalSub}>{budgets.length} categories</Text>
-            </View>
+      {loading ? (
+        <LoadingState message="Loading budgets..." />
+      ) : (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {budgets.length === 0 ? (
+            <EmptyState
+              icon="pie-chart-outline"
+              title={`No budgets for ${MONTHS[month - 1]}`}
+              description="Set monthly spending limits per category to stay on track."
+              actionLabel="Set Budget"
+              onAction={handleAddBudget}
+            />
+          ) : (
+            <>
+              <View style={styles.heroSummary}>
+                <Text style={styles.totalLabel}>TOTAL MONTHLY BUDGET</Text>
+                <Text style={styles.totalAmount}>₹{totalBudget.toLocaleString('en-IN')}</Text>
+                <Text style={styles.totalSub}>{budgets.length} categories configured</Text>
+              </View>
 
-            {/* Budget Items */}
-            {budgets.map((budget) => (
-              <TouchableOpacity
-                key={budget.id}
-                style={styles.budgetCard}
-                onPress={() => handleEditBudget(budget)}
-                onLongPress={() => handleDeleteBudget(budget)}
-              >
-                <View style={styles.budgetLeft}>
-                  <Text style={styles.budgetIcon}>{getCategoryIcon(budget.categoryId)}</Text>
-                  <View>
-                    <Text style={styles.budgetName}>{budget.categoryName}</Text>
-                    <Text style={styles.budgetType}>
-                      {budget.type === 'OVERALL' ? 'Overall' : 'Category'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.budgetRight}>
-                  <Text style={styles.budgetAmount}>
-                    ₹{(budget.amount || 0).toLocaleString('en-IN')}
-                  </Text>
-                  <Text style={styles.budgetPer}>/month</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+              <SurfaceCard padding={0}>
+                {budgets.map((budget, index) => (
+                  <TouchableOpacity
+                    key={budget.id}
+                    style={[styles.budgetRow, index > 0 && styles.rowBorder]}
+                    onPress={() => handleEditBudget(budget)}
+                    onLongPress={() => handleDeleteBudget(budget)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.budgetLeft}>
+                      <View style={styles.budgetIconBox}>
+                        <Ionicons
+                          name={getCategoryIconName(budget.categoryId)}
+                          size={18}
+                          color={Theme.colors.textSecondary}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.budgetName}>{budget.categoryName}</Text>
+                        <Text style={styles.budgetType}>
+                          {budget.type === 'OVERALL' ? 'Overall' : 'Category'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.budgetRight}>
+                      <Text style={styles.budgetAmount}>
+                        ₹{(budget.amount || 0).toLocaleString('en-IN')}
+                      </Text>
+                      <Text style={styles.budgetPer}>/month</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </SurfaceCard>
 
-            <Text style={styles.hint}>Tap to edit • Long press to delete</Text>
-          </>
-        )}
-      </ScrollView>
+              <Text style={styles.hint}>Tap to edit · Long press to delete</Text>
+            </>
+          )}
+        </ScrollView>
+      )}
 
-      {/* Add/Edit Budget Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingBudget ? 'Edit Budget' : 'Add Budget'}
+                {editingBudget ? 'Edit Budget' : 'New Budget'}
               </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalClose}>
+                <Ionicons name="close" size={20} color={Theme.colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            {/* Category Selection */}
             {!editingBudget && (
               <>
-                <Text style={styles.modalLabel}>Category</Text>
+                <Text style={styles.modalLabel}>CATEGORY</Text>
                 <ScrollView style={styles.categoryList} nestedScrollEnabled>
                   {allCategories.map((cat) => {
-                    const exists = budgets.find(b => b.categoryId === cat.id);
+                    const exists = budgets.find((b) => b.categoryId === cat.id);
+                    const isSelected = selectedCategory?.id === cat.id;
                     return (
                       <TouchableOpacity
                         key={cat.id}
                         style={[
                           styles.categoryOption,
-                          selectedCategory?.id === cat.id && styles.categoryOptionActive,
+                          isSelected && styles.categoryOptionActive,
                           exists && styles.categoryOptionDisabled,
                         ]}
                         onPress={() => !exists && setSelectedCategory(cat)}
                         disabled={!!exists}
                       >
-                        <Text style={styles.categoryOptionIcon}>
-                          {getCategoryIcon(cat.id)}
-                        </Text>
-                        <Text style={[
-                          styles.categoryOptionName,
-                          exists && { color: '#D1D5DB' },
-                        ]}>
+                        <Ionicons
+                          name={getCategoryIconName(cat.id)}
+                          size={18}
+                          color={isSelected ? Theme.colors.primary : Theme.colors.textSecondary}
+                          style={{ marginRight: 10 }}
+                        />
+                        <Text
+                          style={[
+                            styles.categoryOptionName,
+                            exists && { color: Theme.colors.textLight },
+                          ]}
+                        >
                           {cat.name}
                         </Text>
                         {exists && (
@@ -276,8 +301,8 @@ const BudgetListScreen = ({ navigation }) => {
                             ₹{exists.amount?.toLocaleString('en-IN')}
                           </Text>
                         )}
-                        {selectedCategory?.id === cat.id && (
-                          <Ionicons name="checkmark-circle" size={20} color="#6C63FF" />
+                        {isSelected && (
+                          <Ionicons name="checkmark-circle" size={20} color={Theme.colors.primary} />
                         )}
                       </TouchableOpacity>
                     );
@@ -286,14 +311,13 @@ const BudgetListScreen = ({ navigation }) => {
               </>
             )}
 
-            {/* Amount */}
-            <Text style={styles.modalLabel}>Monthly Budget Amount</Text>
+            <Text style={styles.modalLabel}>MONTHLY LIMIT</Text>
             <View style={styles.modalAmountRow}>
               <Text style={styles.modalRupee}>₹</Text>
               <TextInput
                 style={styles.modalAmountInput}
                 placeholder="5000"
-                placeholderTextColor="#D1D5DB"
+                placeholderTextColor={Theme.colors.textLight}
                 value={budgetAmount}
                 onChangeText={(v) => setBudgetAmount(v.replace(/[^0-9]/g, ''))}
                 keyboardType="numeric"
@@ -301,20 +325,12 @@ const BudgetListScreen = ({ navigation }) => {
               />
             </View>
 
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[styles.modalSaveBtn, saving && { opacity: 0.6 }]}
+            <AppButton
+              title={editingBudget ? 'Update Budget' : 'Save Budget'}
               onPress={handleSaveBudget}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.modalSaveBtnText}>
-                  {editingBudget ? 'Update Budget' : 'Save Budget'}
-                </Text>
-              )}
-            </TouchableOpacity>
+              loading={saving}
+              style={{ marginTop: 20 }}
+            />
           </View>
         </View>
       </Modal>
@@ -323,101 +339,195 @@ const BudgetListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
   addHeaderBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFFF',
-    justifyContent: 'center', alignItems: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-  monthSelector: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+  monthBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: Theme.layout.screenPaddingHorizontal,
+    marginBottom: 16,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.radius.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.borderSubtle,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  monthArrow: { padding: 8 },
-  monthText: { fontSize: 16, fontWeight: '600', color: '#1A1A2E', marginHorizontal: 16 },
-
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
-
-  totalCard: {
-    backgroundColor: '#6C63FF', borderRadius: 16, padding: 20, marginTop: 16,
-    marginBottom: 16, alignItems: 'center',
+  monthArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  totalLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)' },
-  totalAmount: { fontSize: 28, fontWeight: '700', color: '#FFFFFF', marginTop: 4 },
-  totalSub: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
-
-  budgetCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+  monthText: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.text,
   },
-  budgetLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  budgetIcon: { fontSize: 24, marginRight: 12 },
-  budgetName: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
-  budgetType: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
+  content: {
+    paddingHorizontal: Theme.layout.screenPaddingHorizontal,
+    paddingBottom: 40,
+  },
+  heroSummary: {
+    paddingBottom: 18,
+    marginBottom: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
+  },
+  totalLabel: {
+    ...Theme.typography.presets.sectionEyebrow,
+    color: Theme.colors.textMuted,
+  },
+  totalAmount: {
+    ...Theme.typography.presets.displayNumber,
+    color: Theme.colors.text,
+    marginTop: 4,
+  },
+  totalSub: {
+    ...Theme.typography.presets.rowSubtitle,
+    color: Theme.colors.textMuted,
+    marginTop: 2,
+  },
+  budgetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  rowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.borderSubtle,
+  },
+  budgetLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
+  budgetIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  budgetName: {
+    ...Theme.typography.presets.rowTitle,
+    color: Theme.colors.text,
+  },
+  budgetType: {
+    ...Theme.typography.presets.rowSubtitle,
+    color: Theme.colors.textMuted,
+    marginTop: 1,
+  },
   budgetRight: { alignItems: 'flex-end' },
-  budgetAmount: { fontSize: 16, fontWeight: '700', color: '#1A1A2E' },
-  budgetPer: { fontSize: 11, color: '#9CA3AF' },
-
-  hint: { textAlign: 'center', fontSize: 11, color: '#D1D5DB', marginTop: 12 },
-
-  emptyContainer: { alignItems: 'center', paddingVertical: 60 },
-  emptyEmoji: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
-  emptyText: { fontSize: 14, color: '#6B7280', marginTop: 4 },
-  emptyBtn: {
-    backgroundColor: '#6C63FF', paddingVertical: 12, paddingHorizontal: 24,
-    borderRadius: 10, marginTop: 20,
+  budgetAmount: {
+    ...Theme.typography.presets.monoValue,
+    color: Theme.colors.text,
   },
-  emptyBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  budgetPer: {
+    ...Theme.typography.presets.rowSubtitle,
+    color: Theme.colors.textMuted,
+  },
+  hint: {
+    textAlign: 'center',
+    ...Theme.typography.presets.rowSubtitle,
+    color: Theme.colors.textLight,
+    marginTop: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(24, 24, 27, 0.45)',
+    justifyContent: 'flex-end',
+  },
   modalContent: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, maxHeight: '80%',
+    backgroundColor: Theme.colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 28,
+    maxHeight: '82%',
   },
   modalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
   },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  modalLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8, marginTop: 12 },
-
-  categoryList: { maxHeight: 200 },
+  modalTitle: {
+    ...Theme.typography.presets.title,
+    color: Theme.colors.text,
+  },
+  modalClose: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalLabel: {
+    ...Theme.typography.presets.formLabel,
+    color: Theme.colors.textMuted,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  categoryList: { maxHeight: 210 },
   categoryOption: {
-    flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 10,
-    marginBottom: 4, backgroundColor: '#F9FAFB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: Theme.radius.lg,
+    marginBottom: 4,
+    backgroundColor: Theme.colors.surfaceSubtle,
   },
-  categoryOptionActive: { backgroundColor: '#F0EFFF', borderWidth: 1, borderColor: '#6C63FF' },
-  categoryOptionDisabled: { opacity: 0.5 },
-  categoryOptionIcon: { fontSize: 18, marginRight: 10 },
-  categoryOptionName: { flex: 1, fontSize: 14, color: '#1A1A2E' },
-  categoryExistsText: { fontSize: 12, color: '#9CA3AF', marginRight: 8 },
-
+  categoryOptionActive: {
+    backgroundColor: Theme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary,
+  },
+  categoryOptionDisabled: { opacity: 0.45 },
+  categoryOptionName: {
+    flex: 1,
+    ...Theme.typography.presets.bodyMedium,
+    color: Theme.colors.text,
+  },
+  categoryExistsText: {
+    ...Theme.typography.presets.rowSubtitle,
+    color: Theme.colors.textMuted,
+    marginRight: 8,
+  },
   modalAmountRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB',
-    borderRadius: 12, paddingHorizontal: 14, borderWidth: 1.5, borderColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.radius.lg,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
-  modalRupee: { fontSize: 22, fontWeight: '600', color: '#374151' },
-  modalAmountInput: { flex: 1, height: 52, fontSize: 22, fontWeight: '600', color: '#1A1A2E', paddingLeft: 8 },
-
-  modalSaveBtn: {
-    backgroundColor: '#6C63FF', height: 50, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center', marginTop: 20,
+  modalRupee: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 22,
+    color: Theme.colors.textMuted,
   },
-  modalSaveBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  modalAmountInput: {
+    flex: 1,
+    height: 52,
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 22,
+    color: Theme.colors.text,
+    paddingLeft: 8,
+  },
 });
 
 export default BudgetListScreen;

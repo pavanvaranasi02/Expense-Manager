@@ -57,16 +57,16 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatar: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
   },
   initialsContainer: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#E5E2DC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   initials: {
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
   },
   badge: {
     position: 'absolute',
@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
   name: {
     marginTop: 6,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#71717A',
     maxWidth: 70,
     textAlign: 'center',
   },

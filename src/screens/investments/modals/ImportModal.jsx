@@ -107,7 +107,7 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
               }}
               style={styles.closeBtn}
             >
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -125,12 +125,12 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
                 <Ionicons
                   name={copiedTemplate ? "checkmark" : "copy-outline"}
                   size={14}
-                  color={copiedTemplate ? "#10B981" : "#4F46E5"}
+                  color={copiedTemplate ? "#047857" : "#0F766E"}
                 />
                 <Text
                   style={[
                     styles.toolBtnText,
-                    copiedTemplate && { color: "#10B981" },
+                    copiedTemplate && { color: "#047857" },
                   ]}
                 >
                   {copiedTemplate ? "Copied Template!" : "Copy CSV Template"}
@@ -142,7 +142,7 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
                 onPress={handlePasteClipboard}
                 activeOpacity={0.7}
               >
-                <Ionicons name="clipboard-outline" size={14} color="#4F46E5" />
+                <Ionicons name="clipboard-outline" size={14} color="#0F766E" />
                 <Text style={styles.toolBtnText}>Paste from Clipboard</Text>
               </TouchableOpacity>
             </View>
@@ -154,7 +154,7 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
             <TextInput
               style={styles.textInput}
               placeholder="Paste or enter CSV rows here..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               value={csvText}
               onChangeText={(text) => {
                 setCsvText(text);
@@ -179,7 +179,7 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
             {/* Errors Banner */}
             {parseErrors.length > 0 && (
               <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={18} color="#EF4444" />
+                <Ionicons name="alert-circle" size={18} color="#B91C1C" />
                 <View style={{ flex: 1 }}>
                   {parseErrors.map((err, idx) => (
                     <Text key={idx} style={styles.errorText}>
@@ -194,7 +194,7 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
             {previewList && previewList.length > 0 && (
               <View style={styles.previewSection}>
                 <View style={styles.previewHeader}>
-                  <Ionicons name="checkmark-done" size={16} color="#10B981" />
+                  <Ionicons name="checkmark-done" size={16} color="#047857" />
                   <Text style={styles.previewTitle}>
                     Ready to import ({previewList.length} items)
                   </Text>
@@ -274,19 +274,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -300,30 +300,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     paddingVertical: 8,
     borderRadius: 10,
     gap: 5,
   },
   toolBtnText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
   inputLabel: {
     fontSize: 12,
     color: "#475569",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 6,
   },
   textInput: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 12,
     padding: 12,
     fontSize: 12,
-    color: "#1E293B",
+    color: "#18181B",
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     minHeight: 110,
     textAlignVertical: "top",
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 10,
     borderRadius: 10,
     gap: 6,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   parseBtnText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   errorBanner: {
     flexDirection: "row",
@@ -369,8 +369,8 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#059669",
+    fontFamily: 'Manrope_700Bold',
+    color: "#047857",
   },
   previewItem: {
     flexDirection: "row",
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
   },
   previewIcon: {
     fontSize: 20,
@@ -388,29 +388,29 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   previewMeta: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   previewAmount: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   previewRate: {
     fontSize: 11,
     color: "#2563EB",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   importBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#10B981",
+    backgroundColor: "#047857",
     paddingVertical: 14,
     borderRadius: 14,
     marginTop: 14,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   importBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

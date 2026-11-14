@@ -134,7 +134,7 @@ const QuickValueUpdateModal = ({
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -158,14 +158,14 @@ const QuickValueUpdateModal = ({
                 <Text
                   style={[
                     styles.previewValue,
-                    { color: isGain ? "#059669" : "#DC2626" },
+                    { color: isGain ? "#047857" : "#DC2626" },
                   ]}
                 >
                   {isGain ? "+" : ""}
                   {formatCurrency(absoluteGain, false, nativeSymbol)}
                 </Text>
                 {isForeign && (
-                  <Text style={{ fontSize: 11, color: isGain ? "#059669" : "#DC2626", marginTop: 2, fontWeight: "600" }}>
+                  <Text style={{ fontSize: 11, color: isGain ? "#047857" : "#DC2626", marginTop: 2, fontFamily: 'Manrope_600SemiBold' }}>
                     ≈ {isGain ? "+" : ""}{formatCurrency(absoluteGain * numRate, false, currencySymbol)}
                   </Text>
                 )}
@@ -174,7 +174,7 @@ const QuickValueUpdateModal = ({
                 <View
                   style={[
                     styles.returnPill,
-                    { backgroundColor: isGain ? "#10B981" : "#EF4444" },
+                    { backgroundColor: isGain ? "#047857" : "#B91C1C" },
                   ]}
                 >
                   <Ionicons
@@ -204,11 +204,11 @@ const QuickValueUpdateModal = ({
                   onChangeText={(v) => setInvestedAmount(cleanDecimal(v))}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#71717A"
                 />
               </View>
               {isForeign && numInvested > 0 && (
-                <Text style={{ fontSize: 11, color: "#64748B", marginTop: 2, fontWeight: "500" }}>
+                <Text style={{ fontSize: 11, color: "#71717A", marginTop: 2, fontFamily: 'Manrope_500Medium' }}>
                   ≈ {currencySymbol}{(numInvested * numRate).toLocaleString("en-IN")} in base currency
                 </Text>
               )}
@@ -228,11 +228,11 @@ const QuickValueUpdateModal = ({
                   onChangeText={(v) => setCurrentValue(cleanDecimal(v))}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#71717A"
                 />
               </View>
               {isForeign && numCurrent > 0 && (
-                <Text style={{ fontSize: 11, color: "#64748B", marginTop: 2, fontWeight: "500" }}>
+                <Text style={{ fontSize: 11, color: "#71717A", marginTop: 2, fontFamily: 'Manrope_500Medium' }}>
                   ≈ {currencySymbol}{(numCurrent * numRate).toLocaleString("en-IN")} in base currency
                 </Text>
               )}
@@ -289,7 +289,7 @@ const QuickValueUpdateModal = ({
                     onChangeText={(v) => setExchangeRate(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="e.g. 86.5"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#71717A"
                   />
                 </View>
               </View>
@@ -303,7 +303,7 @@ const QuickValueUpdateModal = ({
                 value={note}
                 onChangeText={setNote}
                 placeholder="e.g. Monthly statement revaluation"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#71717A"
               />
             </View>
 
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -368,19 +368,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -398,13 +398,13 @@ const styles = StyleSheet.create({
   },
   previewLabel: {
     fontSize: 11,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     textTransform: "uppercase",
   },
   previewValue: {
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     marginTop: 2,
   },
   previewColRight: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   returnPillText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   inputGroup: {
     marginBottom: 16,
@@ -434,33 +434,33 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   subLabel: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: "#71717A",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 12,
     paddingHorizontal: 14,
   },
   currencyPrefix: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     marginRight: 6,
   },
   amountInput: {
     flex: 1,
     paddingVertical: 12,
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   presetRow: {
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   },
   presetBtn: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     paddingVertical: 6,
     borderRadius: 8,
     alignItems: "center",
@@ -478,13 +478,13 @@ const styles = StyleSheet.create({
   },
   presetText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#475569",
   },
   noteInput: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -493,14 +493,14 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   saveBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
     elevation: 2,
-    shadowColor: "#4F46E5",
+    shadowColor: "#0F766E",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

@@ -133,7 +133,7 @@ const AnalyticsScreen = ({ navigation }) => {
       let tag = {
         name: "The Balanced",
         icon: "⚖️",
-        color: "#6C63FF",
+        color: "#134E4A",
         desc: "Maintain a healthy balance between spending and saving.",
       };
 
@@ -141,21 +141,21 @@ const AnalyticsScreen = ({ navigation }) => {
         tag = {
           name: "The Investor",
           icon: "📈",
-          color: "#10B981",
+          color: "#047857",
           desc: "You prioritize future wealth and long-term security.",
         };
       else if (savingsPercent > 0.35)
         tag = {
           name: "The Saver",
           icon: "💰",
-          color: "#10B981",
+          color: "#047857",
           desc: "Excellent job keeping more than you spend!",
         };
       else if (totalExp > 0 && totalInc > 0 && savingsPercent < 0.05)
         tag = {
           name: "The Spender",
           icon: "💳",
-          color: "#EF4444",
+          color: "#B91C1C",
           desc: "Careful! Your spending is almost matching your income.",
         };
       else if (sortedCats[0]?.name.includes("Food") && topCatPercent > 0.3)
@@ -189,20 +189,20 @@ const AnalyticsScreen = ({ navigation }) => {
 
   const getPieData = () => {
     const colors = [
-      "#6366F1", // Indigo
-      "#10B981", // Emerald
+      "#134E4A", // Indigo
+      "#047857", // Emerald
       "#F59E0B", // Amber
       "#EC4899", // Pink
       "#3B82F6", // Blue
-      "#EF4444", // Red
-      "#8B5CF6", // Violet
+      "#B91C1C", // Red
+      "#0F766E", // Violet
     ];
     
     return categoryData.slice(0, 5).map((cat, idx) => ({
       name: cat.name,
       population: cat.total,
       color: colors[idx % colors.length],
-      legendFontColor: "#64748B",
+      legendFontColor: "#71717A",
       legendFontSize: 11,
     }));
   };
@@ -278,7 +278,7 @@ const AnalyticsScreen = ({ navigation }) => {
         {loading ? (
           <ActivityIndicator
             size="large"
-            color="#6C63FF"
+            color="#134E4A"
             style={{ marginTop: 60 }}
           />
         ) : (
@@ -304,7 +304,7 @@ const AnalyticsScreen = ({ navigation }) => {
 
             <View style={styles.insightHeader}>
               <Text style={styles.insightTitle}>Financial Health Insight</Text>
-              <Ionicons name="sparkles" size={16} color="#6C63FF" />
+              <Ionicons name="sparkles" size={16} color="#134E4A" />
             </View>
 
             {personality && (
@@ -332,12 +332,14 @@ const AnalyticsScreen = ({ navigation }) => {
 
             <View style={styles.summaryGrid}>
               <View style={styles.summaryItem}>
-                <View style={[styles.summaryIcon, { backgroundColor: '#10B98120' }]}>
-                  <Ionicons name="wallet-outline" size={18} color="#10B981" />
+                <View style={[styles.summaryIcon, { backgroundColor: '#04785720' }]}>
+                  <Ionicons name="wallet-outline" size={18} color="#047857" />
                 </View>
-                <View>
-                  <Text style={styles.summarySub}>Avg Monthly Savings</Text>
-                  <Text style={[styles.summaryVal, { color: "#10B981" }]}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.summarySub} numberOfLines={1} adjustsFontSizeToFit>
+                    Avg Monthly Savings
+                  </Text>
+                  <Text style={[styles.summaryVal, { color: "#047857" }]} numberOfLines={1}>
                     {formatCurrency(
                       Math.round(summary.savings / period.months),
                       isStealthMode,
@@ -349,8 +351,8 @@ const AnalyticsScreen = ({ navigation }) => {
                 <View style={[styles.summaryIcon, { backgroundColor: '#F59E0B20' }]}>
                   <Ionicons name="star-outline" size={18} color="#F59E0B" />
                 </View>
-                <View>
-                  <Text style={styles.summarySub}>Top Category</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.summarySub} numberOfLines={1}>Top Category</Text>
                   <Text style={styles.summaryVal} numberOfLines={1}>
                     {topCategory?.name || "N/A"}
                   </Text>
@@ -375,11 +377,11 @@ const AnalyticsScreen = ({ navigation }) => {
               />
               <View style={styles.legendContainer}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: "#10B981" }]} />
+                  <View style={[styles.legendDot, { backgroundColor: "#047857" }]} />
                   <Text style={styles.legendText}>Income</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: "#EF4444" }]} />
+                  <View style={[styles.legendDot, { backgroundColor: "#B91C1C" }]} />
                   <Text style={styles.legendText}>Expense</Text>
                 </View>
               </View>
@@ -449,19 +451,21 @@ const AnalyticsScreen = ({ navigation }) => {
                         now.getMonth() - (period.months - 1),
                         1,
                       );
-                      navigation.navigate("Transactions", {
-                        categoryId: cat.id,
-                        categoryName: cat.name,
-                        startDate: start.toISOString(),
-                        endDate: new Date().toISOString(),
-                        // Pass searchText to find items by name too, helpful for ghost entries
-                        searchText: cat.name,
+                      navigation.navigate("Activity", {
+                        screen: "ExpenseList",
+                        params: {
+                          categoryId: cat.id,
+                          categoryName: cat.name,
+                          startDate: start.toISOString(),
+                          endDate: new Date().toISOString(),
+                          searchText: cat.name,
+                        },
                       });
                     }}
                   >
                     {cat.icon && cat.icon.length > 2 ? (
                       <View style={styles.catIconContainer}>
-                        <Ionicons name={cat.icon} size={20} color="#6C63FF" />
+                        <Ionicons name={cat.icon} size={20} color="#134E4A" />
                       </View>
                     ) : (
                       <Text style={styles.catIcon}>{cat.icon || "📦"}</Text>
@@ -542,14 +546,14 @@ const chartConfig = {
   labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`,
   style: { borderRadius: 16 },
   propsForDots: { r: "5", strokeWidth: "3", stroke: "#FFFFFF" },
-  propsForLabels: { fontSize: 10, fontWeight: "600" },
-  fillShadowGradientFrom: "#6C63FF",
+  propsForLabels: { fontSize: 10, fontFamily: 'Manrope_600SemiBold' },
+  fillShadowGradientFrom: "#134E4A",
   fillShadowGradientTo: "#FFF",
   fillShadowGradientOpacity: 0.2,
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: "#F7F6F2" },
   header: {
     paddingHorizontal: 24,
     paddingTop: 16,
@@ -558,7 +562,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  title: { fontSize: 24, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  title: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: "#18181B", letterSpacing: -0.5 },
   periodSelector: {
     flexDirection: "row",
     backgroundColor: "#EFF6FF",
@@ -581,7 +585,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  periodBtnText: { fontSize: 12, fontWeight: "700", color: "#60A5FA" },
+  periodBtnText: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: "#60A5FA" },
   periodBtnTextActive: { color: "#2563EB" },
   periodDot: {
     width: 4,
@@ -601,8 +605,8 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -613,7 +617,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: 20,
     elevation: 8,
-    shadowColor: "#6366F1",
+    shadowColor: "#134E4A",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -638,21 +642,21 @@ const styles = StyleSheet.create({
   personaEmoji: { fontSize: 26 },
   personaTitle: {
     color: "#FFFFFF",
-    fontWeight: "900",
+    fontFamily: 'Manrope_700Bold',
     fontSize: 20,
     letterSpacing: 0.2,
   },
   personaBadge: {
     fontSize: 9,
     color: "rgba(255, 255, 255, 0.8)",
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     marginTop: 2,
     letterSpacing: 1,
   },
   personaDesc: {
     fontSize: 13,
-    color: "#4B5563",
-    fontWeight: "600",
+    color: "#3F3F46",
+    fontFamily: 'Manrope_600SemiBold',
     paddingVertical: 16,
     paddingHorizontal: 20,
     lineHeight: 20,
@@ -667,18 +671,13 @@ const styles = StyleSheet.create({
   summaryItem: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 20,
+    padding: 14,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    gap: 10,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#E5E2DC',
   },
   summaryIcon: {
     width: 40,
@@ -689,18 +688,18 @@ const styles = StyleSheet.create({
   },
   summarySub: {
     fontSize: 10,
-    color: "#9CA3AF",
-    fontWeight: "700",
+    color: "#71717A",
+    fontFamily: 'Manrope_700Bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  summaryVal: { fontSize: 15, fontWeight: "800", color: "#111827" },
+  summaryVal: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#18181B" },
 
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "900",
-    color: "#111827",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 16,
     letterSpacing: -0.2,
   },
@@ -716,7 +715,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
   chart: { borderRadius: 20 },
   legendContainer: {
@@ -726,7 +725,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#F1EFEA',
     width: '100%',
   },
   legendItem: {
@@ -741,8 +740,8 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#6B7280',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
   },
 
   emptyContainer: {
@@ -751,8 +750,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: '#9CA3AF',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
   },
 
   categoryHeader: {
@@ -763,9 +762,9 @@ const styles = StyleSheet.create({
   },
   totalRange: { 
     fontSize: 12, 
-    fontWeight: "800", 
+    fontFamily: 'Manrope_700Bold', 
     color: "#FFFFFF",
-    backgroundColor: '#6366F1',
+    backgroundColor: '#134E4A',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
@@ -782,7 +781,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 12,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
 
   catRow: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
@@ -790,7 +789,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -801,20 +800,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
-  catName: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
-  catAmount: { fontSize: 13, fontWeight: "800", color: "#374151" },
+  catName: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#1F2937" },
+  catAmount: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: "#3F3F46" },
   progressBar: {
     height: 8,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F1EFEA",
     borderRadius: 4,
     flex: 1,
     overflow: 'hidden',
   },
-  progressFill: { height: 8, backgroundColor: "#6366F1", borderRadius: 4 },
+  progressFill: { height: 8, backgroundColor: "#134E4A", borderRadius: 4 },
   catPercent: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#9CA3AF",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     marginLeft: 12,
     width: 36,
     textAlign: "right",
@@ -826,26 +825,26 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 18,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
   paymentEmoji: { fontSize: 24 },
   paymentLabel: {
     fontSize: 10,
-    fontWeight: "700",
-    color: "#6B7280",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     textAlign: "center",
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   paymentVal: {
     fontSize: 13,
-    fontWeight: "900",
-    color: "#111827",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginTop: 4,
   },
 
@@ -857,7 +856,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E5E2DC",
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -866,14 +865,14 @@ const styles = StyleSheet.create({
   },
   periodDataRange: {
     fontSize: 16,
-    fontWeight: "900",
-    color: "#111827",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 4,
   },
   periodDataSubtitle: {
     fontSize: 11,
-    color: "#9CA3AF",
-    fontWeight: "700",
+    color: "#71717A",
+    fontFamily: 'Manrope_700Bold',
     textTransform: "uppercase",
     letterSpacing: 1.5,
   },

@@ -70,7 +70,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconBox}>
-                <Ionicons name="notifications" size={20} color="#6366F1" />
+                <Ionicons name="notifications" size={20} color="#134E4A" />
               </View>
               <View>
                 <Text style={styles.title}>Notification Preferences</Text>
@@ -80,13 +80,13 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color="#6366F1" />
+              <ActivityIndicator size="large" color="#134E4A" />
               <Text style={styles.loadingText}>Loading settings...</Text>
             </View>
           ) : (
@@ -106,7 +106,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                   value={settings.enabled}
                   onValueChange={(val) => handleToggle("enabled", val)}
                   trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                  thumbColor={settings.enabled ? "#4F46E5" : "#F8FAFC"}
+                  thumbColor={settings.enabled ? "#0F766E" : "#F8FAFC"}
                 />
               </View>
 
@@ -115,8 +115,8 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
 
               <View style={styles.settingsGroup}>
                 <View style={styles.settingItem}>
-                  <View style={[styles.settingIcon, { backgroundColor: "#EEF2FF" }]}>
-                    <Ionicons name="repeat" size={18} color="#6366F1" />
+                  <View style={[styles.settingIcon, { backgroundColor: "#E6F2F0" }]}>
+                    <Ionicons name="repeat" size={18} color="#134E4A" />
                   </View>
                   <View style={styles.settingTextCol}>
                     <Text style={styles.settingTitle}>SIP Due Reminders</Text>
@@ -129,7 +129,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                     value={settings.enabled && settings.sipReminders}
                     onValueChange={(val) => handleToggle("sipReminders", val)}
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.sipReminders ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.sipReminders ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
 
@@ -150,7 +150,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                     value={settings.enabled && settings.rdReminders}
                     onValueChange={(val) => handleToggle("rdReminders", val)}
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.rdReminders ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.rdReminders ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
 
@@ -171,7 +171,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                     value={settings.enabled && settings.maturityAlerts}
                     onValueChange={(val) => handleToggle("maturityAlerts", val)}
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.maturityAlerts ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.maturityAlerts ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
               </View>
@@ -182,7 +182,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
               <View style={styles.settingsGroup}>
                 <View style={styles.settingItem}>
                   <View style={[styles.settingIcon, { backgroundColor: "#FEE2E2" }]}>
-                    <Ionicons name="pie-chart" size={18} color="#EF4444" />
+                    <Ionicons name="pie-chart" size={18} color="#B91C1C" />
                   </View>
                   <View style={styles.settingTextCol}>
                     <Text style={styles.settingTitle}>Budget Overrun Alerts</Text>
@@ -195,7 +195,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                     value={settings.enabled && settings.budgetAlerts}
                     onValueChange={(val) => handleToggle("budgetAlerts", val)}
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.budgetAlerts ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.budgetAlerts ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
 
@@ -218,7 +218,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                       handleToggle("creditCardAlerts", val)
                     }
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.creditCardAlerts ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.creditCardAlerts ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
 
@@ -239,7 +239,7 @@ const NotificationSettingsModal = ({ visible, onClose }) => {
                     value={settings.enabled && settings.dailyReminder}
                     onValueChange={(val) => handleToggle("dailyReminder", val)}
                     trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                    thumbColor={settings.dailyReminder ? "#4F46E5" : "#F8FAFC"}
+                    thumbColor={settings.dailyReminder ? "#0F766E" : "#F8FAFC"}
                   />
                 </View>
               </View>
@@ -292,26 +292,26 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -323,13 +323,13 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 13,
-    color: "#64748B",
+    color: "#71717A",
   },
   masterCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   masterTitle: {
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#312E81",
   },
   masterSub: {
@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     paddingHorizontal: 14,
     marginBottom: 16,
   },
@@ -382,20 +382,20 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#0F172A",
   },
   settingSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
   },
   doneBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   doneBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

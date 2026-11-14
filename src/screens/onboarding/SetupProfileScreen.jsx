@@ -98,11 +98,11 @@ const SetupProfileScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Full Name *</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
+              <Ionicons name="person-outline" size={20} color="#71717A" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your name"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#71717A"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -114,12 +114,12 @@ const SetupProfileScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Phone Number (Optional)</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="call-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
+              <Ionicons name="call-outline" size={20} color="#71717A" style={styles.inputIcon} />
               <Text style={styles.prefix}>+91</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter phone number"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#71717A"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -194,32 +194,32 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: Theme.typography.size.sm, color: Theme.colors.textMuted, marginTop: 4, marginBottom: Theme.spacing.xl },
 
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '500', color: '#1E293B', marginBottom: 6 },
+  label: { fontSize: 14, fontFamily: 'Manrope_500Medium', color: '#18181B', marginBottom: 6 },
   inputContainer: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#F1F5F9',
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#ECEAE4',
     paddingHorizontal: 14, height: 52,
   },
   inputIcon: { marginRight: 10 },
-  prefix: { fontSize: 15, color: '#64748B', marginRight: 4 },
-  input: { flex: 1, fontSize: 15, color: '#1E293B' },
+  prefix: { fontSize: 15, color: '#71717A', marginRight: 4 },
+  input: { flex: 1, fontSize: 15, color: '#18181B' },
 
   currencyRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   currencyChip: {
     flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16,
-    borderRadius: 10, backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#F1F5F9',
+    borderRadius: 10, backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#ECEAE4',
   },
-  currencyChipActive: { backgroundColor: '#6C63FF', borderColor: '#6C63FF' },
-  currencySymbol: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginRight: 6 },
+  currencyChipActive: { backgroundColor: '#134E4A', borderColor: '#134E4A' },
+  currencySymbol: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#18181B', marginRight: 6 },
   currencySymbolActive: { color: '#FFFFFF' },
-  currencyCode: { fontSize: 13, color: '#64748B' },
+  currencyCode: { fontSize: 13, color: '#71717A' },
   currencyCodeActive: { color: '#FFFFFF' },
 
   nextBtn: {
-    backgroundColor: '#6C63FF', height: 52, borderRadius: 12,
+    backgroundColor: '#134E4A', height: 52, borderRadius: 12,
     justifyContent: 'center', alignItems: 'center', marginTop: 32,
   },
-  nextBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  nextBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: 'Manrope_600SemiBold' },
 });
 
 export default SetupProfileScreen;

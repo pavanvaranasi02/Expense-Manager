@@ -27,7 +27,7 @@ const PortfolioHeroCard = ({
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#4F46E5", "#6366F1", "#7C3AED"]}
+        colors={["#0F766E", "#134E4A", "#134E4A"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -190,7 +190,7 @@ const PortfolioHeroCard = ({
           <Ionicons
             name="pie-chart-outline"
             size={16}
-            color={activeTab === "holdings" ? "#4F46E5" : "#64748B"}
+            color={activeTab === "holdings" ? "#0F766E" : "#71717A"}
           />
           <Text
             style={[
@@ -216,7 +216,7 @@ const PortfolioHeroCard = ({
           <Ionicons
             name="time-outline"
             size={16}
-            color={activeTab === "history" ? "#4F46E5" : "#64748B"}
+            color={activeTab === "history" ? "#0F766E" : "#71717A"}
           />
           <Text
             style={[
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     elevation: 6,
-    shadowColor: "#4F46E5",
+    shadowColor: "#0F766E",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   portfolioTagText: {
     color: "#FFFFFF",
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.8,
   },
   xirrBadge: {
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   xirrBadgeText: {
     color: "#FDE68A",
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.2,
   },
   eyeBtn: {
@@ -298,11 +298,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "rgba(255, 255, 255, 0.75)",
     marginTop: 4,
-    fontWeight: "500",
+    fontFamily: 'Manrope_500Medium',
   },
   mainAmount: {
     fontSize: 30,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
     marginTop: 4,
     letterSpacing: -0.5,
@@ -328,13 +328,13 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   statVal: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
     marginTop: 2,
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   pctText: {
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
   actionsBar: {
     flexDirection: "row",
@@ -371,11 +371,11 @@ const styles = StyleSheet.create({
   actionBtnText: {
     color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   tabSwitcher: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     borderRadius: 12,
     padding: 3,
     marginTop: 14,
@@ -399,12 +399,12 @@ const styles = StyleSheet.create({
   },
   tabBtnText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
   },
   tabBtnTextActive: {
-    color: "#4F46E5",
-    fontWeight: "700",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

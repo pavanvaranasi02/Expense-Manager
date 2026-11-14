@@ -161,7 +161,7 @@ const SettingsScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="chevron-back" size={24} color="#1E293B" />
+            <Ionicons name="chevron-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={{ width: 44 }} />
@@ -284,7 +284,7 @@ const SettingsScreen = ({ navigation }) => {
           {(migrationStatus === 'downloading' || migrationStatus === 'uploading') && (
             <View style={styles.migrationBox}>
               <View style={styles.migrationHeader}>
-                <ActivityIndicator size="small" color="#6C63FF" />
+                <ActivityIndicator size="small" color="#134E4A" />
                 <Text style={styles.migrationText}>
                   {migrationProgress.label || 'Migrating data in background...'} (
                   {migrationProgress.current}/{migrationProgress.total})
@@ -397,7 +397,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled}
               onValueChange={(val) => handleNotificationToggle("enabled", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -409,7 +409,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.sipReminders}
               onValueChange={(val) => handleNotificationToggle("sipReminders", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -421,7 +421,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.rdReminders}
               onValueChange={(val) => handleNotificationToggle("rdReminders", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -433,7 +433,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.budgetAlerts}
               onValueChange={(val) => handleNotificationToggle("budgetAlerts", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -445,7 +445,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.creditCardAlerts}
               onValueChange={(val) => handleNotificationToggle("creditCardAlerts", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -457,7 +457,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.emiAlerts}
               onValueChange={(val) => handleNotificationToggle("emiAlerts", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
 
@@ -469,7 +469,7 @@ const SettingsScreen = ({ navigation }) => {
             <ModernToggle
               value={notificationSettings.enabled && notificationSettings.dailyReminder}
               onValueChange={(val) => handleNotificationToggle("dailyReminder", val)}
-              activeColor="#6C63FF"
+              activeColor="#134E4A"
             />
           </View>
         </View>
@@ -694,10 +694,10 @@ const SettingsScreen = ({ navigation }) => {
               </Text>
             </View>
             {checkingUpdate ? (
-              <ActivityIndicator size="small" color="#6C63FF" />
+              <ActivityIndicator size="small" color="#134E4A" />
             ) : (
               <View style={styles.updateBadge}>
-                <Ionicons name="cloud-download-outline" size={14} color="#6C63FF" />
+                <Ionicons name="cloud-download-outline" size={14} color="#134E4A" />
                 <Text style={styles.updateBadgeText}>Check Now</Text>
               </View>
             )}
@@ -719,7 +719,7 @@ const SettingsScreen = ({ navigation }) => {
                 View changelogs and source repo
               </Text>
             </View>
-            <Ionicons name="open-outline" size={18} color="#94A3B8" />
+            <Ionicons name="open-outline" size={18} color="#71717A" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.aboutRow}>
@@ -733,9 +733,9 @@ const SettingsScreen = ({ navigation }) => {
         {/* Danger Zone */}
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionIcon, { backgroundColor: '#FEE2E2' }]}>
-            <Ionicons name="alert-circle" size={16} color="#EF4444" />
+            <Ionicons name="alert-circle" size={16} color="#B91C1C" />
           </View>
-          <Text style={[styles.sectionTitle, { color: '#EF4444' }]}>DANGER ZONE</Text>
+          <Text style={[styles.sectionTitle, { color: '#B91C1C' }]}>DANGER ZONE</Text>
         </View>
         
         <TouchableOpacity
@@ -752,7 +752,7 @@ const SettingsScreen = ({ navigation }) => {
           }
         >
           <LinearGradient
-            colors={['#FCA5A5', '#EF4444']}
+            colors={['#FCA5A5', '#B91C1C']}
             style={styles.dangerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -776,7 +776,7 @@ const SettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F7F6F2" },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: "row",
@@ -785,19 +785,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#1E293B", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B", letterSpacing: -0.5 },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
   profileSummary: {
@@ -808,19 +808,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   avatarMini: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarTextMini: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  profileName: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
-  profileEmail: { fontSize: 12, color: '#64748B', fontWeight: '500' },
+  avatarTextMini: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: '#FFFFFF' },
+  profileName: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  profileEmail: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_500Medium' },
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -829,8 +829,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 4 },
-  activeText: { fontSize: 10, fontWeight: '800', color: '#10B981', textTransform: 'uppercase' },
+  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#047857', marginRight: 4 },
+  activeText: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#047857', textTransform: 'uppercase' },
 
   sectionHeader: {
     flexDirection: 'row',
@@ -849,8 +849,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: "900",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -879,18 +879,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 16,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     borderWidth: 2,
     borderColor: 'transparent',
     position: 'relative',
   },
   activeCurrencyItem: {
-    backgroundColor: '#E0E7FF',
-    borderColor: '#6C63FF',
+    backgroundColor: '#E6F2F0',
+    borderColor: '#134E4A',
   },
-  currencySymbol: { fontSize: 24, fontWeight: '900', color: '#1E293B' },
-  currencyCode: { fontSize: 12, fontWeight: '800', color: '#64748B', marginTop: 4 },
-  activeCurrencyText: { color: '#6C63FF' },
+  currencySymbol: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  currencyCode: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#71717A', marginTop: 4 },
+  activeCurrencyText: { color: '#134E4A' },
   checkBadge: {
     position: 'absolute',
     top: 8,
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -912,20 +912,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  settingLabel: { fontSize: 15, fontWeight: "700", color: "#1F2937" },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: "#ECEAE4" },
+  settingLabel: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#1F2937" },
   settingSubLabel: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
   },
 
   switchRow: { flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
 
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#E0E7FF",
+    backgroundColor: "#E6F2F0",
     padding: 14,
     marginHorizontal: 18,
     marginBottom: 18,
@@ -934,10 +934,10 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: "#6C63FF",
+    color: "#134E4A",
     marginLeft: 10,
     flex: 1,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
   },
 
   aboutRow: {
@@ -946,18 +946,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
-  aboutValue: { fontSize: 13, color: "#64748B", fontWeight: '600' },
+  aboutValue: { fontSize: 13, color: "#71717A", fontFamily: 'Manrope_600SemiBold' },
   betaBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
   },
-  betaText: { fontSize: 10, fontWeight: '900', color: '#64748B', textTransform: 'uppercase' },
+  betaText: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#71717A', textTransform: 'uppercase' },
   updateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E0E7FF',
+    backgroundColor: '#E6F2F0',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -967,8 +967,8 @@ const styles = StyleSheet.create({
   },
   updateBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
 
   dangerBtn: {
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   },
   dangerText: {
     fontSize: 16,
-    fontWeight: "900",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
     marginLeft: 10,
     letterSpacing: 0.5,

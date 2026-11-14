@@ -809,7 +809,7 @@ const PortfolioScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color="#0F766E" />
           <Text style={styles.loadingText}>Loading Portfolio...</Text>
         </View>
       </SafeAreaView>
@@ -821,7 +821,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("ProfileMain")}
+          onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={22} color="#0F172A" />
@@ -835,7 +835,7 @@ const PortfolioScreen = ({ navigation }) => {
             onPress={() => setShowNotificationSettingsModal(true)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="notifications-outline" size={20} color="#4F46E5" />
+            <Ionicons name="notifications-outline" size={20} color="#0F766E" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -843,7 +843,7 @@ const PortfolioScreen = ({ navigation }) => {
             onPress={() => setShowImportModal(true)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="download-outline" size={20} color="#4F46E5" />
+            <Ionicons name="download-outline" size={20} color="#0F766E" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -851,7 +851,7 @@ const PortfolioScreen = ({ navigation }) => {
             onPress={() => setShowReportModal(true)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="document-text-outline" size={20} color="#4F46E5" />
+            <Ionicons name="document-text-outline" size={20} color="#0F766E" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -873,7 +873,7 @@ const PortfolioScreen = ({ navigation }) => {
               setRefreshing(true);
               fetchInvestments();
             }}
-            colors={["#4F46E5"]}
+            colors={["#0F766E"]}
           />
         }
       >
@@ -989,17 +989,17 @@ const PortfolioScreen = ({ navigation }) => {
             {/* Search and Sort Filter Row */}
             <View style={styles.filterRow}>
               <View style={styles.searchBar}>
-                <Ionicons name="search" size={16} color="#94A3B8" />
+                <Ionicons name="search" size={16} color="#71717A" />
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Search holdings..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#71717A"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery("")}>
-                    <Ionicons name="close-circle" size={16} color="#94A3B8" />
+                    <Ionicons name="close-circle" size={16} color="#71717A" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -1008,7 +1008,7 @@ const PortfolioScreen = ({ navigation }) => {
                 style={styles.sortBtn}
                 onPress={() => setShowSortPicker(true)}
               >
-                <Ionicons name="swap-vertical" size={16} color="#4F46E5" />
+                <Ionicons name="swap-vertical" size={16} color="#0F766E" />
                 <Text style={styles.sortBtnText}>Sort</Text>
               </TouchableOpacity>
             </View>
@@ -1038,7 +1038,7 @@ const PortfolioScreen = ({ navigation }) => {
                     <Ionicons
                       name="download-outline"
                       size={16}
-                      color="#4F46E5"
+                      color="#0F766E"
                     />
                     <Text style={styles.emptyImportBtnText}>Import CSV</Text>
                   </TouchableOpacity>
@@ -1258,7 +1258,7 @@ const PortfolioScreen = ({ navigation }) => {
                   {opt.label}
                 </Text>
                 {sortOption === opt.id && (
-                  <Ionicons name="checkmark" size={18} color="#4F46E5" />
+                  <Ionicons name="checkmark" size={18} color="#0F766E" />
                 )}
               </TouchableOpacity>
             ))}
@@ -1288,7 +1288,7 @@ const PortfolioScreen = ({ navigation }) => {
                         resetAddForm();
                       }}
                     >
-                      <Ionicons name="close" size={24} color="#6B7280" />
+                      <Ionicons name="close" size={24} color="#71717A" />
                     </TouchableOpacity>
                   </View>
 
@@ -1302,7 +1302,7 @@ const PortfolioScreen = ({ navigation }) => {
                     <Text style={styles.typeSelectorText} numberOfLines={1}>
                       {invType.name}
                     </Text>
-                    <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+                    <Ionicons name="chevron-down" size={18} color="#71717A" />
                   </TouchableOpacity>
 
                   {/* Name */}
@@ -1310,7 +1310,7 @@ const PortfolioScreen = ({ navigation }) => {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., Vanguard S&P 500 ETF, HDFC Midcap"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                     value={invName}
                     onChangeText={handleInvNameChange}
                   />
@@ -1320,7 +1320,7 @@ const PortfolioScreen = ({ navigation }) => {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., INDmoney, Alpaca, Zerodha, Bank"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                     value={invPlatform}
                     onChangeText={handleInvPlatformChange}
                   />
@@ -1386,7 +1386,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="e.g., 86.50"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invExchangeRate}
                         onChangeText={(v) => setInvExchangeRate(cleanDecimal(v))}
                         keyboardType="numeric"
@@ -1408,7 +1408,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="5000"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invRdMonthly}
                         onChangeText={(v) =>
                           setInvRdMonthly(cleanDecimal(v))
@@ -1420,7 +1420,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="e.g. 12, 24, 36"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invRdMonths}
                         onChangeText={(v) =>
                           setInvRdMonths(v.replace(/[^0-9]/g, ""))
@@ -1432,7 +1432,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="0"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invRdCompletedMonths}
                         onChangeText={(v) =>
                           setInvRdCompletedMonths(v.replace(/[^0-9]/g, ""))
@@ -1451,7 +1451,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder={invCurrency !== baseCurrency ? "100.00" : "50000"}
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invAmount}
                         onChangeText={(v) =>
                           setInvAmount(cleanDecimal(v))
@@ -1470,7 +1470,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="Leave blank if same as invested"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invCurrentValue}
                         onChangeText={(v) =>
                           setInvCurrentValue(cleanDecimal(v))
@@ -1494,7 +1494,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="5000"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invSipAmount}
                         onChangeText={(v) =>
                           setInvSipAmount(cleanDecimal(v))
@@ -1506,7 +1506,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="e.g., 5"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invSipDate}
                         onChangeText={(v) => {
                           const cleaned = v.replace(/[^0-9]/g, "");
@@ -1529,7 +1529,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="e.g. 7.1"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invInterestRate}
                         onChangeText={setInvInterestRate}
                         keyboardType="numeric"
@@ -1539,7 +1539,7 @@ const PortfolioScreen = ({ navigation }) => {
                       <TextInput
                         style={styles.modalInput}
                         placeholder="DD/MM/YYYY"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={invMaturityDate}
                         onChangeText={setInvMaturityDate}
                       />
@@ -1558,13 +1558,13 @@ const PortfolioScreen = ({ navigation }) => {
                     <Ionicons
                       name={payFromAccount ? "wallet" : "business"}
                       size={18}
-                      color={payFromAccount ? "#4F46E5" : "#9CA3AF"}
+                      color={payFromAccount ? "#0F766E" : "#71717A"}
                       style={{ marginRight: 8 }}
                     />
                     <Text
                       style={[
                         styles.typeSelectorText,
-                        !payFromAccount && { color: "#9CA3AF" },
+                        !payFromAccount && { color: "#71717A" },
                       ]}
                       numberOfLines={1}
                     >
@@ -1572,7 +1572,7 @@ const PortfolioScreen = ({ navigation }) => {
                         ? payFromAccount.name
                         : "Select bank or cash (optional)"}
                     </Text>
-                    <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+                    <Ionicons name="chevron-down" size={18} color="#71717A" />
                   </TouchableOpacity>
 
                   {/* Notes */}
@@ -1583,7 +1583,7 @@ const PortfolioScreen = ({ navigation }) => {
                       { height: 60, textAlignVertical: "top" },
                     ]}
                     placeholder="Any details..."
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                     value={invNote}
                     onChangeText={setInvNote}
                     multiline
@@ -1614,7 +1614,7 @@ const PortfolioScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Investment Type</Text>
               <TouchableOpacity onPress={() => setShowTypeModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -1656,7 +1656,7 @@ const PortfolioScreen = ({ navigation }) => {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Update Current Value</Text>
                 <TouchableOpacity onPress={() => setShowUpdateModal(false)}>
-                  <Ionicons name="close" size={24} color="#6B7280" />
+                  <Ionicons name="close" size={24} color="#71717A" />
                 </TouchableOpacity>
               </View>
               <Text style={styles.subHoldingName}>
@@ -1665,7 +1665,7 @@ const PortfolioScreen = ({ navigation }) => {
               <TextInput
                 style={styles.modalInput}
                 placeholder="0"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
                 value={updateValue}
                 onChangeText={(v) => setUpdateValue(v.replace(/[^0-9]/g, ""))}
                 keyboardType="numeric"
@@ -1704,7 +1704,7 @@ const PortfolioScreen = ({ navigation }) => {
                 <TouchableOpacity
                   onPress={() => setShowAddAmountModal(false)}
                 >
-                  <Ionicons name="close" size={24} color="#6B7280" />
+                  <Ionicons name="close" size={24} color="#71717A" />
                 </TouchableOpacity>
               </View>
 
@@ -1729,7 +1729,7 @@ const PortfolioScreen = ({ navigation }) => {
               <TextInput
                 style={styles.modalInput}
                 placeholder={isForeignInvestment(editingInvestment, baseCurrency) ? "100.00" : "10000"}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
                 value={addAmtValue}
                 onChangeText={(v) =>
                   setAddAmtValue(cleanDecimal(v))
@@ -1746,7 +1746,7 @@ const PortfolioScreen = ({ navigation }) => {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g. 86.50"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                     value={addAmtExchangeRate}
                     onChangeText={(v) => setAddAmtExchangeRate(cleanDecimal(v))}
                     keyboardType="numeric"
@@ -1765,7 +1765,7 @@ const PortfolioScreen = ({ navigation }) => {
                 onPress={() => setShowAddAmtDatePicker(true)}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <Ionicons name="calendar-outline" size={18} color="#4F46E5" />
+                  <Ionicons name="calendar-outline" size={18} color="#0F766E" />
                   <Text style={styles.typeSelectorText}>
                     {addAmtDate.toLocaleDateString("en-IN", {
                       day: "numeric",
@@ -1774,7 +1774,7 @@ const PortfolioScreen = ({ navigation }) => {
                     })}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 13, color: "#6366F1", fontWeight: "600" }}>Change Date</Text>
+                <Text style={{ fontSize: 13, color: "#134E4A", fontFamily: 'Manrope_600SemiBold' }}>Change Date</Text>
               </TouchableOpacity>
 
               {showAddAmtDatePicker && (
@@ -1795,7 +1795,7 @@ const PortfolioScreen = ({ navigation }) => {
               <TextInput
                 style={styles.modalInput}
                 placeholder="Leave empty to auto-calculate"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
                 value={addAmtCurrentValue}
                 onChangeText={(v) =>
                   setAddAmtCurrentValue(cleanDecimal(v))
@@ -1816,14 +1816,14 @@ const PortfolioScreen = ({ navigation }) => {
                     ? payFromAccount.name
                     : "Select account (optional)"}
                 </Text>
-                <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+                <Ionicons name="chevron-down" size={18} color="#71717A" />
               </TouchableOpacity>
 
               <Text style={styles.modalLabel}>Note (Optional)</Text>
               <TextInput
                 style={styles.modalInput}
                 placeholder="e.g. Monthly top-up, bonus investment, dip buy"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
                 value={addAmtNote}
                 onChangeText={setAddAmtNote}
               />
@@ -1851,7 +1851,7 @@ const PortfolioScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Confirm SIP</Text>
               <TouchableOpacity onPress={() => setShowSipModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <Text style={styles.subHoldingName}>
@@ -1868,7 +1868,7 @@ const PortfolioScreen = ({ navigation }) => {
             />
             <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
               <TouchableOpacity
-                style={[styles.modalSaveBtn, { flex: 1, backgroundColor: "#E2E8F0" }]}
+                style={[styles.modalSaveBtn, { flex: 1, backgroundColor: "#E5E2DC" }]}
                 onPress={handleSipSkip}
               >
                 <Text style={[styles.modalSaveBtnText, { color: "#475569" }]}>
@@ -1894,7 +1894,7 @@ const PortfolioScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Pay RD Installment</Text>
               <TouchableOpacity onPress={() => setShowRdPayModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <Text style={styles.subHoldingName}>
@@ -1928,7 +1928,7 @@ const PortfolioScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Transaction History</Text>
               <TouchableOpacity onPress={() => setShowTxnHistoryModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <Text style={styles.subHoldingName}>
@@ -1971,7 +1971,7 @@ const PortfolioScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Payment Account</Text>
               <TouchableOpacity onPress={() => setShowAccountPicker(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -2017,7 +2017,7 @@ const PortfolioScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   loadingBox: {
     flex: 1,
@@ -2027,8 +2027,8 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
   },
   header: {
     flexDirection: "row",
@@ -2038,19 +2038,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   headerActions: {
@@ -2062,7 +2062,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2070,7 +2070,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2097,7 +2097,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#92400E",
   },
   alertItem: {
@@ -2119,16 +2119,16 @@ const styles = StyleSheet.create({
   },
   alertItemName: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   alertItemSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   alertConfirmBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -2136,7 +2136,7 @@ const styles = StyleSheet.create({
   alertConfirmText: {
     color: "#FFFFFF",
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 
   // Filter & Search
@@ -2152,7 +2152,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -2169,7 +2169,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -2177,8 +2177,8 @@ const styles = StyleSheet.create({
   },
   sortBtnText: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
 
   // Empty State
@@ -2190,18 +2190,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     marginTop: 10,
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginTop: 12,
   },
   emptyText: {
     fontSize: 13,
-    color: "#64748B",
+    color: "#71717A",
     textAlign: "center",
     marginTop: 6,
     lineHeight: 18,
@@ -2215,7 +2215,7 @@ const styles = StyleSheet.create({
   emptyAddBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
@@ -2224,21 +2224,21 @@ const styles = StyleSheet.create({
   emptyAddBtnText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   emptyImportBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
     gap: 6,
   },
   emptyImportBtnText: {
-    color: "#4F46E5",
+    color: "#0F766E",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   emptyFilterBox: {
     alignItems: "center",
@@ -2249,12 +2249,12 @@ const styles = StyleSheet.create({
   },
   emptyFilterTitle: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   emptyFilterSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 4,
   },
   resetFilterBtn: {
@@ -2262,12 +2262,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 8,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
   },
   resetFilterText: {
     fontSize: 12,
-    color: "#4F46E5",
-    fontWeight: "700",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
 
   // Modals generic
@@ -2291,12 +2291,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   modalLabel: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
     marginBottom: 6,
     marginTop: 10,
@@ -2304,7 +2304,7 @@ const styles = StyleSheet.create({
   modalInput: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -2315,22 +2315,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   activeCurrencyChip: {
-    backgroundColor: "#EEF2FF",
-    borderColor: "#6366F1",
+    backgroundColor: "#E6F2F0",
+    borderColor: "#134E4A",
   },
   currencyChipText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
   },
   activeCurrencyChipText: {
-    color: "#4F46E5",
-    fontWeight: "700",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
   foreignRateBox: {
     backgroundColor: "#F0F9FF",
@@ -2351,7 +2351,7 @@ const styles = StyleSheet.create({
   },
   foreignDetectionTitle: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0369A1",
   },
   foreignDetectionSubtitle: {
@@ -2371,23 +2371,23 @@ const styles = StyleSheet.create({
   },
   foreignBadgeSmallText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0284C7",
   },
   conversionHint: {
     fontSize: 11,
     color: "#0284C7",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     marginTop: 4,
   },
   subHoldingName: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
     marginBottom: 10,
   },
   modalSaveBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
@@ -2397,14 +2397,14 @@ const styles = StyleSheet.create({
   modalSaveBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   typeSelector: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -2417,7 +2417,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: "#0F172A",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   typeOption: {
     flexDirection: "row",
@@ -2425,7 +2425,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     marginBottom: 6,
   },
   typeOptionIcon: {
@@ -2435,7 +2435,7 @@ const styles = StyleSheet.create({
   typeOptionName: {
     flex: 1,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#0F172A",
   },
   accountOption: {
@@ -2445,19 +2445,19 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   accountOptionSelected: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
   },
   accountName: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#0F172A",
   },
   accountBalance: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
   },
   modalBackdrop: {
     flex: 1,
@@ -2472,7 +2472,7 @@ const styles = StyleSheet.create({
   },
   sortModalTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginBottom: 12,
   },
@@ -2482,7 +2482,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   sortOptionSelected: {
     backgroundColor: "#F8FAFC",
@@ -2490,11 +2490,11 @@ const styles = StyleSheet.create({
   sortOptionText: {
     fontSize: 14,
     color: "#475569",
-    fontWeight: "500",
+    fontFamily: 'Manrope_500Medium',
   },
   sortOptionTextSelected: {
-    color: "#4F46E5",
-    fontWeight: "700",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
   historyItemRow: {
     flexDirection: "row",
@@ -2502,31 +2502,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   historyItemAmount: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   historyItemDate: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   historyItemType: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
   historyItemNote: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
   },
   noTxnsText: {
     textAlign: "center",
-    color: "#94A3B8",
+    color: "#71717A",
     padding: 20,
     fontSize: 13,
   },

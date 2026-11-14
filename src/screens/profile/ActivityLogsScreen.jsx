@@ -558,12 +558,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
   },
   headerSub: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.textMuted,
     marginTop: 1,
   },
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.text,
     paddingVertical: 0,
   },
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   },
   compactChipText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
   },
   compactChipTextActive: {
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
   },
   filterChipTextActive: {
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   },
   operationType: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
     letterSpacing: 0.3,
   },
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   storageBadgeText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.4,
   },
   statusPill: {
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.success,
   },
   metaGrid: {
@@ -730,13 +730,13 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 9,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textLight,
     letterSpacing: 0.5,
   },
   metaValue: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.text,
     marginTop: 2,
   },
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
   messageLink: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.primary,
   },
   totalFooter: {
@@ -767,12 +767,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
   },
   totalValue: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
   },
   centerState: {
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
     marginBottom: 6,
   },
@@ -825,12 +825,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
   },
   modalSub: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.textMuted,
     marginTop: 2,
   },
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.primary,
     marginBottom: 12,
   },
@@ -859,12 +859,12 @@ const styles = StyleSheet.create({
   },
   modalMetaLine: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.textMuted,
   },
   diffLabel: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textLight,
     letterSpacing: 0.6,
     marginBottom: 6,
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.primary,
     letterSpacing: 0.6,
   },

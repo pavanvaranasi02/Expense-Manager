@@ -191,9 +191,9 @@ const FamilyBudgetScreen = ({ navigation }) => {
   };
 
   const getProgressColor = (percent) => {
-    if (percent >= 100) return '#EF4444';
+    if (percent >= 100) return '#B91C1C';
     if (percent >= 80) return '#F59E0B';
-    return '#10B981';
+    return '#047857';
   };
 
   if (loading) {
@@ -201,13 +201,13 @@ const FamilyBudgetScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Family Budget</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -222,12 +222,12 @@ const FamilyBudgetScreen = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Family Budget</Text>
           {budget && canManageMembers() && (
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+              <Ionicons name="trash-outline" size={20} color="#B91C1C" />
             </TouchableOpacity>
           )}
           {!budget && <View style={{ width: 44 }} />}
@@ -236,7 +236,7 @@ const FamilyBudgetScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Month Info */}
           <View style={styles.monthCard}>
-            <Ionicons name="calendar" size={24} color="#6C63FF" />
+            <Ionicons name="calendar" size={24} color="#134E4A" />
             <Text style={styles.monthText}>
               {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
             </Text>
@@ -373,7 +373,7 @@ const FamilyBudgetScreen = ({ navigation }) => {
 
           {/* Info */}
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle-outline" size={18} color="#6C63FF" />
+            <Ionicons name="information-circle-outline" size={18} color="#134E4A" />
             <Text style={styles.infoText}>
               Set budgets to track spending. You'll get alerts when reaching 80% and 100% of your limits.
             </Text>
@@ -407,7 +407,7 @@ const FamilyBudgetScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   keyboardView: {
     flex: 1,
@@ -420,20 +420,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   deleteBtn: {
     width: 44,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   monthCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -463,8 +463,8 @@ const styles = StyleSheet.create({
   },
   monthText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
   section: {
     marginBottom: 24,
@@ -477,19 +477,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
   },
   budgetInputCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 8,
     textTransform: 'uppercase',
   },
@@ -511,19 +511,19 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
     marginRight: 8,
   },
   input: {
     fontSize: 32,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     flex: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     marginVertical: 16,
   },
   progressSection: {
@@ -537,17 +537,17 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
   },
   progressValue: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     textAlign: 'right',
     marginTop: 6,
   },
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -589,13 +589,13 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   categoryInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -603,14 +603,14 @@ const styles = StyleSheet.create({
   },
   currencySymbolSmall: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
     marginRight: 4,
   },
   categoryInput: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     flex: 1,
     textAlign: 'right',
   },
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   },
   categoryProgressBar: {
     height: 4,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 6,
@@ -630,13 +630,13 @@ const styles = StyleSheet.create({
   },
   categoryProgressText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     textAlign: 'right',
   },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: '#6C63FF',
+    color: '#134E4A',
     lineHeight: 16,
   },
   footer: {
@@ -655,17 +655,17 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#ECEAE4',
   },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: '#6C63FF',
+    shadowColor: '#134E4A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
 });

@@ -31,9 +31,9 @@ const EMOJI_OPTIONS = [
 const { width } = Dimensions.get('window');
 
 const COLOR_OPTIONS = [
-  '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+  '#134E4A', '#047857', '#F59E0B', '#B91C1C', '#0F766E',
   '#EC4899', '#14B8A6', '#F97316', '#84CC16', '#06B6D4',
-  '#A855F7', '#E11D48', '#0EA5E9', '#64748B'
+  '#A855F7', '#E11D48', '#0EA5E9', '#71717A'
 ];
 
 const ManageCategoriesScreen = ({ navigation }) => {
@@ -42,7 +42,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
   const [showModal, setShowModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('📦');
-  const [newColor, setNewColor] = useState('#6366F1');
+  const [newColor, setNewColor] = useState('#134E4A');
   const [saving, setSaving] = useState(false);
 
   const fetchCategories = async () => {
@@ -84,7 +84,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
       setShowModal(false);
       setNewName('');
       setNewIcon('📦');
-      setNewColor('#6366F1');
+      setNewColor('#134E4A');
     } else {
       Alert.alert('Error', 'Failed to add category');
     }
@@ -126,14 +126,14 @@ const ManageCategoriesScreen = ({ navigation }) => {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={24} color="#111827" />
+              <Ionicons name="chevron-back" size={24} color="#18181B" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Categories</Text>
             <View style={{ width: 44 }} />
           </View>
         </SafeAreaView>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </View>
     );
@@ -145,11 +145,11 @@ const ManageCategoriesScreen = ({ navigation }) => {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#111827" />
+            <Ionicons name="chevron-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Categories</Text>
           <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addHeaderBtn}>
-            <Ionicons name="add" size={24} color="#6366F1" />
+            <Ionicons name="add" size={24} color="#134E4A" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -161,8 +161,8 @@ const ManageCategoriesScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Section Header */}
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconBox, { backgroundColor: '#EEF2FF' }]}>
-              <Ionicons name="grid" size={14} color="#6366F1" />
+            <View style={[styles.sectionIconBox, { backgroundColor: '#E6F2F0' }]}>
+              <Ionicons name="grid" size={14} color="#134E4A" />
             </View>
             <Text style={styles.sectionTitle}>DEFAULT CATEGORIES ({defaultCats.length})</Text>
           </View>
@@ -188,7 +188,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
           {customCats.length === 0 ? (
             <View style={styles.emptyCustom}>
               <View style={styles.emptyIconCircle}>
-                <Ionicons name="brush-outline" size={32} color="#9CA3AF" />
+                <Ionicons name="brush-outline" size={32} color="#71717A" />
               </View>
               <Text style={styles.emptyCustomText}>No custom categories yet</Text>
               <TouchableOpacity onPress={() => setShowModal(true)} style={styles.emptyAddBtn}>
@@ -214,7 +214,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
                   onPress={() => handleDeleteCategory(cat)}
                   style={styles.trashBtn}
                 >
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={18} color="#B91C1C" />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
@@ -235,7 +235,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>New Category</Text>
               <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -257,7 +257,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
                 <TextInput
                   style={styles.modalInput}
                   placeholder="e.g. Subscriptions"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#71717A"
                   value={newName}
                   onChangeText={setNewName}
                 />
@@ -309,7 +309,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
                 disabled={saving}
               >
                 <LinearGradient
-                  colors={['#6366F1', '#4338CA']}
+                  colors={['#134E4A', '#4338CA']}
                   style={styles.saveBtnGradient}
                 >
                   {saving ? (
@@ -329,7 +329,7 @@ const ManageCategoriesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: 'row',
@@ -338,24 +338,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1EFEA',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B", letterSpacing: -0.5 },
   addHeaderBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -379,8 +379,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 11,
-    fontWeight: '900',
-    color: '#6B7280',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     letterSpacing: 1.5,
   },
 
@@ -393,30 +393,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
   categoryDot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
   categoryIcon: { fontSize: 16, marginRight: 6 },
-  categoryName: { fontSize: 13, color: '#111827', fontWeight: '800', maxWidth: 120 },
+  categoryName: { fontSize: 13, color: '#18181B', fontFamily: 'Manrope_700Bold', maxWidth: 120 },
 
   emptyCustom: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyIconCircle: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
-  emptyCustomText: { fontSize: 14, color: '#6B7280', fontWeight: '500', marginBottom: 12 },
+  emptyCustomText: { fontSize: 14, color: '#71717A', fontFamily: 'Manrope_500Medium', marginBottom: 12 },
   emptyAddBtn: {
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E6F2F0',
   },
-  emptyAddText: { color: '#6366F1', fontWeight: '800', fontSize: 13 },
+  emptyAddText: { color: '#134E4A', fontFamily: 'Manrope_700Bold', fontSize: 13 },
 
   customCategoryCard: {
     flexDirection: 'row',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -440,8 +440,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   customCategoryIcon: { fontSize: 24 },
-  customCategoryName: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  customCategorySub: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
+  customCategoryName: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  customCategorySub: { fontSize: 11, color: '#71717A', fontFamily: 'Manrope_600SemiBold' },
   trashBtn: {
     padding: 8,
     backgroundColor: '#FEF2F2',
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   modalDragHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#E5E2DC',
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 8,
@@ -478,12 +478,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  modalTitle: { fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', letterSpacing: -0.5 },
   modalCloseBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -505,27 +505,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   previewIcon: { fontSize: 36 },
-  previewName: { fontSize: 18, fontWeight: '900', color: '#111827' },
+  previewName: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#18181B' },
 
   inputGroup: { marginBottom: 24 },
   modalLabel: {
     fontSize: 10,
-    fontWeight: '900',
-    color: '#9CA3AF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     letterSpacing: 1,
     marginBottom: 8,
     paddingLeft: 4,
   },
   modalInput: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     paddingHorizontal: 16,
     height: 56,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
 
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 2 },
@@ -535,13 +535,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     borderWidth: 1,
     borderColor: 'transparent',
   },
   activeEmojiChip: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    backgroundColor: '#E6F2F0',
+    borderColor: '#134E4A',
   },
   emojiText: { fontSize: 24 },
 
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 12,
     elevation: 4,
-    shadowColor: '#6366F1',
+    shadowColor: '#134E4A',
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
   },
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalSaveBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', letterSpacing: 0.5 },
+  modalSaveBtnText: { color: '#FFFFFF', fontSize: 17, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
 });
 
 export default ManageCategoriesScreen;

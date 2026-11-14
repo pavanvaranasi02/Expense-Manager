@@ -242,7 +242,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="close" size={24} color="#1E293B" />
+            <Ionicons name="close" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Add Family Expense</Text>
           <View style={{ width: 44 }} />
@@ -289,7 +289,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                 <Text style={styles.fieldValue}>{selectedCategory.name}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#71717A" />
           </TouchableOpacity>
 
           {/* Paid By */}
@@ -308,7 +308,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#71717A" />
           </TouchableOpacity>
 
           {/* Account Selection - Only show when logged-in user is the payer */}
@@ -326,7 +326,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                 <View
                   style={[styles.fieldIcon, { backgroundColor: "#D1FAE5" }]}
                 >
-                  <Ionicons name="wallet" size={20} color="#10B981" />
+                  <Ionicons name="wallet" size={20} color="#047857" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>Payment Account</Text>
@@ -349,7 +349,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                   )}
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={20} color="#71717A" />
             </TouchableOpacity>
           )}
 
@@ -360,7 +360,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
           >
             <View style={styles.fieldLeft}>
               <View style={[styles.fieldIcon, { backgroundColor: "#D1FAE5" }]}>
-                <Ionicons name="people" size={20} color="#10B981" />
+                <Ionicons name="people" size={20} color="#047857" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>Split Details</Text>
@@ -369,7 +369,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#71717A" />
           </TouchableOpacity>
 
           {/* Date */}
@@ -386,18 +386,18 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                 <Text style={styles.fieldValue}>{formatDate(date)}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#71717A" />
           </TouchableOpacity>
 
           {/* Note */}
           <View style={styles.noteField}>
-            <View style={[styles.fieldIcon, { backgroundColor: "#F1F5F9" }]}>
-              <Ionicons name="document-text" size={20} color="#64748B" />
+            <View style={[styles.fieldIcon, { backgroundColor: "#ECEAE4" }]}>
+              <Ionicons name="document-text" size={20} color="#71717A" />
             </View>
             <TextInput
               style={styles.noteInput}
               placeholder="Add a note (optional)"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               value={note}
               onChangeText={setNote}
               multiline
@@ -409,7 +409,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
           {selectedPayer.userId === userId && (
             <View style={styles.syncCard}>
               <View style={styles.syncLeft}>
-                <Ionicons name="sync" size={20} color="#6C63FF" />
+                <Ionicons name="sync" size={20} color="#134E4A" />
                 <View style={styles.syncText}>
                   <Text style={styles.syncTitle}>Sync to Personal</Text>
                   <Text style={styles.syncDesc}>
@@ -436,7 +436,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
             <Ionicons
               name="information-circle-outline"
               size={18}
-              color="#6C63FF"
+              color="#134E4A"
             />
             <Text style={styles.infoText}>
               {splitType === SPLIT_TYPES.PAID_FOR_ALL
@@ -472,7 +472,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Category</Text>
               <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalScroll}>
@@ -501,7 +501,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                     <Ionicons
                       name="checkmark-circle"
                       size={22}
-                      color="#6C63FF"
+                      color="#134E4A"
                     />
                   )}
                 </TouchableOpacity>
@@ -518,7 +518,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Who Paid?</Text>
               <TouchableOpacity onPress={() => setShowPayerPicker(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalScroll}>
@@ -545,7 +545,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                     <Ionicons
                       name="checkmark-circle"
                       size={22}
-                      color="#6C63FF"
+                      color="#134E4A"
                     />
                   )}
                 </TouchableOpacity>
@@ -562,13 +562,13 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Payment Account</Text>
               <TouchableOpacity onPress={() => setShowAccountPicker(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
 
             {!accountsLoaded ? (
               <View style={styles.loadingState}>
-                <ActivityIndicator size="large" color="#6C63FF" />
+                <ActivityIndicator size="large" color="#134E4A" />
                 <Text style={styles.loadingText}>Loading accounts...</Text>
               </View>
             ) : accounts.length === 0 ? (
@@ -629,8 +629,8 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                           size={20}
                           color={
                             account.type === "CREDIT_CARD"
-                              ? "#EF4444"
-                              : "#10B981"
+                              ? "#B91C1C"
+                              : "#047857"
                           }
                         />
                       </View>
@@ -647,7 +647,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
                       <Ionicons
                         name="checkmark-circle"
                         size={22}
-                        color="#6C63FF"
+                        color="#134E4A"
                       />
                     )}
                   </TouchableOpacity>
@@ -687,7 +687,7 @@ const AddFamilyExpenseScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   keyboardView: {
     flex: 1,
@@ -700,20 +700,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   scrollContent: {
     padding: 20,
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
     padding: 24,
     marginBottom: 20,
     alignItems: "center",
-    shadowColor: "#64748B",
+    shadowColor: "#71717A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -733,8 +733,8 @@ const styles = StyleSheet.create({
   },
   amountLabel: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
     marginBottom: 12,
     textTransform: "uppercase",
   },
@@ -744,14 +744,14 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     fontSize: 32,
-    fontWeight: "700",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_700Bold',
+    color: "#134E4A",
     marginRight: 8,
   },
   amountInput: {
     fontSize: 48,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     minWidth: 100,
   },
   field: {
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
   },
   fieldLeft: {
     flexDirection: "row",
@@ -780,14 +780,14 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 12,
-    color: "#94A3B8",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 2,
   },
   fieldValue: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   noteField: {
     flexDirection: "row",
@@ -797,12 +797,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
   },
   noteInput: {
     flex: 1,
     fontSize: 15,
-    color: "#1E293B",
+    color: "#18181B",
     marginLeft: 12,
     minHeight: 60,
     textAlignVertical: "top",
@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -827,23 +827,23 @@ const styles = StyleSheet.create({
   },
   syncTitle: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
     marginBottom: 2,
   },
   syncDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
   },
   toggle: {
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     padding: 2,
   },
   toggleActive: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
   },
   toggleThumb: {
     width: 26,
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: "#6C63FF",
+    color: "#134E4A",
     lineHeight: 16,
   },
   footer: {
@@ -876,17 +876,17 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#ECEAE4",
   },
   submitBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: "#6C63FF",
+    shadowColor: "#134E4A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   modalOverlay: {
@@ -919,12 +919,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   modalScroll: {
     padding: 20,
@@ -938,12 +938,12 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   categoryItemActive: {
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderWidth: 2,
-    borderColor: "#6C63FF",
+    borderColor: "#134E4A",
   },
   categoryIcon: {
     width: 40,
@@ -956,8 +956,8 @@ const styles = StyleSheet.create({
   categoryName: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   memberItem: {
     flexDirection: "row",
@@ -965,32 +965,32 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   memberItemActive: {
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderWidth: 2,
-    borderColor: "#6C63FF",
+    borderColor: "#134E4A",
   },
   memberAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
   memberInitial: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
   },
   memberName: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   // Account Picker Styles
   loadingState: {
@@ -999,7 +999,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 12,
   },
   emptyState: {
@@ -1009,27 +1009,27 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 13,
-    color: "#64748B",
+    color: "#71717A",
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 20,
   },
   closeBtn: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
   },
   closeBtnText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   accountItem: {
@@ -1039,12 +1039,12 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   accountItemActive: {
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderWidth: 2,
-    borderColor: "#6C63FF",
+    borderColor: "#134E4A",
   },
   accountLeft: {
     flexDirection: "row",
@@ -1061,12 +1061,12 @@ const styles = StyleSheet.create({
   },
   accountName: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   accountType: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
   },
 });

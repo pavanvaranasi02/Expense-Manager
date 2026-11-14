@@ -202,7 +202,7 @@ const AddTemplateScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="close" size={24} color="#1E293B" />
+            <Ionicons name="close" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Recurring Expense</Text>
           <TouchableOpacity
@@ -211,7 +211,7 @@ const AddTemplateScreen = ({ navigation }) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#6C63FF" />
+              <ActivityIndicator size="small" color="#134E4A" />
             ) : (
               <Text style={styles.saveBtnText}>Save</Text>
             )}
@@ -227,7 +227,7 @@ const AddTemplateScreen = ({ navigation }) => {
               placeholder="e.g., Monthly Rent, Netflix Subscription"
               value={name}
               onChangeText={setName}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
             />
           </View>
 
@@ -242,7 +242,7 @@ const AddTemplateScreen = ({ navigation }) => {
                 keyboardType="decimal-pad"
                 value={amount}
                 onChangeText={setAmount}
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#71717A"
               />
             </View>
           </View>
@@ -258,20 +258,20 @@ const AddTemplateScreen = ({ navigation }) => {
                 style={[
                   styles.categoryIcon,
                   {
-                    backgroundColor: selectedCategory.icon + "15" || "#F1F5F9",
+                    backgroundColor: selectedCategory.icon + "15" || "#ECEAE4",
                   },
                 ]}
               >
                 <Ionicons
                   name={selectedCategory.icon || "ellipsis-horizontal"}
                   size={20}
-                  color="#6C63FF"
+                  color="#134E4A"
                 />
               </View>
               <Text style={styles.categoryBtnText}>
                 {selectedCategory.name}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={20} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -351,7 +351,7 @@ const AddTemplateScreen = ({ navigation }) => {
               style={styles.dateBtn}
               onPress={() => setShowDatePicker(true)}
             >
-              <Ionicons name="calendar-outline" size={20} color="#6C63FF" />
+              <Ionicons name="calendar-outline" size={20} color="#134E4A" />
               <Text style={styles.dateBtnText}>
                 {startDate.toLocaleDateString("en-IN", {
                   day: "numeric",
@@ -420,7 +420,7 @@ const AddTemplateScreen = ({ navigation }) => {
               placeholder="Add a note..."
               value={note}
               onChangeText={setNote}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -436,7 +436,7 @@ const AddTemplateScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Category</Text>
               <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
-                <Ionicons name="close" size={24} color="#1E293B" />
+                <Ionicons name="close" size={24} color="#18181B" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalList}>
@@ -465,7 +465,7 @@ const AddTemplateScreen = ({ navigation }) => {
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color="#6C63FF"
+                      color="#134E4A"
                     />
                   )}
                 </TouchableOpacity>
@@ -495,7 +495,7 @@ const AddTemplateScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F7F6F2" },
   keyboardView: { flex: 1 },
   header: {
     flexDirection: "row",
@@ -505,25 +505,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
   },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B" },
+  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   saveBtn: { paddingHorizontal: 16, paddingVertical: 8 },
-  saveBtnText: { fontSize: 15, fontWeight: "700", color: "#6C63FF" },
+  saveBtnText: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#134E4A" },
   scrollContent: { padding: 20, paddingBottom: 40 },
   section: { marginBottom: 24 },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 12,
   },
   input: {
@@ -531,9 +531,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
-    color: "#1E293B",
+    color: "#18181B",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   amountInputWrapper: {
     flexDirection: "row",
@@ -542,15 +542,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   currencySymbol: {
     fontSize: 20,
-    fontWeight: "700",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_700Bold',
+    color: "#134E4A",
     marginRight: 8,
   },
-  amountInput: { flex: 1, fontSize: 20, fontWeight: "700", color: "#1E293B" },
+  amountInput: { flex: 1, fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   categoryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   categoryIcon: {
     width: 36,
@@ -571,8 +571,8 @@ const styles = StyleSheet.create({
   categoryBtnText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   payerContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   payerBtn: {
@@ -581,10 +581,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  payerBtnActive: { backgroundColor: "#6C63FF", borderColor: "#6C63FF" },
-  payerBtnText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
+  payerBtnActive: { backgroundColor: "#134E4A", borderColor: "#134E4A" },
+  payerBtnText: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
   payerBtnTextActive: { color: "#FFFFFF" },
   recurrenceRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   recurrenceBtn: {
@@ -593,11 +593,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     alignItems: "center",
   },
-  recurrenceBtnActive: { backgroundColor: "#6C63FF", borderColor: "#6C63FF" },
-  recurrenceBtnText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
+  recurrenceBtnActive: { backgroundColor: "#134E4A", borderColor: "#134E4A" },
+  recurrenceBtnText: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
   recurrenceBtnTextActive: { color: "#FFFFFF" },
   frequencyRow: {
     flexDirection: "row",
@@ -606,21 +606,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  frequencyLabel: { fontSize: 15, color: "#64748B", marginRight: 8 },
+  frequencyLabel: { fontSize: 15, color: "#71717A", marginRight: 8 },
   frequencyInput: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     width: 50,
     textAlign: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 8,
     paddingVertical: 6,
   },
-  frequencyUnit: { fontSize: 15, color: "#64748B", marginLeft: 8 },
+  frequencyUnit: { fontSize: 15, color: "#71717A", marginLeft: 8 },
   dateBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -628,10 +628,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     gap: 10,
   },
-  dateBtnText: { fontSize: 15, fontWeight: "600", color: "#1E293B" },
+  dateBtnText: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: "#18181B" },
   autoCreateRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -640,18 +640,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  autoCreateTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
-  autoCreateDesc: { fontSize: 13, color: "#94A3B8", marginTop: 4 },
+  autoCreateTitle: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#18181B" },
+  autoCreateDesc: { fontSize: 13, color: "#71717A", marginTop: 4 },
   toggle: {
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     padding: 2,
   },
-  toggleActive: { backgroundColor: "#6C63FF" },
+  toggleActive: { backgroundColor: "#134E4A" },
   toggleKnob: {
     width: 24,
     height: 24,
@@ -677,9 +677,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B" },
+  modalTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   modalList: { padding: 16 },
   modalItem: {
     flexDirection: "row",
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 4,
   },
-  modalItemActive: { backgroundColor: "#F0EFFF" },
+  modalItemActive: { backgroundColor: "#E6F2F0" },
   modalItemIcon: {
     width: 40,
     height: 40,
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  modalItemText: { flex: 1, fontSize: 15, fontWeight: "600", color: "#1E293B" },
+  modalItemText: { flex: 1, fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: "#18181B" },
 });
 
 export default AddTemplateScreen;

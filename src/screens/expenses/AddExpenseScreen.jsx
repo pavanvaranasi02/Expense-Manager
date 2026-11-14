@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,26 +15,39 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getCurrencySymbol } from '../../constants/currencies';
 import { getAccounts } from '../../services/accountService';
 import { getAllCategories } from '../../services/categoryService';
 import { addExpense, updateExpense } from '../../services/expenseService';
+import { generateStableId } from '../../services/transactionValidation';
+import useAuthStore from '../../store/useAuthStore';
 import { Theme } from '../../theme/theme';
 
 const PAYMENT_MODES = [
-  { id: 'UPI', label: 'UPI', icon: '📱' },
-  { id: 'DEBIT_CARD', label: 'Debit Card', icon: '💳' },
-  { id: 'CREDIT_CARD', label: 'Credit Card', icon: '🔴' },
-  { id: 'CASH', label: 'Cash', icon: '💵' },
-  { id: 'NET_BANKING', label: 'Net Banking', icon: '🏦' },
-  { id: 'OTHER', label: 'Other', icon: '📦' },
+  { id: 'UPI', label: 'UPI', icon: 'phone-portrait-outline' },
+  { id: 'DEBIT_CARD', label: 'Debit Card', icon: 'card-outline' },
+  { id: 'CREDIT_CARD', label: 'Credit Card', icon: 'card' },
+  { id: 'CASH', label: 'Cash', icon: 'cash-outline' },
+  { id: 'NET_BANKING', label: 'Net Banking', icon: 'business-outline' },
+  { id: 'OTHER', label: 'Other', icon: 'ellipsis-horizontal-circle-outline' },
 ];
 
+const renderCategoryGlyph = (icon, isSelected) => {
+  const color = isSelected ? '#FFFFFF' : Theme.colors.textSecondary;
+  if (icon && icon.length > 2 && !/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(icon)) {
+    return <Ionicons name={icon} size={16} color={color} />;
+  }
+  return <Ionicons name="pricetag-outline" size={16} color={color} />;
+};
+
 const AddExpenseScreen = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
+  const userProfile = useAuthStore((s) => s.userProfile);
+  const cs = userProfile?.currencySymbol || getCurrencySymbol(userProfile?.currency, '₹');
+
   const editData = route?.params?.expense;
   const isEdit = !!editData;
 
@@ -64,34 +76,46 @@ const AddExpenseScreen = ({ navigation, route }) => {
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  const submittingRef = useRef(false);
+  const idempotencyKeyRef = useRef(generateStableId('exp_req'));
+
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    const loadData = async () => {
+      const [catResult, accResult] = await Promise.all([
+        getAllCategories(),
+        getAccounts(),
+      ]);
+      if (!active) return;
+      if (catResult.success) setCategories(catResult.categories || []);
+      if (accResult.success) {
+        const list = accResult.accounts || [];
+        setAccounts(list);
+        if (list.length > 0) {
+          setSelectedAccount((prev) => {
+            if (prev) return prev;
+            const defaultAcc = list.find((a) => a.isDefault) || list[0];
+            if (defaultAcc.type === 'CREDIT_CARD') setPaymentMode('CREDIT_CARD');
+            else if (defaultAcc.type === 'CASH') setPaymentMode('CASH');
+            return defaultAcc;
+          });
+        }
+      }
+    };
     loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const loadData = async () => {
-    const [catResult, accResult] = await Promise.all([
-      getAllCategories(),
-      getAccounts(),
-    ]);
-    if (catResult.success) setCategories(catResult.categories);
-    if (accResult.success) {
-      setAccounts(accResult.accounts);
-      if (!selectedAccount && accResult.accounts.length > 0) {
-        const defaultAcc =
-          accResult.accounts.find((a) => a.isDefault) || accResult.accounts[0];
-        setSelectedAccount(defaultAcc);
-        if (defaultAcc.type === 'CREDIT_CARD') setPaymentMode('CREDIT_CARD');
-        else if (defaultAcc.type === 'CASH') setPaymentMode('CASH');
-      }
-    }
-  };
-
   const handleAccountSelect = (account) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setSelectedAccount(account);
     if (account.type === 'CREDIT_CARD') setPaymentMode('CREDIT_CARD');
     else if (account.type === 'CASH') setPaymentMode('CASH');
@@ -118,90 +142,104 @@ const AddExpenseScreen = ({ navigation, route }) => {
     if (selectedDate) setDate(selectedDate);
   };
 
+  // Top 6 quick-pick categories + ensure selected category is visible if outside top 6
+  const quickCategories = useMemo(() => {
+    const top = categories.slice(0, 6);
+    if (selectedCategory && !top.some((c) => c.id === selectedCategory.id)) {
+      return [selectedCategory, ...top.slice(0, 5)];
+    }
+    return top;
+  }, [categories, selectedCategory]);
+
+  const filteredCategories = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    if (!q) return categories;
+    return categories.filter((c) => (c.name || '').toLowerCase().includes(q));
+  }, [categories, categorySearch]);
+
   const validate = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Required', 'Please enter a valid amount');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setValidationError('Enter an amount greater than 0.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       return false;
     }
     if (!selectedCategory) {
-      Alert.alert('Required', 'Please select a category');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setValidationError('Select a category for this expense.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       return false;
     }
+    setValidationError('');
     return true;
   };
 
   const handleSave = async () => {
+    if (submittingRef.current || loading) return;
     if (!validate()) return;
+    submittingRef.current = true;
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const expenseData = {
-      amount: parseFloat(amount),
-      categoryId: selectedCategory.id,
-      categoryName: selectedCategory.name,
-      categoryIcon: selectedCategory.icon,
-      accountId: selectedAccount?.id || null,
-      accountName: selectedAccount?.name || 'Unknown',
-      accountType: selectedAccount?.type || null,
-      paymentMode,
-      note: note.trim(),
-      date: date.toISOString(),
-    };
+    try {
+      const expenseData = {
+        amount: parseFloat(amount),
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        categoryIcon: selectedCategory.icon,
+        accountId: selectedAccount?.id || null,
+        accountName: selectedAccount?.name || 'Unknown',
+        accountType: selectedAccount?.type || null,
+        paymentMode,
+        note: note.trim(),
+        date: date.toISOString(),
+        idempotencyKey: isEdit ? undefined : idempotencyKeyRef.current,
+      };
 
-    let result;
-    if (isEdit) {
-      result = await updateExpense(editData.id, expenseData, editData);
-    } else {
-      result = await addExpense(expenseData);
+      const result = isEdit
+        ? await updateExpense(editData.id, expenseData, editData)
+        : await addExpense(expenseData);
+
+      if (result.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        navigation.goBack();
+      } else {
+        Alert.alert('Unable to Save', result.error || 'Please try again.');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      }
+    } finally {
+      submittingRef.current = false;
+      setLoading(false);
     }
-
-    if (result.success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      navigation.goBack();
-    } else {
-      Alert.alert('Error', result.error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
-    setLoading(false);
   };
-
-  const currentMode = PAYMENT_MODES.find(m => m.id === paymentMode) || PAYMENT_MODES[0];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+      {/* Clean Top Bar */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
             navigation.goBack();
           }}
           style={styles.closeBtn}
+          accessibilityLabel="Close add expense"
         >
-          <Ionicons name="close" size={24} color={Theme.colors.text} />
+          <Ionicons name="close" size={20} color={Theme.colors.text} />
         </TouchableOpacity>
+
         <Text style={styles.headerTitle}>
-          {isEdit ? 'Edit Transaction' : 'Add Expense'}
+          {isEdit ? 'Edit Expense' : 'New Expense'}
         </Text>
+
         <TouchableOpacity
-          style={[styles.saveBtnWrapper, loading && { opacity: 0.6 }]}
-          onPress={handleSave}
-          disabled={loading}
+          style={styles.datePill}
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowDatePicker(true);
+          }}
+          accessibilityLabel="Change expense date"
         >
-          <LinearGradient
-            colors={[Theme.colors.primary, Theme.colors.secondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveBtn}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.saveBtnText}>{isEdit ? 'Update' : 'Save'}</Text>
-            )}
-          </LinearGradient>
+          <Ionicons name="calendar-outline" size={14} color={Theme.colors.textSecondary} />
+          <Text style={styles.datePillText}>{getFormattedDate()}</Text>
         </TouchableOpacity>
       </View>
 
@@ -209,269 +247,380 @@ const AddExpenseScreen = ({ navigation, route }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Amount Section */}
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.amountSection}>
-              <Text style={styles.amountLabel}>You spent</Text>
-              <View style={styles.amountRow}>
-                <Text style={styles.rupee}>₹</Text>
-                <TextInput
-                  style={styles.amountInput}
-                  placeholder="0"
-                  placeholderTextColor={Theme.colors.textLight}
-                  value={amount}
-                  onChangeText={(v) => {
-                    setAmount(v.replace(/[^0-9.]/g, ''));
-                  }}
-                  keyboardType="numeric"
-                  autoFocus={!isEdit}
-                />
-              </View>
-            </Animated.View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero Amount Entry */}
+          <View style={styles.amountSection}>
+            <Text style={styles.amountLabel}>AMOUNT</Text>
+            <View style={styles.amountInputRow}>
+              <Text style={styles.currencyPrefix}>{cs}</Text>
+              <TextInput
+                style={styles.amountInput}
+                value={amount}
+                onChangeText={(val) => {
+                  setAmount(val.replace(/[^0-9.]/g, ''));
+                  if (validationError) setValidationError('');
+                }}
+                placeholder="0"
+                placeholderTextColor={Theme.colors.textLight}
+                keyboardType="decimal-pad"
+                autoFocus={!isEdit}
+                returnKeyType="done"
+                accessibilityLabel="Expense amount"
+              />
+            </View>
 
-            {/* Form Fields */}
-            <Animated.View entering={FadeInUp.delay(300)}>
-              {/* Category selector */}
-              <Text style={styles.fieldLabel}>Category</Text>
+            <View style={styles.quickAmtRow}>
+              {[100, 500, 1000].map((inc) => (
+                <TouchableOpacity
+                  key={inc}
+                  style={styles.quickAmtPill}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    const curr = parseFloat(amount) || 0;
+                    setAmount(String(curr + inc));
+                    if (validationError) setValidationError('');
+                  }}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.quickAmtText}>+{cs}{inc}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Add a note (merchant, item, or context)..."
+              placeholderTextColor={Theme.colors.textLight}
+              maxLength={120}
+              returnKeyType="done"
+              accessibilityLabel="Expense note"
+            />
+
+            {validationError ? (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={15} color={Theme.colors.error} />
+                <Text style={styles.errorText}>{validationError}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.formSheet}>
+          {/* Category Shortcuts + Searchable Complete Selector */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.fieldHeader}>
+              <Text style={styles.fieldLabel}>CATEGORY</Text>
               <TouchableOpacity
-                style={styles.selector}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Keyboard.dismiss();
+                  setCategorySearch('');
                   setShowCategoryModal(true);
                 }}
               >
-                {selectedCategory ? (
-                  <View style={styles.selectorMain}>
-                    <View style={styles.selectorIconContainer}>
-                      <Text style={styles.selectorEmoji}>{selectedCategory.icon}</Text>
-                    </View>
-                    <Text style={styles.selectorText}>{selectedCategory.name}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.selectorPlaceholder}>Choose a category...</Text>
-                )}
-                <Ionicons name="chevron-forward" size={20} color={Theme.colors.textLight} />
+                <Text style={styles.fieldAction}>All ({categories.length})</Text>
               </TouchableOpacity>
+            </View>
 
-              {/* Account selector */}
-              <Text style={styles.fieldLabel}>Paid From</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipsScroll}
+            >
+              {quickCategories.map((cat) => {
+                const isSelected = selectedCategory?.id === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[styles.chip, isSelected && styles.chipActive]}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setSelectedCategory(cat);
+                      if (validationError) setValidationError('');
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    {renderCategoryGlyph(cat.icon, isSelected)}
+                    <Text
+                      style={[styles.chipText, isSelected && styles.chipTextActive]}
+                      numberOfLines={1}
+                    >
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
               <TouchableOpacity
-                style={styles.selector}
+                style={styles.moreChip}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setShowAccountModal(true);
+                  Keyboard.dismiss();
+                  setCategorySearch('');
+                  setShowCategoryModal(true);
                 }}
+                activeOpacity={0.75}
               >
-                {selectedAccount ? (
-                  <View style={styles.selectorMain}>
-                    <View style={[styles.selectorIconContainer, { backgroundColor: Theme.colors.primaryBackground }]}>
-                      <Ionicons 
-                        name={selectedAccount.type === 'CREDIT_CARD' ? "card" : "wallet"} 
-                        size={18} 
-                        color={Theme.colors.primary} 
-                      />
-                    </View>
-                    <View>
-                      <Text style={styles.selectorText}>{selectedAccount.name}</Text>
-                      <Text style={styles.selectorSub}>
-                        {selectedAccount.type === 'CREDIT_CARD' ? 'Credit Card' : 'Direct Account'}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <Text style={styles.selectorPlaceholder}>Select an account...</Text>
-                )}
-                <Ionicons name="chevron-forward" size={20} color={Theme.colors.textLight} />
+                <Ionicons name="search-outline" size={15} color={Theme.colors.primary} />
+                <Text style={styles.moreChipText}>Browse All</Text>
               </TouchableOpacity>
+            </ScrollView>
+          </View>
 
-              {/* Payment Mode */}
-              <Text style={styles.fieldLabel}>Payment Mode</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
-                style={styles.modeScroll}
-                contentContainerStyle={styles.modeScrollContent}
-              >
-                {PAYMENT_MODES.map((mode) => (
+          {/* Account Selection */}
+          <View style={[styles.fieldGroup, styles.fieldGroupDivider]}>
+            <View style={styles.fieldHeader}>
+              <Text style={styles.fieldLabel}>PAID FROM ACCOUNT</Text>
+              {accounts.length > 1 ? (
+                <TouchableOpacity onPress={() => setShowAccountModal(true)}>
+                  <Text style={styles.fieldAction}>Switch</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              style={styles.selectorRow}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowAccountModal(true);
+              }}
+              activeOpacity={0.75}
+            >
+              <View style={styles.selectorIcon}>
+                <Ionicons
+                  name={
+                    selectedAccount?.type === 'CREDIT_CARD'
+                      ? 'card-outline'
+                      : selectedAccount?.type === 'CASH'
+                      ? 'cash-outline'
+                      : 'business-outline'
+                  }
+                  size={18}
+                  color={Theme.colors.textSecondary}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.selectorTitle}>
+                  {selectedAccount?.name || 'Select an account'}
+                </Text>
+                <Text style={styles.selectorSub}>
+                  {selectedAccount
+                    ? selectedAccount.type === 'CREDIT_CARD'
+                      ? `Credit Card • ${cs}${(selectedAccount.currentUsage || 0).toLocaleString('en-IN')} used`
+                      : `${selectedAccount.type === 'CASH' ? 'Cash' : 'Bank'} • ${cs}${(selectedAccount.balance || 0).toLocaleString('en-IN')} available`
+                    : 'Tap to choose bank, cash or card'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-down" size={18} color={Theme.colors.textLight} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Payment Method */}
+          <View style={[styles.fieldGroup, styles.fieldGroupDivider, { marginBottom: 0 }]}>
+            <View style={styles.fieldHeader}>
+              <Text style={styles.fieldLabel}>PAYMENT METHOD</Text>
+            </View>
+            <View style={styles.modeGrid}>
+              {PAYMENT_MODES.map((mode) => {
+                const active = paymentMode === mode.id;
+                return (
                   <TouchableOpacity
                     key={mode.id}
-                    style={[
-                      styles.modeChip,
-                      paymentMode === mode.id && styles.modeChipActive,
-                    ]}
+                    style={[styles.modeChip, active && styles.modeChipActive]}
                     onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      Haptics.selectionAsync().catch(() => {});
                       setPaymentMode(mode.id);
                     }}
+                    activeOpacity={0.75}
                   >
-                    <Text style={styles.modeEmoji}>{mode.icon}</Text>
-                    <Text style={[styles.modeLabel, paymentMode === mode.id && styles.modeLabelActive]}>
+                    <Ionicons
+                      name={mode.icon}
+                      size={15}
+                      color={active ? '#FFFFFF' : Theme.colors.textSecondary}
+                    />
+                    <Text style={[styles.modeText, active && styles.modeTextActive]}>
                       {mode.label}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                );
+              })}
+            </View>
+          </View>
+          </View>
+        </ScrollView>
 
-              {/* Date */}
-              <Text style={styles.fieldLabel}>Date</Text>
-              <View style={styles.dateLayout}>
-                <TouchableOpacity
-                  style={[styles.dateChip, getFormattedDate() === 'Today' && styles.dateChipActive]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setDate(new Date());
-                  }}
-                >
-                  <Text style={[styles.dateChipText, getFormattedDate() === 'Today' && styles.dateChipTextActive]}>Today</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.dateChip, getFormattedDate() === 'Yesterday' && styles.dateChipActive]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    const d = new Date();
-                    d.setDate(d.getDate() - 1);
-                    setDate(d);
-                  }}
-                >
-                  <Text style={[styles.dateChipText, getFormattedDate() === 'Yesterday' && styles.dateChipTextActive]}>Yesterday</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.customDateBtn, (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && styles.dateChipActive]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setShowDatePicker(true);
-                  }}
-                >
-                  <Ionicons 
-                    name="calendar" 
-                    size={16} 
-                    color={(getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') ? '#FFF' : Theme.colors.primary} 
-                  />
-                  <Text style={[styles.customDateText, (getFormattedDate() !== 'Today' && getFormattedDate() !== 'Yesterday') && { color: '#FFF' }]}>
-                    {getFormattedDate()}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Description */}
-              <Text style={styles.fieldLabel}>Note (Optional)</Text>
-              <TextInput
-                style={styles.noteBox}
-                placeholder="What was this for? (e.g. Starbucks Coffee)"
-                placeholderTextColor={Theme.colors.textLight}
-                value={note}
-                onChangeText={setNote}
-                multiline
-              />
-            </Animated.View>
-
-            {/* Bottom cushioning */}
-            <View style={{ height: 100 }} />
-          </ScrollView>
-        </TouchableWithoutFeedback>
+        {/* Anchored Bottom Save Bar */}
+        <View
+          style={[
+            styles.bottomBar,
+            { paddingBottom: Math.max(insets.bottom, 12) + 4 },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.primaryCta, loading && { opacity: 0.65 }]}
+            onPress={handleSave}
+            disabled={loading}
+            activeOpacity={0.85}
+            accessibilityLabel={isEdit ? 'Update expense' : 'Save expense'}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.primaryCtaText}>
+                {isEdit
+                  ? 'Update Expense'
+                  : parseFloat(amount) > 0
+                  ? `Save ${cs}${parseFloat(amount).toLocaleString('en-IN')}`
+                  : 'Save Expense'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
 
-      {/* Modals & Pickers */}
       {showDatePicker && (
         <DateTimePicker
           value={date}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onDateChange}
           maximumDate={new Date()}
+          onChange={onDateChange}
         />
       )}
 
-      {/* Category Modal */}
-      <Modal visible={showCategoryModal} animationType="slide" transparent>
+      {/* Searchable Complete Category Selector Modal */}
+      <Modal
+        visible={showCategoryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choose Category</Text>
-              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
-                <Ionicons name="close-circle" size={28} color={Theme.colors.textLight} />
+              <Text style={styles.modalTitle}>Select Category</Text>
+              <TouchableOpacity
+                onPress={() => setShowCategoryModal(false)}
+                style={styles.modalClose}
+                hitSlop={8}
+              >
+                <Ionicons name="close" size={20} color={Theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={categories}
-              numColumns={3}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.catGrid}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.catItem,
-                    selectedCategory?.id === item.id && styles.catItemActive,
-                  ]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    setSelectedCategory(item);
-                    setShowCategoryModal(false);
-                  }}
-                >
-                  <View style={styles.catIconBox}>
-                    <Text style={styles.catEmoji}>{item.icon}</Text>
-                  </View>
-                  <Text style={styles.catName} numberOfLines={1}>{item.name}</Text>
+
+            <View style={styles.modalSearchWrap}>
+              <Ionicons name="search-outline" size={17} color={Theme.colors.textLight} />
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Search default or custom categories..."
+                placeholderTextColor={Theme.colors.textLight}
+                value={categorySearch}
+                onChangeText={setCategorySearch}
+                autoFocus
+              />
+              {categorySearch.length > 0 ? (
+                <TouchableOpacity onPress={() => setCategorySearch('')} hitSlop={8}>
+                  <Ionicons name="close-circle" size={17} color={Theme.colors.textLight} />
                 </TouchableOpacity>
-              )}
+              ) : null}
+            </View>
+
+            <FlatList
+              data={filteredCategories}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                <Text style={styles.emptyModalText}>No matching categories</Text>
+              }
+              renderItem={({ item }) => {
+                const isSelected = selectedCategory?.id === item.id;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalRow, isSelected && styles.modalRowActive]}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setSelectedCategory(item);
+                      if (validationError) setValidationError('');
+                      setShowCategoryModal(false);
+                    }}
+                  >
+                    <View style={styles.modalRowIcon}>
+                      {renderCategoryGlyph(item.icon, false)}
+                    </View>
+                    <Text style={styles.modalRowText}>{item.name}</Text>
+                    {isSelected ? (
+                      <Ionicons name="checkmark" size={18} color={Theme.colors.primary} />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>
       </Modal>
 
-      {/* Account Modal */}
-      <Modal visible={showAccountModal} animationType="slide" transparent>
+      {/* Account Selector Modal */}
+      <Modal
+        visible={showAccountModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAccountModal(false)}
+      >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Source Account</Text>
-              <TouchableOpacity onPress={() => setShowAccountModal(false)}>
-                <Ionicons name="close-circle" size={28} color={Theme.colors.textLight} />
+              <Text style={styles.modalTitle}>Select Account</Text>
+              <TouchableOpacity
+                onPress={() => setShowAccountModal(false)}
+                style={styles.modalClose}
+                hitSlop={8}
+              >
+                <Ionicons name="close" size={20} color={Theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.accList} showsVerticalScrollIndicator={false}>
-              {accounts.map((acc) => (
-                <TouchableOpacity
-                  key={acc.id}
-                  style={[
-                    styles.accItem,
-                    selectedAccount?.id === acc.id && styles.accItemActive,
-                  ]}
-                  onPress={() => handleAccountSelect(acc)}
-                >
-                  <View style={[styles.accIcon, { backgroundColor: acc.type === 'CREDIT_CARD' ? Theme.colors.errorBackground : Theme.colors.successBackground }]}>
-                    <Ionicons 
-                      name={acc.type === 'CREDIT_CARD' ? "card" : "wallet"} 
-                      size={20} 
-                      color={acc.type === 'CREDIT_CARD' ? Theme.colors.error : Theme.colors.success} 
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.accTitle}>{acc.name}</Text>
-                    <Text style={styles.accLabel}>
-                      {acc.type === 'CREDIT_CARD' ? 'Credit Line' : 'Savings/Cash'}
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.accVal}>
-                      ₹{(acc.type === 'CREDIT_CARD' ? (acc.creditLimit - acc.currentUsage) : acc.balance).toLocaleString('en-IN')}
-                    </Text>
-                    <Text style={styles.accDesc}>Available</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+
+            <FlatList
+              data={accounts}
+              keyExtractor={(item) => item.id}
+              ListEmptyComponent={
+                <Text style={styles.emptyModalText}>No accounts available</Text>
+              }
+              renderItem={({ item }) => {
+                const isSelected = selectedAccount?.id === item.id;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalRow, isSelected && styles.modalRowActive]}
+                    onPress={() => handleAccountSelect(item)}
+                  >
+                    <View style={styles.modalRowIcon}>
+                      <Ionicons
+                        name={
+                          item.type === 'CREDIT_CARD'
+                            ? 'card-outline'
+                            : item.type === 'CASH'
+                            ? 'cash-outline'
+                            : 'business-outline'
+                        }
+                        size={18}
+                        color={Theme.colors.textSecondary}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.modalRowText}>{item.name}</Text>
+                      <Text style={styles.modalRowSub}>
+                        {(item.type || 'ACCOUNT').replace('_', ' ')}
+                      </Text>
+                    </View>
+                    {isSelected ? (
+                      <Ionicons name="checkmark" size={18} color={Theme.colors.primary} />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              }}
+            />
           </View>
         </View>
       </Modal>
@@ -480,194 +629,372 @@ const AddExpenseScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: Theme.colors.background,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
   },
   closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    ...Theme.shadows.soft,
   },
-  headerTitle: { fontSize: 18, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
-  saveBtnWrapper: { borderRadius: 12, overflow: 'hidden', ...Theme.shadows.elevated },
-  saveBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  saveBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: Theme.typography.weight.bold },
-  
-  content: { paddingHorizontal: 20 },
-
-  // Amount
-  amountSection: { alignItems: 'center', paddingVertical: 40 },
-  amountLabel: { fontSize: 13, color: Theme.colors.textLight, fontWeight: Theme.typography.weight.bold, textTransform: 'uppercase', marginBottom: 12 },
-  amountRow: { flexDirection: 'row', alignItems: 'center' },
-  rupee: { fontSize: 42, color: Theme.colors.text, fontWeight: Theme.typography.weight.normal, marginRight: 10 },
-  amountInput: {
-    fontSize: 64,
-    fontWeight: Theme.typography.weight.extrabold,
+  headerTitle: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: Theme.typography.size.base,
     color: Theme.colors.text,
-    minWidth: 100,
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  datePillText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.textSecondary,
+  },
+  scrollContent: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingBottom: 20,
+  },
+  amountSection: {
+    paddingTop: 14,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  amountLabel: {
+    ...Theme.typography.presets.sectionEyebrow,
+    color: Theme.colors.textMuted,
+    marginBottom: 4,
+  },
+  amountInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  currencyPrefix: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: 28,
+    color: Theme.colors.textMuted,
+    marginRight: 4,
+  },
+  amountInput: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 42,
+    color: Theme.colors.text,
+    minWidth: 80,
+    textAlign: 'center',
+    paddingVertical: 0,
+    ...Theme.typography.tabularNums,
+  },
+  noteInput: {
+    width: '100%',
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.text,
     textAlign: 'center',
   },
-
-  // Form
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: Theme.typography.weight.extrabold,
-    color: Theme.colors.textLight,
-    textTransform: 'uppercase',
-    marginTop: 20,
-    marginBottom: 10,
-    letterSpacing: 1,
+  quickAmtRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
   },
-  selector: {
+  quickAmtPill: {
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    paddingHorizontal: 11,
+    paddingVertical: 4,
+    borderRadius: Theme.radius.full,
+  },
+  quickAmtText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: 11,
+    color: Theme.colors.textSecondary,
+    ...Theme.typography.tabularNums,
+  },
+  formSheet: {
+    backgroundColor: 'transparent',
+  },
+  fieldGroupDivider: {
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.borderSubtle,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    backgroundColor: Theme.colors.errorLight,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: Theme.radius.sm,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.error,
+  },
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  fieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  fieldLabel: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+    letterSpacing: 0.8,
+  },
+  fieldAction: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.primary,
+  },
+  chipsScroll: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  chipActive: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  chipText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.text,
+  },
+  chipTextActive: {
+    color: '#FFFFFF',
+  },
+  moreChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Theme.colors.primaryLight,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  moreChipText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.primary,
+  },
+  selectorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Theme.colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    ...Theme.shadows.soft,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 10,
   },
-  selectorMain: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  selectorIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Theme.colors.background,
-    justifyContent: 'center',
+  selectorIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: Theme.radius.md,
+    backgroundColor: Theme.colors.surfaceSubtle,
     alignItems: 'center',
-    marginRight: 15,
+    justifyContent: 'center',
   },
-  selectorEmoji: { fontSize: 20 },
-  selectorText: { fontSize: 16, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
-  selectorSub: { fontSize: 12, color: Theme.colors.textLight, marginTop: 2 },
-  selectorPlaceholder: { fontSize: 16, color: Theme.colors.textLight, flex: 1 },
-
-  // Payment Modes
-  modeScroll: { 
-    marginHorizontal: -20, 
-    paddingVertical: 12, // Ensure shadows aren't clipped
+  selectorTitle: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.text,
   },
-  modeScrollContent: {
-    paddingHorizontal: 20,
-    paddingRight: 40, // Extra cushioning for the last item
+  selectorSub: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+    marginTop: 1,
+  },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
   },
   modeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    gap: 5,
     backgroundColor: Theme.colors.surface,
-    marginRight: 10,
-    ...Theme.shadows.soft,
-  },
-  modeChipActive: { backgroundColor: Theme.colors.primary },
-  modeEmoji: { fontSize: 16, marginRight: 10 },
-  modeLabel: { fontSize: 14, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
-  modeLabelActive: { color: '#FFF' },
-
-  // Date
-  dateLayout: { flexDirection: 'row', gap: 10 },
-  dateChip: {
-    flex: 1,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Theme.shadows.soft,
-  },
-  dateChipActive: { backgroundColor: Theme.colors.primary },
-  dateChipText: { fontSize: 14, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
-  dateChipTextActive: { color: '#FFF' },
-  customDateBtn: {
-    flex: 1.5,
-    height: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    backgroundColor: Theme.colors.primaryBackground,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.md,
     paddingHorizontal: 10,
+    paddingVertical: 7,
   },
-  customDateText: { fontSize: 13, fontWeight: Theme.typography.weight.bold, color: Theme.colors.primary, marginLeft: 8 },
-
-  // Note
-  noteBox: {
+  modeChipActive: {
+    backgroundColor: Theme.colors.inkSurface,
+    borderColor: Theme.colors.inkSurface,
+  },
+  modeText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.xs,
+    color: Theme.colors.textSecondary,
+  },
+  modeTextActive: {
+    color: '#FFFFFF',
+  },
+  bottomBar: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingTop: 10,
     backgroundColor: Theme.colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 15,
-    color: Theme.colors.text,
-    minHeight: 100,
-    textAlignVertical: 'top',
-    ...Theme.shadows.soft,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border,
   },
-
-  // Modals
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: Theme.colors.background,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    padding: 24,
-    maxHeight: '85%',
-  },
-  modalHandle: {
-    width: 40,
-    height: 5,
-    backgroundColor: Theme.colors.border,
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
-  
-  catGrid: { paddingBottom: 40 },
-  catItem: {
-    flex: 1,
+  primaryCta: {
+    backgroundColor: Theme.colors.primary,
+    borderRadius: Theme.radius.md,
+    height: 48,
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: Theme.colors.surface,
-    borderRadius: 20,
-    margin: 6,
-    ...Theme.shadows.soft,
+    justifyContent: 'center',
   },
-  catItemActive: { backgroundColor: Theme.colors.primaryBackground, borderColor: Theme.colors.primary, borderWidth: 1 },
-  catIconBox: { width: 50, height: 50, borderRadius: 15, backgroundColor: Theme.colors.background, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  catEmoji: { fontSize: 28 },
-  catName: { fontSize: 12, fontWeight: Theme.typography.weight.bold, color: Theme.colors.textMuted },
-
-  accList: { paddingBottom: 30 },
-  accItem: {
+  primaryCtaText: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: '#FFFFFF',
+    fontSize: Theme.typography.size.sm,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(24, 24, 27, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: Theme.colors.surface,
+    borderTopLeftRadius: Theme.radius.xxl,
+    borderTopRightRadius: Theme.radius.xxl,
+    paddingHorizontal: Theme.spacing.md,
+    paddingTop: 16,
+    paddingBottom: 28,
+    maxHeight: '78%',
+  },
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: Theme.colors.surface,
-    borderRadius: 20,
+    justifyContent: 'space-between',
     marginBottom: 12,
-    ...Theme.shadows.soft,
   },
-  accItemActive: { borderColor: Theme.colors.primary, borderWidth: 1.5 },
-  accIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-  accTitle: { fontSize: 16, fontWeight: Theme.typography.weight.bold, color: Theme.colors.text },
-  accLabel: { fontSize: 12, color: Theme.colors.textLight, marginTop: 2 },
-  accVal: { fontSize: 15, fontWeight: Theme.typography.weight.extrabold, color: Theme.colors.text },
-  accDesc: { fontSize: 10, color: Theme.colors.textLight, textAlign: 'right' },
+  modalTitle: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: Theme.typography.size.lg,
+    color: Theme.colors.text,
+  },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSearchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.background,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+    marginBottom: 10,
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.text,
+    paddingVertical: 0,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.borderSubtle,
+    gap: 10,
+  },
+  modalRowActive: {
+    backgroundColor: Theme.colors.primaryLight,
+    borderRadius: Theme.radius.md,
+  },
+  modalRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: Theme.radius.md,
+    backgroundColor: Theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalRowText: {
+    flex: 1,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: Theme.typography.size.sm,
+    color: Theme.colors.text,
+  },
+  modalRowSub: {
+    fontSize: 11,
+    color: Theme.colors.textMuted,
+    textTransform: 'capitalize',
+    marginTop: 1,
+  },
+  emptyModalText: {
+    textAlign: 'center',
+    color: Theme.colors.textMuted,
+    paddingVertical: 24,
+    fontSize: Theme.typography.size.sm,
+  },
 });
 
 export default AddExpenseScreen;

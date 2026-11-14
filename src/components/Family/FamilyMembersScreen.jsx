@@ -178,7 +178,7 @@ const FamilyMembersScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Family Members</Text>
         {canManageMembers() && (
@@ -186,7 +186,7 @@ const FamilyMembersScreen = ({ navigation }) => {
             style={styles.addBtn}
             onPress={() => navigation.navigate('FamilyInvite')}
           >
-            <Ionicons name="person-add" size={22} color="#6C63FF" />
+            <Ionicons name="person-add" size={22} color="#134E4A" />
           </TouchableOpacity>
         )}
         {!canManageMembers() && <View style={{ width: 44 }} />}
@@ -196,12 +196,12 @@ const FamilyMembersScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6C63FF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#134E4A']} />
         }
       >
         {/* Member Count */}
         <View style={styles.countCard}>
-          <Ionicons name="people" size={24} color="#6C63FF" />
+          <Ionicons name="people" size={24} color="#134E4A" />
           <Text style={styles.countText}>
             {members.length} of 6 members
           </Text>
@@ -218,7 +218,7 @@ const FamilyMembersScreen = ({ navigation }) => {
             <View key={member.userId} style={styles.memberItemWrapper}>
               {actionLoading === member.userId ? (
                 <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="small" color="#6C63FF" />
+                  <ActivityIndicator size="small" color="#134E4A" />
                 </View>
               ) : null}
               <FamilyMemberItem
@@ -238,8 +238,8 @@ const FamilyMembersScreen = ({ navigation }) => {
         <View style={styles.legend}>
           <Text style={styles.legendTitle}>Role Legend</Text>
           <View style={styles.legendRow}>
-            <View style={[styles.legendBadge, { backgroundColor: '#F0EFFF' }]}>
-              <Ionicons name="star" size={12} color="#6C63FF" />
+            <View style={[styles.legendBadge, { backgroundColor: '#E6F2F0' }]}>
+              <Ionicons name="star" size={12} color="#134E4A" />
             </View>
             <Text style={styles.legendText}>Owner — Full control over the family</Text>
           </View>
@@ -250,8 +250,8 @@ const FamilyMembersScreen = ({ navigation }) => {
             <Text style={styles.legendText}>Co-Admin — Can invite & remove members</Text>
           </View>
           <View style={styles.legendRow}>
-            <View style={[styles.legendBadge, { backgroundColor: '#F1F5F9' }]}>
-              <Ionicons name="person" size={12} color="#64748B" />
+            <View style={[styles.legendBadge, { backgroundColor: '#ECEAE4' }]}>
+              <Ionicons name="person" size={12} color="#71717A" />
             </View>
             <Text style={styles.legendText}>Member — Can view & add expenses</Text>
           </View>
@@ -264,7 +264,7 @@ const FamilyMembersScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -288,14 +288,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   addBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     gap: 12,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -320,13 +320,13 @@ const styles = StyleSheet.create({
   countText: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   slotsText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#10B981',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#047857',
   },
   membersList: {
     marginBottom: 24,
@@ -347,12 +347,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   legendTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     marginBottom: 12,
     textTransform: 'uppercase',
   },
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     flex: 1,
   },
 });

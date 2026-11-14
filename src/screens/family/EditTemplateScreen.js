@@ -177,13 +177,13 @@ const EditTemplateScreen = ({ navigation, route }) => {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="close" size={24} color="#1E293B" />
+            <Ionicons name="close" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Recurring Expense</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -198,12 +198,12 @@ const EditTemplateScreen = ({ navigation, route }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="close" size={24} color="#1E293B" />
+            <Ionicons name="close" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Recurring Expense</Text>
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
             {saving ? (
-              <ActivityIndicator size="small" color="#6C63FF" />
+              <ActivityIndicator size="small" color="#134E4A" />
             ) : (
               <Text style={styles.saveBtnText}>Save</Text>
             )}
@@ -219,7 +219,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
               placeholder="e.g., Monthly Rent, Netflix Subscription"
               value={name}
               onChangeText={setName}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
             />
           </View>
 
@@ -234,7 +234,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
                 keyboardType="decimal-pad"
                 value={amount}
                 onChangeText={setAmount}
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#71717A"
               />
             </View>
           </View>
@@ -246,11 +246,11 @@ const EditTemplateScreen = ({ navigation, route }) => {
               style={styles.categoryBtn}
               onPress={() => setShowCategoryModal(true)}
             >
-              <View style={[styles.categoryIcon, { backgroundColor: selectedCategory.icon + "15" || "#F1F5F9" }]}>
-                <Ionicons name={selectedCategory.icon || "ellipsis-horizontal"} size={20} color="#6C63FF" />
+              <View style={[styles.categoryIcon, { backgroundColor: selectedCategory.icon + "15" || "#ECEAE4" }]}>
+                <Ionicons name={selectedCategory.icon || "ellipsis-horizontal"} size={20} color="#134E4A" />
               </View>
               <Text style={styles.categoryBtnText}>{selectedCategory.name}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={20} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -327,7 +327,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
               style={styles.dateBtn}
               onPress={() => setShowDatePicker(true)}
             >
-              <Ionicons name="calendar-outline" size={20} color="#6C63FF" />
+              <Ionicons name="calendar-outline" size={20} color="#134E4A" />
               <Text style={styles.dateBtnText}>
                 {startDate.toLocaleDateString("en-IN", {
                   day: "numeric",
@@ -364,7 +364,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
               placeholder="Add a note..."
               value={note}
               onChangeText={setNote}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -380,7 +380,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Category</Text>
               <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
-                <Ionicons name="close" size={24} color="#1E293B" />
+                <Ionicons name="close" size={24} color="#18181B" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalList}>
@@ -401,7 +401,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
                   </View>
                   <Text style={styles.modalItemText}>{cat.name}</Text>
                   {selectedCategory.id === cat.id && (
-                    <Ionicons name="checkmark-circle" size={20} color="#6C63FF" />
+                    <Ionicons name="checkmark-circle" size={20} color="#134E4A" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -430,7 +430,7 @@ const EditTemplateScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F7F6F2" },
   keyboardView: { flex: 1 },
   header: {
     flexDirection: "row",
@@ -440,24 +440,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
-  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#F8F9FE", justifyContent: "center", alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B" },
+  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#F7F6F2", justifyContent: "center", alignItems: "center" },
+  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   saveBtn: { paddingHorizontal: 16, paddingVertical: 8 },
-  saveBtnText: { fontSize: 15, fontWeight: "700", color: "#6C63FF" },
+  saveBtnText: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#134E4A" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   scrollContent: { padding: 20, paddingBottom: 40 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#18181B", marginBottom: 12 },
   input: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
-    color: "#1E293B",
+    color: "#18181B",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   amountInputWrapper: {
     flexDirection: "row",
@@ -466,10 +466,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  currencySymbol: { fontSize: 20, fontWeight: "700", color: "#6C63FF", marginRight: 8 },
-  amountInput: { flex: 1, fontSize: 20, fontWeight: "700", color: "#1E293B" },
+  currencySymbol: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#134E4A", marginRight: 8 },
+  amountInput: { flex: 1, fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   categoryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -477,10 +477,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   categoryIcon: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  categoryBtnText: { flex: 1, fontSize: 15, fontWeight: "600", color: "#1E293B" },
+  categoryBtnText: { flex: 1, fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: "#18181B" },
   payerContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   payerBtn: {
     paddingHorizontal: 16,
@@ -488,10 +488,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  payerBtnActive: { backgroundColor: "#6C63FF", borderColor: "#6C63FF" },
-  payerBtnText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
+  payerBtnActive: { backgroundColor: "#134E4A", borderColor: "#134E4A" },
+  payerBtnText: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
   payerBtnTextActive: { color: "#FFFFFF" },
   recurrenceRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   recurrenceBtn: {
@@ -500,16 +500,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     alignItems: "center",
   },
-  recurrenceBtnActive: { backgroundColor: "#6C63FF", borderColor: "#6C63FF" },
-  recurrenceBtnText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
+  recurrenceBtnActive: { backgroundColor: "#134E4A", borderColor: "#134E4A" },
+  recurrenceBtnText: { fontSize: 14, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
   recurrenceBtnTextActive: { color: "#FFFFFF" },
-  frequencyRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E2E8F0" },
-  frequencyLabel: { fontSize: 15, color: "#64748B", marginRight: 8 },
-  frequencyInput: { fontSize: 15, fontWeight: "700", color: "#1E293B", width: 50, textAlign: "center", borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingVertical: 6 },
-  frequencyUnit: { fontSize: 15, color: "#64748B", marginLeft: 8 },
+  frequencyRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E5E2DC" },
+  frequencyLabel: { fontSize: 15, color: "#71717A", marginRight: 8 },
+  frequencyInput: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#18181B", width: 50, textAlign: "center", borderWidth: 1, borderColor: "#E5E2DC", borderRadius: 8, paddingVertical: 6 },
+  frequencyUnit: { fontSize: 15, color: "#71717A", marginLeft: 8 },
   dateBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -517,10 +517,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     gap: 10,
   },
-  dateBtnText: { fontSize: 15, fontWeight: "600", color: "#1E293B" },
+  dateBtnText: { fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: "#18181B" },
   autoCreateRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -529,24 +529,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
-  autoCreateTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
-  autoCreateDesc: { fontSize: 13, color: "#94A3B8", marginTop: 4 },
-  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: "#E2E8F0", padding: 2 },
-  toggleActive: { backgroundColor: "#6C63FF" },
+  autoCreateTitle: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: "#18181B" },
+  autoCreateDesc: { fontSize: 13, color: "#71717A", marginTop: 4 },
+  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: "#E5E2DC", padding: 2 },
+  toggleActive: { backgroundColor: "#134E4A" },
   toggleKnob: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#FFFFFF" },
   toggleKnobActive: { transform: [{ translateX: 22 }] },
   noteInput: { minHeight: 80 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalContent: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "80%" },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B" },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderBottomColor: "#ECEAE4" },
+  modalTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   modalList: { padding: 16 },
   modalItem: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 12, marginBottom: 4 },
-  modalItemActive: { backgroundColor: "#F0EFFF" },
+  modalItemActive: { backgroundColor: "#E6F2F0" },
   modalItemIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  modalItemText: { flex: 1, fontSize: 15, fontWeight: "600", color: "#1E293B" },
+  modalItemText: { flex: 1, fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: "#18181B" },
 });
 
 export default EditTemplateScreen;

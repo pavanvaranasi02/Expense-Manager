@@ -75,7 +75,7 @@ const InvestmentDetailModal = ({
               <View
                 style={[
                   styles.iconBox,
-                  { backgroundColor: `${inv.typeColor || "#4F46E5"}15` },
+                  { backgroundColor: `${inv.typeColor || "#0F766E"}15` },
                 ]}
               >
                 <Text style={styles.icon}>{inv.typeIcon || "💰"}</Text>
@@ -103,7 +103,7 @@ const InvestmentDetailModal = ({
             </View>
 
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -163,7 +163,7 @@ const InvestmentDetailModal = ({
                   <Text
                     style={[
                       styles.metricSubVal,
-                      { color: isPos ? "#10B981" : "#EF4444" },
+                      { color: isPos ? "#047857" : "#B91C1C" },
                     ]}
                   >
                     {isPos ? "+" : ""}
@@ -177,7 +177,7 @@ const InvestmentDetailModal = ({
                     <Text
                       style={[
                         styles.metricSubValConverted,
-                        { color: isPos ? "#10B981" : "#EF4444" },
+                        { color: isPos ? "#047857" : "#B91C1C" },
                       ]}
                     >
                       ≈ {isPos ? "+" : ""}{formatCurrency(returns.convertedReturn, isStealthMode, currencySymbol)}
@@ -209,7 +209,7 @@ const InvestmentDetailModal = ({
             {/* Special notices: SIP, RD Progress, Maturity */}
             {hasSip && (
               <View style={styles.infoBanner}>
-                <Ionicons name="repeat" size={16} color="#6366F1" />
+                <Ionicons name="repeat" size={16} color="#134E4A" />
                 <View style={{ flex: 1, marginLeft: 8 }}>
                   <Text style={styles.infoBannerTitle}>Active SIP</Text>
                   <Text style={styles.infoBannerText}>
@@ -305,7 +305,7 @@ const InvestmentDetailModal = ({
             {/* Note if available */}
             {inv.note ? (
               <View style={styles.noteBox}>
-                <Ionicons name="document-text-outline" size={15} color="#64748B" />
+                <Ionicons name="document-text-outline" size={15} color="#71717A" />
                 <Text style={styles.noteText}>{inv.note}</Text>
               </View>
             ) : null}
@@ -338,7 +338,7 @@ const InvestmentDetailModal = ({
 
               {/* 2. Add Investment */}
               <TouchableOpacity
-                style={[styles.actionGridItem, { borderColor: "#6366F1" }]}
+                style={[styles.actionGridItem, { borderColor: "#134E4A" }]}
                 onPress={() => {
                   onClose();
                   onOpenAddAmount(inv);
@@ -347,10 +347,10 @@ const InvestmentDetailModal = ({
                 <View
                   style={[
                     styles.actionIconBox,
-                    { backgroundColor: "#EEF2FF" },
+                    { backgroundColor: "#E6F2F0" },
                   ]}
                 >
-                  <Ionicons name="add-circle" size={20} color="#4F46E5" />
+                  <Ionicons name="add-circle" size={20} color="#0F766E" />
                 </View>
                 <Text style={styles.actionGridTitle}>Add Funds</Text>
                 <Text style={styles.actionGridSub}>Invest more capital</Text>
@@ -367,7 +367,7 @@ const InvestmentDetailModal = ({
                 <View
                   style={[
                     styles.actionIconBox,
-                    { backgroundColor: "#F1F5F9" },
+                    { backgroundColor: "#ECEAE4" },
                   ]}
                 >
                   <Ionicons name="create-outline" size={20} color="#475569" />
@@ -406,7 +406,7 @@ const InvestmentDetailModal = ({
                   onOpenHistory(inv);
                 }}
               >
-                <Ionicons name="time-outline" size={17} color="#4F46E5" />
+                <Ionicons name="time-outline" size={17} color="#0F766E" />
                 <Text style={styles.historyBtnText}>View Transaction History</Text>
               </TouchableOpacity>
 
@@ -414,7 +414,7 @@ const InvestmentDetailModal = ({
                 style={styles.deleteBtn}
                 onPress={confirmDelete}
               >
-                <Ionicons name="trash-outline" size={17} color="#EF4444" />
+                <Ionicons name="trash-outline" size={17} color="#B91C1C" />
                 <Text style={styles.deleteBtnText}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitleRow: {
@@ -483,18 +483,18 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
   },
   platformBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
   },
   platformText: {
     fontSize: 10,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
   },
   inactiveBadge: {
@@ -505,14 +505,14 @@ const styles = StyleSheet.create({
   },
   inactiveText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#DC2626",
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     marginBottom: 14,
   },
   primaryMetric: {
@@ -529,21 +529,21 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   metricBig: {
     fontSize: 26,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginTop: 2,
   },
   metricBigConverted: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
     marginTop: 2,
   },
   foreignBanner: {
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   },
   foreignBannerTitle: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0369A1",
   },
   foreignBannerSub: {
@@ -568,13 +568,13 @@ const styles = StyleSheet.create({
   },
   metricSubValConverted: {
     fontSize: 10,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
     marginTop: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     marginBottom: 12,
   },
   metricsRow: {
@@ -589,14 +589,14 @@ const styles = StyleSheet.create({
   },
   metricSubLabel: {
     fontSize: 11,
-    color: "#64748B",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
     marginBottom: 2,
   },
   metricSubVal: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   returnBadge: {
     paddingHorizontal: 8,
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   },
   returnBadgeText: {
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
   infoBanner: {
     flexDirection: "row",
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
   },
   infoBannerTitle: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   infoBannerText: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   sipActionBtn: {
-    backgroundColor: "#6366F1",
+    backgroundColor: "#134E4A",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   sipActionText: {
     color: "#FFFFFF",
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   noteBox: {
     flexDirection: "row",
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#475569",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   actionIconBox: {
     width: 36,
@@ -682,12 +682,12 @@ const styles = StyleSheet.create({
   },
   actionGridTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   actionGridSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   bottomActionsRow: {
@@ -701,15 +701,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 6,
   },
   historyBtnText: {
-    color: "#4F46E5",
+    color: "#0F766E",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   deleteBtn: {
     flexDirection: "row",
@@ -722,9 +722,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   deleteBtnText: {
-    color: "#EF4444",
+    color: "#B91C1C",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
 });
 

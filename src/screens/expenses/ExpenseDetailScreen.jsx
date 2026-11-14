@@ -1,42 +1,48 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppButton from '../../components/ui/AppButton';
+import ScreenHeader from '../../components/ui/ScreenHeader';
+import SurfaceCard from '../../components/ui/SurfaceCard';
 import { deleteExpense } from '../../services/expenseService';
 import { deleteIncome } from '../../services/incomeService';
+import { Theme } from '../../theme/theme';
+
+const getOutlineIcon = (rawIcon, isIncome) => {
+  if (rawIcon && rawIcon.length > 2 && !/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(rawIcon)) {
+    return rawIcon;
+  }
+  return isIncome ? 'arrow-down-circle-outline' : 'receipt-outline';
+};
 
 const TransactionDetailScreen = ({ navigation, route }) => {
   const txn = route?.params?.expense || route?.params?.income;
   if (!txn) return null;
 
   const isIncome = txn.type === 'income' || !!txn.sourceName;
+  const isTransfer = txn.type === 'transfer' || txn.isTransfer === true;
 
-  // FIX: Handle ISO strings, Date objects, and Firestore Timestamps
   const formatDate = (d) => {
     if (!d) return '';
     let date;
-
     if (typeof d === 'string') {
-      // ISO string from serialized data
       date = new Date(d);
     } else if (d instanceof Date) {
       date = d;
     } else if (d.toDate && typeof d.toDate === 'function') {
-      // Firestore Timestamp
       date = d.toDate();
     } else if (d.seconds) {
-      // Raw Firestore timestamp object
       date = new Date(d.seconds * 1000);
     } else {
       date = new Date(d);
     }
-
     if (isNaN(date.getTime())) return 'Invalid date';
 
     return date.toLocaleDateString('en-IN', {
@@ -76,36 +82,52 @@ const TransactionDetailScreen = ({ navigation, route }) => {
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isIncome ? 'Income' : 'Expense'} Detail</Text>
-        <TouchableOpacity onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={22} color="#EF4444" />
-        </TouchableOpacity>
-      </View>
+  const iconName = getOutlineIcon(isIncome ? txn.sourceIcon : txn.categoryIcon, isIncome);
+  const accentColor = isIncome
+    ? Theme.colors.success
+    : isTransfer
+    ? Theme.colors.primary
+    : Theme.colors.error;
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Amount */}
+  const rows = [
+    { label: 'Date', value: formatDate(txn.date), icon: 'calendar-outline' },
+    { label: 'Account', value: txn.accountName || 'Unknown', icon: 'card-outline' },
+    !isIncome && {
+      label: 'Payment',
+      value: txn.paymentMode?.replace('_', ' ') || 'Other',
+      icon: 'wallet-outline',
+    },
+    !isIncome && {
+      label: 'Classification',
+      value: isTransfer ? 'Transfer / Bill Payment' : txn.isCredit ? 'Credit Card (Debt)' : 'Direct Payment',
+      icon: 'swap-horizontal-outline',
+    },
+    txn.note && {
+      label: 'Note',
+      value: txn.note,
+      icon: 'document-text-outline',
+    },
+  ].filter(Boolean);
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenHeader
+        title={isIncome ? 'Income Detail' : isTransfer ? 'Transfer Detail' : 'Expense Detail'}
+        showBack
+        navigation={navigation}
+        rightActions={
+          <TouchableOpacity onPress={handleDelete} style={styles.trashBtn} hitSlop={8}>
+            <Ionicons name="trash-outline" size={18} color={Theme.colors.error} />
+          </TouchableOpacity>
+        }
+      />
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.amountSection}>
-          {isIncome ? (
-            txn.sourceIcon && txn.sourceIcon.length > 2 ? (
-              <Ionicons name={txn.sourceIcon} size={48} color="#10B981" style={{ marginBottom: 12 }} />
-            ) : (
-              <Text style={styles.icon}>{txn.sourceIcon || '💰'}</Text>
-            )
-          ) : txn.categoryIcon && txn.categoryIcon.length > 2 ? (
-            <Ionicons name={txn.categoryIcon} size={48} color="#EF4444" style={{ marginBottom: 12 }} />
-          ) : (
-            <Text style={styles.icon}>{txn.categoryIcon || '📦'}</Text>
-          )}
-          <Text style={[styles.amount, isIncome && { color: '#10B981' }]}>
+          <View style={styles.iconBadge}>
+            <Ionicons name={iconName} size={26} color={accentColor} />
+          </View>
+          <Text style={[styles.amount, { color: accentColor }]}>
             {isIncome ? '+' : '-'}₹{(txn.amount || 0).toLocaleString('en-IN')}
           </Text>
           <Text style={styles.category}>
@@ -113,149 +135,103 @@ const TransactionDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Details */}
-        <View style={styles.detailCard}>
-          {[
-            {
-              label: 'Date',
-              value: formatDate(txn.date),
-              icon: 'calendar-outline',
-            },
-            {
-              label: 'Account',
-              value: txn.accountName,
-              icon: 'card-outline',
-            },
-            !isIncome && {
-              label: 'Payment',
-              value: txn.paymentMode?.replace('_', ' '),
-              icon: 'wallet-outline',
-            },
-            !isIncome && {
-              label: 'Type',
-              value: txn.isCredit
-                ? '🔴 Credit Card (Debt)'
-                : '🟢 Direct Payment',
-              icon: 'swap-horizontal',
-            },
-            txn.note && {
-              label: 'Note',
-              value: txn.note,
-              icon: 'document-text-outline',
-            },
-          ]
-            .filter(Boolean)
-            .map((item, i) => (
-              <View
-                key={i}
-                style={[styles.detailRow, i > 0 && styles.detailBorder]}
-              >
-                <View style={styles.detailLeft}>
-                  <Ionicons name={item.icon} size={18} color="#6B7280" />
-                  <Text style={styles.detailLabel}>{item.label}</Text>
-                </View>
-                <Text style={styles.detailValue}>{item.value}</Text>
+        <SurfaceCard padding={0} style={styles.detailCard}>
+          {rows.map((item, i) => (
+            <View
+              key={item.label}
+              style={[styles.detailRow, i > 0 && styles.detailBorder]}
+            >
+              <View style={styles.detailLeft}>
+                <Ionicons name={item.icon} size={17} color={Theme.colors.textMuted} />
+                <Text style={styles.detailLabel}>{item.label}</Text>
               </View>
-            ))}
-        </View>
+              <Text style={styles.detailValue}>{item.value}</Text>
+            </View>
+          ))}
+        </SurfaceCard>
 
-        {/* Actions */}
-        <TouchableOpacity style={[styles.editBtn, isIncome && { backgroundColor: '#10B981' }]} onPress={handleEdit}>
-          <Ionicons name="create-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.editBtnText}>Edit {isIncome ? 'Income' : 'Expense'}</Text>
-        </TouchableOpacity>
+        <AppButton
+          title={`Edit ${isIncome ? 'Income' : 'Expense'}`}
+          icon="create-outline"
+          onPress={handleEdit}
+          style={{ marginBottom: 10 }}
+        />
 
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          <Text style={styles.deleteBtnText}>Delete {isIncome ? 'Income' : 'Expense'}</Text>
-        </TouchableOpacity>
+        <AppButton
+          title={`Delete ${isIncome ? 'Income' : 'Expense'}`}
+          icon="trash-outline"
+          variant="danger"
+          onPress={handleDelete}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
-  header: {
-    flexDirection: 'row',
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  trashBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Theme.colors.errorLight,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
-
-  amountSection: { alignItems: 'center', paddingVertical: 32 },
-  icon: { fontSize: 48, marginBottom: 12 },
-  amount: { fontSize: 36, fontWeight: '700', color: '#EF4444' },
-  category: { fontSize: 16, color: '#6B7280', marginTop: 4 },
-
-  detailCard: {
-    backgroundColor: '#FFFFFF',
+  content: {
+    paddingHorizontal: Theme.layout.screenPaddingHorizontal,
+    paddingBottom: 40,
+  },
+  amountSection: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
+    marginBottom: 20,
+  },
+  iconBadge: {
+    width: 52,
+    height: 52,
     borderRadius: 16,
-    padding: 4,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  amount: {
+    ...Theme.typography.presets.heroAmount,
+  },
+  category: {
+    ...Theme.typography.presets.bodyMedium,
+    color: Theme.colors.textMuted,
+    marginTop: 4,
+  },
+  detailCard: {
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
-  detailBorder: { borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-  detailLeft: { flexDirection: 'row', alignItems: 'center' },
-  detailLabel: { fontSize: 14, color: '#6B7280', marginLeft: 10 },
+  detailBorder: {
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.borderSubtle,
+  },
+  detailLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  detailLabel: {
+    ...Theme.typography.presets.body,
+    color: Theme.colors.textMuted,
+  },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A2E',
-    maxWidth: '50%',
+    ...Theme.typography.presets.rowTitle,
+    color: Theme.colors.text,
+    maxWidth: '58%',
     textAlign: 'right',
-  },
-
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6C63FF',
-    height: 50,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  editBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-
-  deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
-    height: 50,
-    borderRadius: 12,
-  },
-  deleteBtnText: {
-    color: '#EF4444',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
   },
 });
 

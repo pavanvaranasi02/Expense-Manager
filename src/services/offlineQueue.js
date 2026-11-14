@@ -143,12 +143,13 @@ export const readFromCache = async (collection) => {
   }
 };
 
-// Optimistically add an item to the local cache
+// Optimistically add an item to the local cache (deduplicated by id)
 export const addToCache = async (collection, item) => {
   try {
     const { data } = await readFromCache(collection);
-    const current = data || [];
-    const updated = [item, ...current];
+    const current = Array.isArray(data) ? data : [];
+    const filtered = item?.id ? current.filter((x) => x && x.id !== item.id) : current;
+    const updated = [item, ...filtered];
     await saveToCache(collection, updated);
   } catch (error) {
     console.log(`❌ addToCache (${collection}) error:`, error);

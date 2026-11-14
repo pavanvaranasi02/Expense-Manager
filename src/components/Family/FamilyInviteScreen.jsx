@@ -59,7 +59,7 @@ const FamilyInviteScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Invite Members</Text>
         <View style={{ width: 44 }} />
@@ -69,7 +69,7 @@ const FamilyInviteScreen = ({ navigation }) => {
         {/* Illustration */}
         <View style={styles.illustration}>
           <View style={styles.iconCircle}>
-            <Ionicons name="mail" size={48} color="#6C63FF" />
+            <Ionicons name="mail" size={48} color="#134E4A" />
           </View>
         </View>
 
@@ -81,7 +81,7 @@ const FamilyInviteScreen = ({ navigation }) => {
         {/* Code Card */}
         {regenerating ? (
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#6C63FF" />
+            <ActivityIndicator size="large" color="#134E4A" />
             <Text style={styles.loadingText}>Generating new code...</Text>
           </View>
         ) : (
@@ -128,7 +128,7 @@ const FamilyInviteScreen = ({ navigation }) => {
 
         {/* Member limit notice */}
         <View style={styles.notice}>
-          <Ionicons name="information-circle" size={18} color="#64748B" />
+          <Ionicons name="information-circle" size={18} color="#71717A" />
           <Text style={styles.noticeText}>
             A family can have up to 6 members. Currently: {family?.memberCount || 1}/6
           </Text>
@@ -141,7 +141,7 @@ const FamilyInviteScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   content: {
     flex: 1,
@@ -181,20 +181,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: 22,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 40,
     alignItems: 'center',
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
   },
   instructions: {
     marginTop: 24,
@@ -221,12 +221,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   instructionsTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 14,
   },
   step: {
@@ -238,20 +238,20 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   stepNumberText: {
     fontSize: 11,
-    fontWeight: '800',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
   stepText: {
     flex: 1,
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     lineHeight: 18,
   },
   notice: {
@@ -260,14 +260,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     borderRadius: 12,
     gap: 8,
   },
   noticeText: {
     flex: 1,
     fontSize: 12,
-    color: '#64748B',
+    color: '#71717A',
   },
 });
 

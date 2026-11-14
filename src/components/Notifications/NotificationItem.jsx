@@ -4,22 +4,22 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 const getNotificationIcon = (type) => {
   switch (type) {
     case "FAMILY_JOIN":
-      return { name: "person-add", color: "#10B981", bg: "#D1FAE5" };
+      return { name: "person-add", color: "#047857", bg: "#D1FAE5" };
     case "FAMILY_LEAVE":
       return { name: "person-remove", color: "#F59E0B", bg: "#FEF3C7" };
     case "OWNERSHIP_TRANSFER":
-      return { name: "star", color: "#6C63FF", bg: "#F0EFFF" };
+      return { name: "star", color: "#134E4A", bg: "#E6F2F0" };
     case "ROLE_CHANGE":
       return { name: "shield-checkmark", color: "#3B82F6", bg: "#DBEAFE" };
     case "REMOVED_FROM_FAMILY":
-      return { name: "close-circle", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "close-circle", color: "#B91C1C", bg: "#FEE2E2" };
     case "FAMILY_DELETED":
-      return { name: "trash", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "trash", color: "#B91C1C", bg: "#FEE2E2" };
     case "MEMBER_REMOVED":
-      return { name: "person-remove", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "person-remove", color: "#B91C1C", bg: "#FEE2E2" };
     // Budget alerts
     case "BUDGET_EXCEEDED":
-      return { name: "alert-circle", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "alert-circle", color: "#B91C1C", bg: "#FEE2E2" };
     case "BUDGET_WARNING":
       return { name: "warning", color: "#F59E0B", bg: "#FEF3C7" };
     case "BUDGET_INFO_50":
@@ -27,22 +27,22 @@ const getNotificationIcon = (type) => {
     case "BUDGET_WARNING_80":
       return { name: "warning", color: "#F59E0B", bg: "#FEF3C7" };
     case "BUDGET_DANGER":
-      return { name: "alert-circle", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "alert-circle", color: "#B91C1C", bg: "#FEE2E2" };
     // Credit card alerts
     case "CREDIT_CARD_DUE":
       return { name: "card", color: "#F59E0B", bg: "#FEF3C7" };
     case "CREDIT_CARD_URGENT":
-      return { name: "alert-circle", color: "#EF4444", bg: "#FEE2E2" };
+      return { name: "alert-circle", color: "#B91C1C", bg: "#FEE2E2" };
     // Investment alerts
     case "SIP_DUE":
-      return { name: "trending-up", color: "#6C63FF", bg: "#F0EFFF" };
+      return { name: "trending-up", color: "#134E4A", bg: "#E6F2F0" };
     case "RD_DUE":
       return { name: "refresh", color: "#14B8A6", bg: "#F0FDFA" };
     // Recurring expenses
     case "RECURRING_EXPENSE_DUE":
       return { name: "repeat", color: "#3B82F6", bg: "#DBEAFE" };
     default:
-      return { name: "notifications", color: "#64748B", bg: "#F1F5F9" };
+      return { name: "notifications", color: "#71717A", bg: "#ECEAE4" };
   }
 };
 
@@ -92,7 +92,7 @@ const NotificationItem = ({
           </Text>
           {persistent && (
             <View style={styles.persistentBadge}>
-              <Ionicons name="pin" size={10} color="#6C63FF" />
+              <Ionicons name="pin" size={10} color="#134E4A" />
             </View>
           )}
         </View>
@@ -112,7 +112,7 @@ const NotificationItem = ({
           onPress={onDelete}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="close" size={16} color="#94A3B8" />
+          <Ionicons name="close" size={16} color="#71717A" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -128,15 +128,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
   },
   unread: {
     backgroundColor: "#FAFAFE",
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   persistent: {
     backgroundColor: "#FAFAFE",
-    borderColor: "#6C63FF",
+    borderColor: "#134E4A",
     borderWidth: 1.5,
   },
   iconContainer: {
@@ -159,34 +159,34 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   unreadText: {
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   body: {
     fontSize: 13,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
     lineHeight: 18,
   },
   time: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 6,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     marginLeft: 8,
     marginTop: 4,
   },

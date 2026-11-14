@@ -71,13 +71,13 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Family Analytics</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -87,8 +87,8 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
     analytics?.categoryBreakdown.slice(0, 5).map((cat, index) => ({
       name: cat.name,
       population: cat.total,
-      color: ['#6C63FF', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'][index % 5],
-      legendFontColor: '#64748B',
+      color: ['#134E4A', '#3B82F6', '#047857', '#F59E0B', '#B91C1C'][index % 5],
+      legendFontColor: '#71717A',
       legendFontSize: 12,
     })) || [];
 
@@ -97,7 +97,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Family Analytics</Text>
         <View style={{ width: 44 }} />
@@ -107,7 +107,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
         {/* Month Selector */}
         <View style={styles.monthSelector}>
           <TouchableOpacity style={styles.monthBtn} onPress={() => navigateMonth(-1)}>
-            <Ionicons name="chevron-back" size={20} color="#6C63FF" />
+            <Ionicons name="chevron-back" size={20} color="#134E4A" />
           </TouchableOpacity>
           <Text style={styles.monthText}>
             {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
@@ -130,7 +130,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
                 selectedYear === new Date().getFullYear() &&
                 selectedMonth === new Date().getMonth() + 1
                   ? '#CBD5E1'
-                  : '#6C63FF'
+                  : '#134E4A'
               }
             />
           </TouchableOpacity>
@@ -140,7 +140,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
         <View style={styles.summaryGrid}>
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIcon, { backgroundColor: '#FEE2E2' }]}>
-              <Ionicons name="wallet" size={24} color="#EF4444" />
+              <Ionicons name="wallet" size={24} color="#B91C1C" />
             </View>
             <Text style={styles.summaryLabel}>Total Spent</Text>
             <Text style={styles.summaryValue}>
@@ -158,7 +158,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
 
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIcon, { backgroundColor: '#D1FAE5' }]}>
-              <Ionicons name="trending-down" size={24} color="#10B981" />
+              <Ionicons name="trending-down" size={24} color="#047857" />
             </View>
             <Text style={styles.summaryLabel}>Avg. Expense</Text>
             <Text style={styles.summaryValue}>
@@ -273,7 +273,7 @@ const FamilyAnalyticsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -283,20 +283,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   loadingContainer: {
     flex: 1,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     marginBottom: 20,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -325,14 +325,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   monthText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     alignItems: 'center',
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -361,22 +361,22 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 4,
   },
   summaryValue: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 12,
   },
   chartCard: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     alignItems: 'center',
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   categoryLeft: {
     flexDirection: 'row',
@@ -420,28 +420,28 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   categoryRight: {
     alignItems: 'flex-end',
   },
   categoryAmount: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 2,
   },
   categoryPercent: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
   memberList: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   memberLeft: {
     flexDirection: 'row',
@@ -463,20 +463,20 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#E5E2DC',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   memberRankText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
   memberName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   memberRight: {
     flex: 1,
@@ -484,27 +484,27 @@ const styles = StyleSheet.create({
   },
   memberAmount: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 6,
   },
   memberBarBg: {
     width: '100%',
     height: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 4,
   },
   memberBarFill: {
     height: 6,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     borderRadius: 3,
   },
   memberPercent: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -514,20 +514,20 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#71717A',
     textAlign: 'center',
   },
 });

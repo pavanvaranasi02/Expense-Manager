@@ -125,8 +125,8 @@ const FamilyExpensesScreen = ({ navigation }) => {
   const renderExpense = ({ item }) => (
     <View style={styles.expenseCard}>
       <View style={styles.expenseMain}>
-        <View style={[styles.expenseIcon, { backgroundColor: item.categoryIcon + '15' || '#F1F5F9' }]}>
-          <Ionicons name={item.categoryIcon || 'ellipsis-horizontal'} size={22} color="#6C63FF" />
+        <View style={[styles.expenseIcon, { backgroundColor: item.categoryIcon + '15' || '#ECEAE4' }]}>
+          <Ionicons name={item.categoryIcon || 'ellipsis-horizontal'} size={22} color="#134E4A" />
         </View>
         <View style={styles.expenseInfo}>
           <Text style={styles.expenseCategory}>{item.categoryName}</Text>
@@ -145,7 +145,7 @@ const FamilyExpensesScreen = ({ navigation }) => {
               onPress={() => handleDelete(item)}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="trash-outline" size={16} color="#EF4444" />
+              <Ionicons name="trash-outline" size={16} color="#B91C1C" />
             </TouchableOpacity>
           )}
         </View>
@@ -158,13 +158,13 @@ const FamilyExpensesScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Family Expenses</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -175,14 +175,14 @@ const FamilyExpensesScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Family Expenses</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => navigation.navigate('AddFamilyExpense')}
         >
-          <Ionicons name="add" size={24} color="#6C63FF" />
+          <Ionicons name="add" size={24} color="#134E4A" />
         </TouchableOpacity>
       </View>
 
@@ -213,7 +213,7 @@ const FamilyExpensesScreen = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6C63FF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#134E4A']} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -241,7 +241,7 @@ const FamilyExpensesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -251,26 +251,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#ECEAE4',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   addBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     margin: 20,
     padding: 20,
     borderRadius: 20,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -297,19 +297,19 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 4,
   },
   summaryValue: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   summaryMonth: {
     fontSize: 13,
-    color: '#64748B',
-    fontWeight: '600',
+    color: '#71717A',
+    fontFamily: 'Manrope_600SemiBold',
     marginTop: 4,
   },
   listContent: {
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   expenseMain: {
     flexDirection: 'row',
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
   },
   expenseCategory: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
     marginBottom: 4,
   },
   expenseMeta: {
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   expenseMetaText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#71717A',
   },
   expenseMetaDot: {
     fontSize: 12,
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   expenseNote: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     marginTop: 2,
   },
   expenseRight: {
@@ -369,8 +369,8 @@ const styles = StyleSheet.create({
   },
   expenseAmount: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#EF4444',
+    fontFamily: 'Manrope_700Bold',
+    color: '#B91C1C',
     marginBottom: 6,
   },
   deleteBtn: {
@@ -389,27 +389,27 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#71717A',
     textAlign: 'center',
     marginBottom: 24,
   },
   emptyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   emptyBtnText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: '#FFFFFF',
   },
 });

@@ -180,7 +180,7 @@ const FamilySettingsScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Family Settings</Text>
         <View style={{ width: 44 }} />
@@ -190,7 +190,7 @@ const FamilySettingsScreen = ({ navigation }) => {
         {/* Family Info */}
         <View style={styles.infoCard}>
           <View style={styles.familyIcon}>
-            <Ionicons name="home" size={32} color="#6C63FF" />
+            <Ionicons name="home" size={32} color="#134E4A" />
           </View>
           <View style={styles.familyInfo}>
             <Text style={styles.familyName}>{family?.name}</Text>
@@ -216,14 +216,14 @@ const FamilySettingsScreen = ({ navigation }) => {
                 setShowRenameModal(true);
               }}
             >
-              <View style={[styles.settingIcon, { backgroundColor: '#F0EFFF' }]}>
-                <Ionicons name="pencil" size={18} color="#6C63FF" />
+              <View style={[styles.settingIcon, { backgroundColor: '#E6F2F0' }]}>
+                <Ionicons name="pencil" size={18} color="#134E4A" />
               </View>
               <View style={styles.settingContent}>
                 <Text style={styles.settingLabel}>Rename Family</Text>
                 <Text style={styles.settingDesc}>Change the family display name</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={18} color="#71717A" />
             </TouchableOpacity>
 
             {otherMembers.length > 0 && (
@@ -238,7 +238,7 @@ const FamilySettingsScreen = ({ navigation }) => {
                   <Text style={styles.settingLabel}>Transfer Ownership</Text>
                   <Text style={styles.settingDesc}>Make someone else the owner</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                <Ionicons name="chevron-forward" size={18} color="#71717A" />
               </TouchableOpacity>
             )}
           </View>
@@ -246,17 +246,17 @@ const FamilySettingsScreen = ({ navigation }) => {
 
         {/* Danger Zone */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: '#EF4444' }]}>Danger Zone</Text>
+          <Text style={[styles.sectionTitle, { color: '#B91C1C' }]}>Danger Zone</Text>
           
           <TouchableOpacity 
             style={styles.dangerItem}
             onPress={handleLeave}
           >
             <View style={[styles.settingIcon, { backgroundColor: '#FEE2E2' }]}>
-              <Ionicons name="exit-outline" size={18} color="#EF4444" />
+              <Ionicons name="exit-outline" size={18} color="#B91C1C" />
             </View>
             <View style={styles.settingContent}>
-              <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Leave Family</Text>
+              <Text style={[styles.settingLabel, { color: '#B91C1C' }]}>Leave Family</Text>
               <Text style={styles.settingDesc}>
                 {isOwner() ? 'Ownership will be transferred' : 'You can rejoin with a code'}
               </Text>
@@ -269,10 +269,10 @@ const FamilySettingsScreen = ({ navigation }) => {
               onPress={handleDelete}
             >
               <View style={[styles.settingIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="trash" size={18} color="#EF4444" />
+                <Ionicons name="trash" size={18} color="#B91C1C" />
               </View>
               <View style={styles.settingContent}>
-                <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Delete Family</Text>
+                <Text style={[styles.settingLabel, { color: '#B91C1C' }]}>Delete Family</Text>
                 <Text style={styles.settingDesc}>Permanently delete and remove all members</Text>
               </View>
             </TouchableOpacity>
@@ -283,7 +283,7 @@ const FamilySettingsScreen = ({ navigation }) => {
       {/* Loading Overlay */}
       {loading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       )}
 
@@ -346,7 +346,7 @@ const FamilySettingsScreen = ({ navigation }) => {
                 >
                   <MemberAvatar member={member} size={40} showBadge={true} />
                   <Text style={styles.memberSelectName}>{member.displayName}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color="#71717A" />
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -367,7 +367,7 @@ const FamilySettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   header: {
     flexDirection: 'row',
@@ -391,8 +391,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 24,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -425,12 +425,12 @@ const styles = StyleSheet.create({
   },
   familyName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   familyMeta: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     marginTop: 4,
   },
   section: {
@@ -438,8 +438,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
     marginBottom: 12,
     textTransform: 'uppercase',
   },
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#ECEAE4',
   },
   dangerItem: {
     flexDirection: 'row',
@@ -476,12 +476,12 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   settingDesc: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#71717A',
     marginTop: 2,
   },
   loadingOverlay: {
@@ -505,26 +505,26 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     textAlign: 'center',
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
     textAlign: 'center',
     marginBottom: 20,
   },
   modalInput: {
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1E293B',
+    color: '#18181B',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E2DC',
     marginBottom: 20,
   },
   modalActions: {
@@ -535,34 +535,34 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCancelBtnFull: {
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
   },
   modalCancelText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#64748B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#71717A',
   },
   modalConfirmBtn: {
     flex: 1,
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalConfirmText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
   membersList: {
@@ -573,14 +573,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 14,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
     marginBottom: 8,
   },
   memberSelectName: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
     marginLeft: 12,
   },
 });

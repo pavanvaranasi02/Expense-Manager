@@ -11,6 +11,11 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import {
+  calculateAccountTotals,
+  fromPaise,
+  toPaise,
+} from './financialCalculationService';
+import {
   addLocalDoc,
   deleteLocalDoc,
   getLocalCollection,
@@ -36,15 +41,15 @@ export const addAccount = async (accountData) => {
       name: accountData.name,
       bankName: accountData.bankName || null,
       accountNumber: accountData.accountNumber || null,
-      balance: parseFloat(accountData.balance) || 0,
+      balance: fromPaise(toPaise(accountData.balance)),
 
       hasDebitCard: accountData.hasDebitCard || false,
       debitCardLast4: accountData.debitCardLast4 || null,
 
-      creditLimit: parseFloat(accountData.creditLimit) || 0,
-      currentUsage: parseFloat(accountData.currentUsage) || 0,
+      creditLimit: fromPaise(toPaise(accountData.creditLimit)),
+      currentUsage: fromPaise(toPaise(accountData.currentUsage)),
       availableCredit: accountData.type === 'CREDIT_CARD'
-        ? (parseFloat(accountData.creditLimit) || 0) - (parseFloat(accountData.currentUsage) || 0)
+        ? fromPaise(Math.max(0, toPaise(accountData.creditLimit) - toPaise(accountData.currentUsage)))
         : 0,
       billGenerationDate: parseInt(accountData.billGenerationDate) || 1,
       billDueDate: parseInt(accountData.billDueDate) || 15,
@@ -111,7 +116,8 @@ export const updateAccount = async (accountId, data) => {
   try {
     const userId = getUserId();
     if (isLocalMode()) {
-      await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId, data);
+      const updated = await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId, data);
+      if (!updated) return { success: false, error: 'Account not found' };
       return { success: true };
     }
     await updateDoc(doc(db, 'users', userId, 'accounts', accountId), {
@@ -129,7 +135,8 @@ export const deleteAccount = async (accountId) => {
   try {
     const userId = getUserId();
     if (isLocalMode()) {
-      await deleteLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId);
+      const deleted = await deleteLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, accountId);
+      if (!deleted) return { success: false, error: 'Account not found' };
       return { success: true };
     }
     await deleteDoc(doc(db, 'users', userId, 'accounts', accountId));
@@ -143,19 +150,25 @@ export const deleteAccount = async (accountId) => {
 export const payCreditCardBill = async (cardId, paymentAmount, payFromAccountId = null, expenseId = null) => {
   try {
     const userId = getUserId();
-    const amount = parseFloat(paymentAmount);
+    const amountPaise = toPaise(paymentAmount);
 
-    if (!amount || amount <= 0) return { success: false, error: 'Invalid payment amount' };
+    if (!amountPaise || amountPaise <= 0) return { success: false, error: 'Invalid payment amount' };
 
     if (isLocalMode()) {
       const cardData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, cardId);
       if (!cardData) return { success: false, error: 'Credit card not found' };
 
-      const currentUsage = cardData.currentUsage || 0;
-      const actualPayment = Math.min(amount, currentUsage);
-      const newUsage = currentUsage - actualPayment;
-      const newAvailable = (cardData.creditLimit || 0) - newUsage;
-      const isFullPayment = newUsage <= 0;
+      const currentUsagePaise = toPaise(cardData.currentUsage);
+      const actualPaymentPaise = Math.min(amountPaise, currentUsagePaise);
+      if (actualPaymentPaise <= 0) {
+        return { success: false, error: 'No outstanding balance on this card' };
+      }
+      const newUsagePaise = currentUsagePaise - actualPaymentPaise;
+      const newAvailablePaise = Math.max(0, toPaise(cardData.creditLimit) - newUsagePaise);
+      const actualPayment = fromPaise(actualPaymentPaise);
+      const newUsage = fromPaise(newUsagePaise);
+      const newAvailable = fromPaise(newAvailablePaise);
+      const isFullPayment = newUsagePaise <= 0;
       const remainingBill = Math.max(0, newUsage);
 
       const paymentEntry = {
@@ -183,7 +196,7 @@ export const payCreditCardBill = async (cardId, paymentAmount, payFromAccountId 
         const bankData = await getLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payFromAccountId);
         if (bankData) {
           await updateLocalDoc(userId, LOCAL_COLLECTIONS.ACCOUNTS, payFromAccountId, {
-            balance: (bankData.balance || 0) - actualPayment,
+            balance: fromPaise(toPaise(bankData.balance) - actualPaymentPaise),
           });
         }
       }
@@ -207,11 +220,17 @@ export const payCreditCardBill = async (cardId, paymentAmount, payFromAccountId 
 
     if (!cardData) return { success: false, error: 'Credit card not found' };
 
-    const currentUsage = cardData.currentUsage || 0;
-    const actualPayment = Math.min(amount, currentUsage);
-    const newUsage = currentUsage - actualPayment;
-    const newAvailable = (cardData.creditLimit || 0) - newUsage;
-    const isFullPayment = newUsage <= 0;
+    const currentUsagePaise = toPaise(cardData.currentUsage);
+    const actualPaymentPaise = Math.min(amountPaise, currentUsagePaise);
+    if (actualPaymentPaise <= 0) {
+      return { success: false, error: 'No outstanding balance on this card' };
+    }
+    const newUsagePaise = currentUsagePaise - actualPaymentPaise;
+    const newAvailablePaise = Math.max(0, toPaise(cardData.creditLimit) - newUsagePaise);
+    const actualPayment = fromPaise(actualPaymentPaise);
+    const newUsage = fromPaise(newUsagePaise);
+    const newAvailable = fromPaise(newAvailablePaise);
+    const isFullPayment = newUsagePaise <= 0;
     const remainingBill = Math.max(0, newUsage);
 
     const paymentEntry = {
@@ -248,7 +267,7 @@ export const payCreditCardBill = async (cardId, paymentAmount, payFromAccountId 
 
       if (bankData) {
         await updateDoc(bankRef, {
-          balance: (bankData.balance || 0) - actualPayment,
+          balance: fromPaise(toPaise(bankData.balance) - actualPaymentPaise),
           updatedAt: serverTimestamp(),
         });
       }
@@ -407,11 +426,8 @@ export const getCardsWithPendingBills = (accounts) => {
 
 // ============ CALCULATE TOTALS ============
 export const calculateTotals = (accounts) => {
-  const totalAssets = accounts
-    .filter((a) => a.type === 'BANK' || a.type === 'CASH')
-    .reduce((sum, a) => sum + (a.balance || 0), 0);
-  const totalDebts = accounts
-    .filter((a) => a.type === 'CREDIT_CARD')
-    .reduce((sum, a) => sum + (a.currentUsage || 0), 0);
-  return { totalAssets, totalDebts, netWorth: totalAssets - totalDebts };
+  const { totalAssets, totalDebts, netWorth } = calculateAccountTotals(accounts, null, {
+    includeInvestmentsInAssets: false,
+  });
+  return { totalAssets, totalDebts, netWorth };
 };

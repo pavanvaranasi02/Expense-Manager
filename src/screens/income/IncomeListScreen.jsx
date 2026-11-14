@@ -14,11 +14,11 @@ const IncomeListScreen = ({ navigation }) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   back: { padding: 20 },
-  backText: { fontSize: 16, color: '#6C63FF', fontWeight: '600' },
+  backText: { fontSize: 16, color: '#134E4A', fontFamily: 'Manrope_600SemiBold' },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 14, color: '#9CA3AF' },
+  text: { fontSize: 14, color: '#71717A' },
 });
 
 export default IncomeListScreen;

@@ -1,4 +1,11 @@
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from '@expo-google-fonts/manrope';
 import { registerRootComponent } from 'expo';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -11,14 +18,18 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { initStateLoggers } from './src/services/activityLogService';
 import { checkForGitHubUpdates } from './src/services/updateService';
 
-
-// Inside your root component that wraps the navigator:
 const SyncProvider = ({ children }) => {
-  useNetworkSync(); // starts network listener + auto-sync
+  useNetworkSync();
   return children;
 };
 
 function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+  });
   const [updateInfo, setUpdateInfo] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
@@ -39,6 +50,10 @@ function App() {
       stopLoggers();
     };
   }, []);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <SyncProvider>

@@ -17,18 +17,18 @@ import useAccountStore from '../../store/useAccountStore';
 const ACCOUNT_TYPES = [
   { type: 'BANK', label: 'Bank Account', emoji: '🏦', color: '#3B82F6' },
   { type: 'CREDIT_CARD', label: 'Credit Card', emoji: '💳', color: '#F59E0B' },
-  { type: 'CASH', label: 'Cash', emoji: '💵', color: '#10B981' },
+  { type: 'CASH', label: 'Cash', emoji: '💵', color: '#047857' },
 ];
 
 const BANK_COLORS = [
   { name: 'Blue', color: '#3B82F6' },
-  { name: 'Purple', color: '#8B5CF6' },
-  { name: 'Red', color: '#EF4444' },
+  { name: 'Purple', color: '#0F766E' },
+  { name: 'Red', color: '#B91C1C' },
   { name: 'Orange', color: '#F59E0B' },
-  { name: 'Green', color: '#10B981' },
+  { name: 'Green', color: '#047857' },
   { name: 'Teal', color: '#14B8A6' },
   { name: 'Pink', color: '#EC4899' },
-  { name: 'Gray', color: '#6B7280' },
+  { name: 'Gray', color: '#71717A' },
 ];
 
 const AddAccountScreen = ({ navigation, route }) => {
@@ -106,7 +106,7 @@ const AddAccountScreen = ({ navigation, route }) => {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="close" size={24} color="#111827" />
+            <Ionicons name="close" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{editMode ? 'Edit Account' : 'New Account'}</Text>
           <View style={{ width: 44 }} />
@@ -126,8 +126,8 @@ const AddAccountScreen = ({ navigation, route }) => {
           {!editMode && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <View style={[styles.sectionIconBox, { backgroundColor: '#EEF2FF' }]}>
-                  <Ionicons name="apps" size={14} color="#6366F1" />
+                <View style={[styles.sectionIconBox, { backgroundColor: '#E6F2F0' }]}>
+                  <Ionicons name="apps" size={14} color="#134E4A" />
                 </View>
                 <Text style={styles.sectionTitle}>ACCOUNT TYPE</Text>
               </View>
@@ -149,7 +149,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                     </View>
                     <Text style={[
                       styles.typeLabel,
-                      selectedType === type.type && { color: type.color, fontWeight: '900' },
+                      selectedType === type.type && { color: type.color, fontFamily: 'Manrope_700Bold' },
                     ]}>
                       {type.label}
                     </Text>
@@ -172,7 +172,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. HDFC Savings"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#71717A"
                   value={accountName}
                   onChangeText={setAccountName}
                 />
@@ -185,7 +185,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                   <TextInput
                     style={styles.textInput}
                     placeholder="e.g. HDFC, ICICI, SBI"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                     value={bankName}
                     onChangeText={setBankName}
                   />
@@ -201,7 +201,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                     <TextInput
                       style={styles.amountInput}
                       placeholder="0"
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor="#71717A"
                       value={balance}
                       onChangeText={(v) => setBalance(v.replace(/[^0-9.]/g, ''))}
                       keyboardType="numeric"
@@ -220,7 +220,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                       <TextInput
                         style={styles.amountInput}
                         placeholder="100,000"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={creditLimit}
                         onChangeText={(v) => setCreditLimit(v.replace(/[^0-9]/g, ''))}
                         keyboardType="numeric"
@@ -235,7 +235,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                       <TextInput
                         style={styles.amountInput}
                         placeholder="0"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={currentUsage}
                         onChangeText={(v) => setCurrentUsage(v.replace(/[^0-9]/g, ''))}
                         keyboardType="numeric"
@@ -249,7 +249,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="1"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={billDate}
                         onChangeText={setBillDate}
                         keyboardType="numeric"
@@ -261,7 +261,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="15"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor="#71717A"
                         value={dueDate}
                         onChangeText={setDueDate}
                         keyboardType="numeric"
@@ -301,7 +301,7 @@ const AddAccountScreen = ({ navigation, route }) => {
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={['#6366F1', '#4338CA']}
+                  colors={['#134E4A', '#4338CA']}
                   style={styles.saveBtn}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -326,7 +326,7 @@ const AddAccountScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: 'row',
@@ -335,26 +335,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1EFEA',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B", letterSpacing: -0.5 },
   content: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 },
 
   section: { marginBottom: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingLeft: 4 },
   sectionIconBox: { width: 28, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  sectionTitle: { fontSize: 11, fontWeight: "900", color: "#6B7280", letterSpacing: 1.5 },
-  label: { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 8, paddingLeft: 4 },
+  sectionTitle: { fontSize: 11, fontFamily: 'Manrope_700Bold', color: "#71717A", letterSpacing: 1.5 },
+  label: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: "#71717A", letterSpacing: 1, marginBottom: 8, paddingLeft: 4 },
 
   typeRow: { gap: 10 },
   typeChip: {
@@ -364,13 +364,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     marginBottom: 4,
     position: 'relative',
   },
   typeIconBox: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   typeEmoji: { fontSize: 22 },
-  typeLabel: { fontSize: 15, fontWeight: '800', color: '#111827', marginLeft: 12 },
+  typeLabel: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B', marginLeft: 12 },
   checkBadge: {
     position: 'absolute',
     right: 16,
@@ -385,12 +385,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     paddingHorizontal: 16,
     height: 56,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   amountRow: {
     flexDirection: 'row',
@@ -398,16 +398,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     paddingLeft: 18,
   },
-  rupee: { fontSize: 24, fontWeight: '900', color: '#111827' },
+  rupee: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: '#18181B' },
   amountInput: {
     flex: 1,
     height: 60,
     fontSize: 22,
-    fontWeight: '900',
-    color: '#111827',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     paddingHorizontal: 12,
     letterSpacing: -0.5,
   },
@@ -430,13 +430,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
   },
 
-  saveBtnCont: { borderRadius: 20, overflow: 'hidden', marginTop: 12, elevation: 4, shadowColor: '#6366F1', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 } },
+  saveBtnCont: { borderRadius: 20, overflow: 'hidden', marginTop: 12, elevation: 4, shadowColor: '#134E4A', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 } },
   saveBtn: {
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  saveBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  saveBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: 'Manrope_700Bold', letterSpacing: 1 },
 });
 
 export default AddAccountScreen;

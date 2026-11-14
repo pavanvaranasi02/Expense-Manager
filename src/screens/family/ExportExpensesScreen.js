@@ -176,7 +176,7 @@ const ExportExpensesScreen = ({ navigation }) => {
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="close" size={24} color="#1E293B" />
+          <Ionicons name="close" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Export Expenses</Text>
         <View style={{ width: 44 }} />
@@ -208,7 +208,7 @@ const ExportExpensesScreen = ({ navigation }) => {
                     : "Custom Range"}
               </Text>
               {dateRange === range && (
-                <Ionicons name="checkmark-circle" size={20} color="#6C63FF" />
+                <Ionicons name="checkmark-circle" size={20} color="#134E4A" />
               )}
             </TouchableOpacity>
           ))}
@@ -228,7 +228,7 @@ const ExportExpensesScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
 
-              <Ionicons name="arrow-forward" size={20} color="#94A3B8" />
+              <Ionicons name="arrow-forward" size={20} color="#71717A" />
 
               <TouchableOpacity
                 style={styles.dateBtn}
@@ -329,7 +329,7 @@ const ExportExpensesScreen = ({ navigation }) => {
                 <Ionicons
                   name={fmt === "CSV" ? "document-text" : "document"}
                   size={20}
-                  color={format === fmt ? "#6C63FF" : "#64748B"}
+                  color={format === fmt ? "#134E4A" : "#71717A"}
                 />
                 <View style={{ marginLeft: 12 }}>
                   <Text
@@ -348,7 +348,7 @@ const ExportExpensesScreen = ({ navigation }) => {
                 </View>
               </View>
               {format === fmt && (
-                <Ionicons name="checkmark-circle" size={20} color="#6C63FF" />
+                <Ionicons name="checkmark-circle" size={20} color="#134E4A" />
               )}
             </TouchableOpacity>
           ))}
@@ -359,7 +359,7 @@ const ExportExpensesScreen = ({ navigation }) => {
           <Ionicons
             name="information-circle-outline"
             size={18}
-            color="#6C63FF"
+            color="#134E4A"
           />
           <Text style={styles.infoText}>
             {format === "CSV"
@@ -420,14 +420,14 @@ const ExportExpensesScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Ionicons name="checkmark-circle" size={48} color="#10B981" />
+              <Ionicons name="checkmark-circle" size={48} color="#047857" />
               <Text style={styles.modalTitle}>Export Successful!</Text>
               <Text style={styles.modalSubtitle}>{exportedFile?.fileName}</Text>
             </View>
 
             {/* File Location Info */}
             <View style={styles.fileLocationCard}>
-              <Ionicons name="location-outline" size={16} color="#64748B" />
+              <Ionicons name="location-outline" size={16} color="#71717A" />
               <Text style={styles.fileLocationLabel}>Saved to:</Text>
               <Text style={styles.fileLocationPath} numberOfLines={2}>
                 {exportedFile?.fileUri?.replace("file://", "") ||
@@ -443,10 +443,10 @@ const ExportExpensesScreen = ({ navigation }) => {
                 <View
                   style={[
                     styles.modalActionIcon,
-                    { backgroundColor: "#F0EFFF" },
+                    { backgroundColor: "#E6F2F0" },
                   ]}
                 >
-                  <Ionicons name="share-outline" size={24} color="#6C63FF" />
+                  <Ionicons name="share-outline" size={24} color="#134E4A" />
                 </View>
                 <Text style={styles.modalActionText}>Share</Text>
               </TouchableOpacity>
@@ -477,10 +477,10 @@ const ExportExpensesScreen = ({ navigation }) => {
                 <View
                   style={[
                     styles.modalActionIcon,
-                    { backgroundColor: "#F1F5F9" },
+                    { backgroundColor: "#ECEAE4" },
                   ]}
                 >
-                  <Ionicons name="close-outline" size={24} color="#64748B" />
+                  <Ionicons name="close-outline" size={24} color="#71717A" />
                 </View>
                 <Text style={styles.modalActionText}>Close</Text>
               </TouchableOpacity>
@@ -501,7 +501,7 @@ const ExportExpensesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   header: {
     flexDirection: "row",
@@ -511,20 +511,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   scrollContent: {
     padding: 20,
@@ -541,14 +541,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 12,
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: "#94A3B8",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
   },
   option: {
     flexDirection: "row",
@@ -559,11 +559,11 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
   },
   optionActive: {
-    backgroundColor: "#F0EFFF",
-    borderColor: "#6C63FF",
+    backgroundColor: "#E6F2F0",
+    borderColor: "#134E4A",
     borderWidth: 2,
   },
   optionLeft: {
@@ -573,15 +573,15 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   optionLabelActive: {
-    color: "#6C63FF",
+    color: "#134E4A",
   },
   optionDesc: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
   },
   customDateRow: {
@@ -597,18 +597,18 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   dateBtnLabel: {
     fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     marginBottom: 4,
   },
   dateBtnValue: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   chipContainer: {
     flexDirection: "row",
@@ -621,16 +621,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   chipActive: {
-    backgroundColor: "#6C63FF",
-    borderColor: "#6C63FF",
+    backgroundColor: "#134E4A",
+    borderColor: "#134E4A",
   },
   chipLabel: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
   },
   chipLabelActive: {
     color: "#FFFFFF",
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: "#6C63FF",
+    color: "#134E4A",
     lineHeight: 16,
   },
   footer: {
@@ -657,17 +657,17 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#ECEAE4",
   },
   exportBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: "#6C63FF",
+    shadowColor: "#134E4A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   },
   exportBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   modalOverlay: {
@@ -708,20 +708,20 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginTop: 12,
   },
   modalSubtitle: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 4,
     textAlign: "center",
   },
   fileLocationCard: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     borderRadius: 12,
     padding: 12,
     width: "100%",
@@ -730,13 +730,13 @@ const styles = StyleSheet.create({
   },
   fileLocationLabel: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#64748B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#71717A",
     flex: 1,
   },
   fileLocationPath: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: "#71717A",
     flex: 3,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
@@ -761,17 +761,17 @@ const styles = StyleSheet.create({
   },
   modalActionText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   modalInfo: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     textAlign: "center",
     lineHeight: 18,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#ECEAE4",
     width: "100%",
   },
 });

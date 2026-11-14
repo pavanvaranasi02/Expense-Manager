@@ -110,7 +110,7 @@ const CreateFamilyScreen = ({ navigation }) => {
             style={styles.backBtn} 
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create Family</Text>
           <View style={{ width: 44 }} />
@@ -119,7 +119,7 @@ const CreateFamilyScreen = ({ navigation }) => {
         <View style={styles.content}>
           {/* Illustration */}
           <View style={styles.iconContainer}>
-            <Ionicons name="home" size={48} color="#6C63FF" />
+            <Ionicons name="home" size={48} color="#134E4A" />
           </View>
 
           <Text style={styles.title}>Name Your Family</Text>
@@ -132,7 +132,7 @@ const CreateFamilyScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               placeholder="e.g., The Varanasis"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               value={familyName}
               onChangeText={setFamilyName}
               maxLength={30}
@@ -143,7 +143,7 @@ const CreateFamilyScreen = ({ navigation }) => {
 
           {/* Info */}
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={20} color="#6C63FF" />
+            <Ionicons name="information-circle-outline" size={20} color="#134E4A" />
             <Text style={styles.infoText}>
               After creating, you'll receive a unique invite code to share with family members.
             </Text>
@@ -175,7 +175,7 @@ const CreateFamilyScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   keyboardView: {
     flex: 1,
@@ -202,8 +202,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   content: {
     flex: 1,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 30,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -222,14 +222,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
@@ -238,14 +238,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E2DC',
     paddingHorizontal: 16,
     paddingVertical: 4,
   },
   input: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
     paddingVertical: 16,
   },
   charCount: {
@@ -253,12 +253,12 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 8,
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#71717A',
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     borderRadius: 12,
     padding: 14,
     marginTop: 20,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#6C63FF',
+    color: '#134E4A',
     lineHeight: 18,
   },
   footer: {
@@ -277,11 +277,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: '#6C63FF',
+    shadowColor: '#134E4A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   createBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
 });

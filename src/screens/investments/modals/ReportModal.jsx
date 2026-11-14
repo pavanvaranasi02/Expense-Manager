@@ -72,7 +72,7 @@ const ReportModal = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -108,7 +108,7 @@ const ReportModal = ({
                     styles.summaryVal,
                     {
                       color:
-                        (totals?.totalReturns || 0) >= 0 ? "#10B981" : "#EF4444",
+                        (totals?.totalReturns || 0) >= 0 ? "#047857" : "#B91C1C",
                     },
                   ]}
                 >
@@ -124,7 +124,7 @@ const ReportModal = ({
 
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Annualized / XIRR</Text>
-                <Text style={[styles.summaryVal, { color: "#4F46E5" }]}>
+                <Text style={[styles.summaryVal, { color: "#0F766E" }]}>
                   {portfolioXirr !== null && portfolioXirr !== undefined
                     ? `${portfolioXirr}% p.a.`
                     : "N/A"}
@@ -141,7 +141,7 @@ const ReportModal = ({
 
             {successMsg ? (
               <View style={styles.successBanner}>
-                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                <Ionicons name="checkmark-circle" size={16} color="#047857" />
                 <Text style={styles.successBannerText}>{successMsg}</Text>
               </View>
             ) : null}
@@ -160,7 +160,7 @@ const ReportModal = ({
                   { backgroundColor: "rgba(16, 185, 129, 0.1)" },
                 ]}
               >
-                <Ionicons name="grid-outline" size={22} color="#10B981" />
+                <Ionicons name="grid-outline" size={22} color="#047857" />
               </View>
               <View style={styles.exportCardText}>
                 <Text style={styles.exportCardTitle}>Export to CSV / Excel</Text>
@@ -168,7 +168,7 @@ const ReportModal = ({
                   Raw holding data, dates, invested amount, and XIRR
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={18} color="#71717A" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -182,7 +182,7 @@ const ReportModal = ({
                   { backgroundColor: "rgba(79, 70, 229, 0.1)" },
                 ]}
               >
-                <Ionicons name="document-text" size={22} color="#4F46E5" />
+                <Ionicons name="document-text" size={22} color="#0F766E" />
               </View>
               <View style={styles.exportCardText}>
                 <Text style={styles.exportCardTitle}>
@@ -192,12 +192,12 @@ const ReportModal = ({
                   Formatted report ready to print, share, or save
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+              <Ionicons name="chevron-forward" size={18} color="#71717A" />
             </TouchableOpacity>
 
             {exporting && (
               <View style={styles.loadingRow}>
-                <ActivityIndicator size="small" color="#4F46E5" />
+                <ActivityIndicator size="small" color="#0F766E" />
                 <Text style={styles.loadingText}>Generating report...</Text>
               </View>
             )}
@@ -229,19 +229,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   summaryRow: {
     flexDirection: "row",
@@ -259,21 +259,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   summaryLabel: {
     fontSize: 13,
-    color: "#64748B",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
   },
   summaryVal: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   actionHeader: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#475569",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   iconWrap: {
     width: 42,
@@ -302,12 +302,12 @@ const styles = StyleSheet.create({
   },
   exportCardTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   exportCardSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   successBanner: {
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   successBannerText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#065F46",
   },
   loadingRow: {
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: "#4F46E5",
-    fontWeight: "600",
+    color: "#0F766E",
+    fontFamily: 'Manrope_600SemiBold',
   },
 });
 

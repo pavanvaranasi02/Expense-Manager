@@ -21,7 +21,7 @@ const InvestmentCard = ({
   const inv = investment;
   const returns = calculateInvestmentReturns(inv);
   const typeConfig = INVESTMENT_TYPES.find((t) => t.id === inv.type);
-  const typeColor = typeConfig?.color || "#6C63FF";
+  const typeColor = typeConfig?.color || "#134E4A";
 
   const invCurrency = inv.currency || "INR";
   const nativeSymbol = getCurrencySymbol(invCurrency, currencySymbol);
@@ -125,7 +125,7 @@ const InvestmentCard = ({
           <Text
             style={[
               styles.valNum,
-              { color: isPos ? "#10B981" : "#EF4444" },
+              { color: isPos ? "#047857" : "#B91C1C" },
             ]}
           >
             {isPos ? "+" : ""}
@@ -139,7 +139,7 @@ const InvestmentCard = ({
             <Text
               style={[
                 styles.retPct,
-                { color: isPos ? "#10B981" : "#EF4444" },
+                { color: isPos ? "#047857" : "#B91C1C" },
               ]}
             >
               ({isPos ? "+" : ""}
@@ -150,7 +150,7 @@ const InvestmentCard = ({
             <Text
               style={[
                 styles.convertedSub,
-                { color: isPos ? "#10B981" : "#EF4444" },
+                { color: isPos ? "#047857" : "#B91C1C" },
               ]}
             >
               ≈ {isPos ? "+" : ""}{formatCurrency(returns.convertedReturn, isStealthMode, currencySymbol)}
@@ -162,7 +162,7 @@ const InvestmentCard = ({
       {/* Extra Info (SIP / RD progress / Maturity) */}
       {hasSip && (
         <View style={styles.infoRow}>
-          <Ionicons name="repeat" size={13} color="#6366F1" />
+          <Ionicons name="repeat" size={13} color="#134E4A" />
           <Text style={styles.infoText}>
             SIP:{" "}
             {formatCurrency(inv.sipAmount, isStealthMode, currencySymbol)} on{" "}
@@ -205,7 +205,7 @@ const InvestmentCard = ({
       {maturityCountdown && (
         <View style={styles.infoRow}>
           <Ionicons name="flag-outline" size={13} color={maturityCountdown.color} />
-          <Text style={[styles.infoText, { color: maturityCountdown.color, fontWeight: "600" }]}>
+          <Text style={[styles.infoText, { color: maturityCountdown.color, fontFamily: 'Manrope_600SemiBold' }]}>
             {maturityCountdown.text}
             {inv.maturityAmount
               ? ` • Expected: ${formatCurrency(inv.maturityAmount, isStealthMode, currencySymbol)}`
@@ -221,7 +221,7 @@ const InvestmentCard = ({
           onPress={onAddAmount}
           activeOpacity={0.7}
         >
-          <Ionicons name="add-circle-outline" size={15} color="#4F46E5" />
+          <Ionicons name="add-circle-outline" size={15} color="#0F766E" />
           <Text style={styles.actionBtnText}>Add Funds</Text>
         </TouchableOpacity>
 
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   metaRow: {
@@ -297,11 +297,11 @@ const styles = StyleSheet.create({
   },
   typeText: {
     fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
   },
   platformBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   platformText: {
     fontSize: 10,
     color: "#475569",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   foreignBadge: {
     flexDirection: "row",
@@ -325,13 +325,13 @@ const styles = StyleSheet.create({
   foreignBadgeText: {
     fontSize: 10,
     color: "#0369A1",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   convertedSub: {
     fontSize: 10,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 1,
-    fontWeight: "500",
+    fontFamily: 'Manrope_500Medium',
   },
   rateBadge: {
     flexDirection: "row",
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   rateText: {
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
   valuesGrid: {
     flexDirection: "row",
@@ -359,20 +359,20 @@ const styles = StyleSheet.create({
   },
   valLabel: {
     fontSize: 10,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   valNum: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginTop: 2,
   },
   retPct: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     marginTop: 1,
   },
   infoRow: {
@@ -396,11 +396,11 @@ const styles = StyleSheet.create({
   rdMonthlyText: {
     fontSize: 11,
     color: "#0D9488",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   progressBg: {
     height: 5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E2DC",
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#ECEAE4",
     paddingTop: 10,
     gap: 8,
   },
@@ -427,12 +427,12 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
   },
   manageBtn: {
     marginLeft: "auto",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
   },
 });
 

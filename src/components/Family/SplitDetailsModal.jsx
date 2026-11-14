@@ -152,7 +152,7 @@ const SplitDetailsModal = ({
           <View style={styles.header}>
             <Text style={styles.title}>Split Details</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#64748B" />
+              <Ionicons name="close" size={24} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -177,7 +177,7 @@ const SplitDetailsModal = ({
                   {label}
                 </Text>
                 {splitType === key && (
-                  <Ionicons name="checkmark-circle" size={20} color="#6C63FF" />
+                  <Ionicons name="checkmark-circle" size={20} color="#134E4A" />
                 )}
               </TouchableOpacity>
             ))}
@@ -274,8 +274,8 @@ const SplitDetailsModal = ({
                                   0,
                                 ) - parseFloat(amount),
                               ) < 0.01
-                                ? "#10B981"
-                                : "#EF4444",
+                                ? "#047857"
+                                : "#B91C1C",
                           },
                         ]}
                       >
@@ -308,8 +308,8 @@ const SplitDetailsModal = ({
                                   0,
                                 ) - 100,
                               ) < 0.01
-                                ? "#10B981"
-                                : "#EF4444",
+                                ? "#047857"
+                                : "#B91C1C",
                           },
                         ]}
                       >
@@ -358,20 +358,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   title: {
     fontSize: 20,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   content: {
     padding: 20,
   },
   sectionLabel: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     textTransform: "uppercase",
     marginBottom: 12,
     marginTop: 8,
@@ -382,21 +382,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 14,
     borderRadius: 12,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     marginBottom: 8,
   },
   typeOptionActive: {
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderWidth: 2,
-    borderColor: "#6C63FF",
+    borderColor: "#134E4A",
   },
   typeLabel: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   typeLabelActive: {
-    color: "#6C63FF",
+    color: "#134E4A",
   },
   memberRow: {
     flexDirection: "row",
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 12,
     borderRadius: 12,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     marginBottom: 8,
   },
   memberLeft: {
@@ -423,18 +423,18 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   checkboxActive: {
-    backgroundColor: "#6C63FF",
-    borderColor: "#6C63FF",
+    backgroundColor: "#134E4A",
+    borderColor: "#134E4A",
   },
   memberName: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   splitAmount: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#10B981",
+    fontFamily: 'Manrope_700Bold',
+    color: "#047857",
   },
   inputContainer: {
     flexDirection: "row",
@@ -443,27 +443,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     minWidth: 100,
   },
   inputPrefix: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_700Bold',
+    color: "#134E4A",
     marginRight: 4,
   },
   input: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
     textAlign: "right",
     flex: 1,
     paddingVertical: 8,
   },
   inputSuffix: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_700Bold',
+    color: "#134E4A",
     marginLeft: 4,
   },
   summary: {
@@ -471,26 +471,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 14,
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 12,
     marginTop: 12,
   },
   summaryLabel: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
   },
   summaryValue: {
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#ECEAE4",
   },
   saveBtn: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     height: 52,
     borderRadius: 14,
     justifyContent: "center",
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
 });

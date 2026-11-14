@@ -90,7 +90,7 @@ const FamilyLandingScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -103,7 +103,7 @@ const FamilyLandingScreen = ({ navigation }) => {
         {/* Illustration */}
         <View style={styles.illustrationContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="people" size={64} color="#6C63FF" />
+            <Ionicons name="people" size={64} color="#134E4A" />
           </View>
         </View>
 
@@ -123,7 +123,7 @@ const FamilyLandingScreen = ({ navigation }) => {
           ].map((feature, index) => (
             <View key={index} style={styles.featureRow}>
               <View style={styles.featureIcon}>
-                <Ionicons name={feature.icon} size={18} color="#6C63FF" />
+                <Ionicons name={feature.icon} size={18} color="#134E4A" />
               </View>
               <Text style={styles.featureText}>{feature.text}</Text>
             </View>
@@ -142,7 +142,7 @@ const FamilyLandingScreen = ({ navigation }) => {
                   <LinearGradient colors={['#a43e3e', 'rgba(255,0,255,0)', 'rgba(255,0,255,0)', '#bb4646']} start={{x:0, y:0}} end={{x:1, y:1}} style={{ flex: 1 }} />
                 </Animated.View>
               </View>
-              <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#6C63FF', borderRadius: 14, gap: 10 }}>
+              <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#134E4A', borderRadius: 14, gap: 10 }}>
                 <Ionicons name="add-circle" size={22} color="#FFFFFF" />
                 <Text style={styles.primaryBtnText}>Create a Family</Text>
               </View>
@@ -156,11 +156,11 @@ const FamilyLandingScreen = ({ navigation }) => {
             <View style={{ width: '100%', borderRadius: 16, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 2, height: 56 }}>
               <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
                 <Animated.View style={{ width: 800, height: 800, transform: [{ rotate: spin }] }}>
-                  <LinearGradient colors={['#6C63FF', 'rgba(108,99,255,0)', 'rgba(108,99,255,0)', '#6C63FF']} start={{x:0, y:0}} end={{x:1, y:1}} style={{ flex: 1 }} />
+                  <LinearGradient colors={['#134E4A', 'rgba(108,99,255,0)', 'rgba(108,99,255,0)', '#134E4A']} start={{x:0, y:0}} end={{x:1, y:1}} style={{ flex: 1 }} />
                 </Animated.View>
               </View>
               <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 14, gap: 10 }}>
-                <Ionicons name="enter-outline" size={22} color="#6C63FF" />
+                <Ionicons name="enter-outline" size={22} color="#134E4A" />
                 <Text style={styles.secondaryBtnText}>Join with Code</Text>
               </View>
             </View>
@@ -174,7 +174,7 @@ const FamilyLandingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   loadingContainer: {
     flex: 1,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
   },
   content: {
     flex: 1,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -207,14 +207,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 15,
-    color: '#64748B',
+    color: '#71717A',
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 16,
@@ -233,15 +233,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   featureText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#18181B',
   },
   actions: {
     gap: 12,
@@ -250,11 +250,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: '#6C63FF',
+    shadowColor: '#134E4A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
   secondaryBtn: {
@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 10,
     borderWidth: 2,
-    borderColor: '#6C63FF',
+    borderColor: '#134E4A',
   },
   secondaryBtnText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#6C63FF',
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
   },
 });
 

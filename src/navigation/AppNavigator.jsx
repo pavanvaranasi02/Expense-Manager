@@ -6,27 +6,60 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { auth } from '../config/firebase';
 import { getUserProfile } from '../services/authService';
 import useAuthStore from '../store/useAuthStore';
+import { Theme } from '../theme/theme';
 
 import AuthNavigator from './AuthNavigator';
+import FamilyNavigator from './FamilyNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 
 import AddExpenseScreen from '../screens/expenses/AddExpenseScreen';
 import AddIncomeScreen from '../screens/income/AddIncomeScreen';
 
+// Profile / Settings Stack (opened from top-right avatar)
+import BudgetListScreen from '../screens/budget/BudgetListScreen';
+import BudgetStatusScreen from '../screens/budget/BudgetStatusScreen';
+import SetBudgetScreen from '../screens/budget/SetBudgetScreen';
+import PortfolioScreen from '../screens/investments/PortfolioScreen';
+import ActivityLogsScreen from '../screens/profile/ActivityLogsScreen';
+import AddAccountScreen from '../screens/profile/AddAccountScreen';
+import CreditCardBillScreen from '../screens/profile/CreditCardBillScreen';
+import ManageAccountsScreen from '../screens/profile/ManageAccountsScreen';
+import ManageCategoriesScreen from '../screens/profile/ManageCategoriesScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import SettingsScreen from '../screens/profile/SettingsScreen';
+
 const LoadingScreen = () => (
   <View style={loadingStyles.container}>
-    <ActivityIndicator size="large" color="#6C63FF" />
-    <Text style={loadingStyles.text}>Loading...</Text>
+    <ActivityIndicator size="large" color={Theme.colors.primary} />
+    <Text style={loadingStyles.text}>Loading KOSH...</Text>
   </View>
 );
 
 const loadingStyles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FE' },
-  text: { marginTop: 12, fontSize: 14, color: '#6B7280' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background },
+  text: { marginTop: 12, fontSize: 14, color: Theme.colors.textMuted },
 });
 
 const Stack = createNativeStackNavigator();
+const ProfileStackNav = createNativeStackNavigator();
+
+const ProfileStack = () => (
+  <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
+    <ProfileStackNav.Screen name="ManageCategories" component={ManageCategoriesScreen} />
+    <ProfileStackNav.Screen name="ActivityLogs" component={ActivityLogsScreen} />
+    <ProfileStackNav.Screen name="Settings" component={SettingsScreen} />
+    {/* Compatibility routes in case any deep link or alert targets them via Profile */}
+    <ProfileStackNav.Screen name="ManageAccounts" component={ManageAccountsScreen} />
+    <ProfileStackNav.Screen name="AddAccount" component={AddAccountScreen} />
+    <ProfileStackNav.Screen name="Portfolio" component={PortfolioScreen} />
+    <ProfileStackNav.Screen name="CreditCardBill" component={CreditCardBillScreen} />
+    <ProfileStackNav.Screen name="BudgetList" component={BudgetListScreen} />
+    <ProfileStackNav.Screen name="BudgetStatus" component={BudgetStatusScreen} />
+    <ProfileStackNav.Screen name="SetBudget" component={SetBudgetScreen} />
+  </ProfileStackNav.Navigator>
+);
 
 const AppNavigator = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -43,7 +76,6 @@ const AppNavigator = () => {
       console.log('🔔 Auth state changed:', firebaseUser ? firebaseUser.uid : 'null');
 
       if (firebaseUser) {
-        // Fetch their profile from Firestore
         const result = await getUserProfile(firebaseUser.uid);
 
         if (result.success) {
@@ -54,15 +86,11 @@ const AppNavigator = () => {
           setUserProfile(result.profile);
         } else {
           console.log('⚠️ No profile found, will show onboarding');
-          // User exists in Auth but no Firestore profile
-          // This means they need onboarding
           setUserProfile({ onboardingComplete: false });
         }
-        
-        // Set user only after profile logic to avoid flashing Onboarding navigator
+
         setUser(firebaseUser);
       } else {
-        // User is signed out
         console.log('👋 User signed out');
         setUser(null);
         setUserProfile(null);
@@ -74,15 +102,6 @@ const AppNavigator = () => {
     return () => unsubscribe();
   }, []);
 
-  // Debug log
-  useEffect(() => {
-    console.log('📱 Navigation state:', {
-      isAuthenticated,
-      isOnboardingComplete,
-      isLoading,
-    });
-  }, [isAuthenticated, isOnboardingComplete, isLoading]);
-
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -91,15 +110,26 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
-          // ===== NOT LOGGED IN =====
           <Stack.Screen name="Auth" component={AuthNavigator} />
         ) : !isOnboardingComplete ? (
-          // ===== NEEDS ONBOARDING =====
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
-          // ===== FULLY READY =====
           <>
             <Stack.Screen name="Main" component={MainTabNavigator} />
+            <Stack.Screen
+              name="Family"
+              component={FamilyNavigator}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileStack}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
             <Stack.Screen
               name="AddExpenseModal"
               component={AddExpenseScreen}

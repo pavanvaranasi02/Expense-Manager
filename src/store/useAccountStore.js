@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { calculateAccountTotals } from '../services/financialCalculationService';
 
 const useAccountStore = create((set, get) => ({
   accounts: [],
@@ -27,19 +28,21 @@ const useAccountStore = create((set, get) => ({
   getCashAccounts: () => get().accounts.filter(a => a.type === 'CASH'),
 
   getTotalAssets: () => {
-    return get().accounts
-      .filter(a => a.type === 'BANK' || a.type === 'CASH')
-      .reduce((sum, a) => sum + (a.balance || 0), 0);
+    return calculateAccountTotals(get().accounts, null, {
+      includeInvestmentsInAssets: false,
+    }).totalAssets;
   },
 
   getTotalDebts: () => {
-    return get().accounts
-      .filter(a => a.type === 'CREDIT_CARD')
-      .reduce((sum, a) => sum + (a.currentUsage || 0), 0);
+    return calculateAccountTotals(get().accounts, null, {
+      includeInvestmentsInAssets: false,
+    }).totalLiabilities;
   },
 
   getNetWorth: () => {
-    return get().getTotalAssets() - get().getTotalDebts();
+    return calculateAccountTotals(get().accounts, null, {
+      includeInvestmentsInAssets: false,
+    }).netWorth;
   },
 
   clearAccounts: () => set({ accounts: [], loading: false }),

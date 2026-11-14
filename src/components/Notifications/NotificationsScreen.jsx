@@ -77,10 +77,10 @@ const NotificationsScreen = ({ navigation }) => {
         navigation.navigate("Family", { screen: "FamilyBudget" });
         break;
       case "CreditCardBill":
-        navigation.navigate("Profile", { screen: "CreditCardBill" });
+        navigation.navigate("Wealth", { screen: "CreditCardBill" });
         break;
       case "Portfolio":
-        navigation.navigate("Profile", { screen: "Portfolio" });
+        navigation.navigate("Wealth", { screen: "Portfolio" });
         break;
       case "FamilyTemplates":
         navigation.navigate("Family", { screen: "FamilyTemplates" });
@@ -126,13 +126,13 @@ const NotificationsScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -146,12 +146,12 @@ const NotificationsScreen = ({ navigation }) => {
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
         {notifications.some((n) => !n.persistent) && (
           <TouchableOpacity style={styles.menuBtn} onPress={handleClearAll}>
-            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            <Ionicons name="trash-outline" size={20} color="#B91C1C" />
           </TouchableOpacity>
         )}
         {!notifications.some((n) => !n.persistent) && (
@@ -182,7 +182,7 @@ const NotificationsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#6C63FF"]}
+              colors={["#134E4A"]}
             />
           }
         >
@@ -231,7 +231,7 @@ const NotificationsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   header: {
     flexDirection: "row",
@@ -255,8 +255,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   menuBtn: {
     width: 44,
@@ -281,20 +281,20 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#71717A",
     textAlign: "center",
     lineHeight: 20,
   },
@@ -313,14 +313,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     textTransform: "uppercase",
   },
   markAllRead: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#134E4A",
   },
 });
 

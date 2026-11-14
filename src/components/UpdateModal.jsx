@@ -110,7 +110,7 @@ const UpdateModal = ({ visible, updateInfo, onClose }) => {
               styles.iconCircle,
               {
                 backgroundColor: hasUpdate
-                  ? "#EEF2FF"
+                  ? "#E6F2F0"
                   : isNotFoundOrPrivate
                     ? "#FFFBEB"
                     : "#F0FDF4",
@@ -128,10 +128,10 @@ const UpdateModal = ({ visible, updateInfo, onClose }) => {
               size={32}
               color={
                 hasUpdate
-                  ? "#4F46E5"
+                  ? "#0F766E"
                   : isNotFoundOrPrivate
                     ? "#D97706"
-                    : "#10B981"
+                    : "#047857"
               }
             />
           </View>
@@ -162,12 +162,12 @@ const UpdateModal = ({ visible, updateInfo, onClose }) => {
 
             {hasUpdate && (
               <>
-                <Ionicons name="arrow-forward" size={16} color="#94A3B8" />
+                <Ionicons name="arrow-forward" size={16} color="#71717A" />
                 <View style={[styles.versionPill, styles.versionPillHighlight]}>
-                  <Text style={[styles.versionLabel, { color: "#4F46E5" }]}>
+                  <Text style={[styles.versionLabel, { color: "#0F766E" }]}>
                     Latest
                   </Text>
-                  <Text style={[styles.versionValue, { color: "#4F46E5" }]}>
+                  <Text style={[styles.versionValue, { color: "#0F766E" }]}>
                     {latestTag}
                   </Text>
                 </View>
@@ -319,13 +319,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     textAlign: "center",
   },
   subTitle: {
     fontSize: 13,
-    color: "#64748B",
+    color: "#71717A",
     textAlign: "center",
     marginTop: 4,
     paddingHorizontal: 12,
@@ -338,26 +338,26 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   versionPill: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
     alignItems: "center",
   },
   versionPillHighlight: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     borderWidth: 1,
     borderColor: "#C7D2FE",
   },
   versionLabel: {
     fontSize: 10,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     textTransform: "uppercase",
   },
   versionValue: {
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginTop: 1,
   },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     marginBottom: 16,
   },
   notesHeader: {
@@ -376,19 +376,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
+    borderBottomColor: "#E5E2DC",
     paddingBottom: 6,
   },
   notesTitle: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     flex: 1,
   },
   notesDate: {
     fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "500",
+    color: "#71717A",
+    fontFamily: 'Manrope_500Medium',
     marginLeft: 8,
   },
   notesScroll: {
@@ -407,12 +407,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8,
     elevation: 2,
-    shadowColor: "#4F46E5",
+    shadowColor: "#0F766E",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -420,13 +420,13 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   secondaryBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     paddingVertical: 12,
     borderRadius: 14,
     gap: 8,
@@ -434,20 +434,20 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     color: "#334155",
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   closeTextBtn: {
     paddingVertical: 8,
     alignItems: "center",
   },
   closeText: {
-    color: "#94A3B8",
+    color: "#71717A",
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   downloadLinkBox: {
     width: "100%",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -457,27 +457,27 @@ const styles = StyleSheet.create({
   },
   downloadLinkLabel: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
     letterSpacing: 0.6,
     marginBottom: 4,
   },
   downloadLinkUrl: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#312E81",
   },
   mdH2: {
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
     marginTop: 4,
     marginBottom: 4,
   },
   mdH3: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginTop: 8,
     marginBottom: 4,
   },
@@ -490,17 +490,17 @@ const styles = StyleSheet.create({
   mdBulletDot: {
     fontSize: 13,
     lineHeight: 19,
-    color: "#4F46E5",
-    fontWeight: "800",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
   mdBold: {
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   mdCode: {
-    fontWeight: "600",
-    color: "#4F46E5",
-    backgroundColor: "#EEF2FF",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#0F766E",
+    backgroundColor: "#E6F2F0",
   },
 });
 

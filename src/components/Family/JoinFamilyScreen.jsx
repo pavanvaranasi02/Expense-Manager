@@ -115,7 +115,7 @@ const JoinFamilyScreen = ({ navigation }) => {
             style={styles.backBtn} 
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Join Family</Text>
           <View style={{ width: 44 }} />
@@ -124,7 +124,7 @@ const JoinFamilyScreen = ({ navigation }) => {
         <View style={styles.content}>
           {/* Illustration */}
           <View style={styles.iconContainer}>
-            <Ionicons name="enter-outline" size={48} color="#6C63FF" />
+            <Ionicons name="enter-outline" size={48} color="#134E4A" />
           </View>
 
           <Text style={styles.title}>Enter Invite Code</Text>
@@ -145,7 +145,7 @@ const JoinFamilyScreen = ({ navigation }) => {
               autoCorrect={false}
             />
             {previewLoading && (
-              <ActivityIndicator size="small" color="#6C63FF" style={styles.inputLoader} />
+              <ActivityIndicator size="small" color="#134E4A" style={styles.inputLoader} />
             )}
           </View>
 
@@ -154,7 +154,7 @@ const JoinFamilyScreen = ({ navigation }) => {
             <View style={styles.previewCard}>
               <View style={styles.previewHeader}>
                 <View style={styles.previewIconContainer}>
-                  <Ionicons name="home" size={24} color="#6C63FF" />
+                  <Ionicons name="home" size={24} color="#134E4A" />
                 </View>
                 <View style={styles.previewInfo}>
                   <Text style={styles.previewName}>{preview.name}</Text>
@@ -162,7 +162,7 @@ const JoinFamilyScreen = ({ navigation }) => {
                     {preview.memberCount}/6 members
                   </Text>
                 </View>
-                <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+                <Ionicons name="checkmark-circle" size={24} color="#047857" />
               </View>
 
               {/* Member Avatars */}
@@ -184,7 +184,7 @@ const JoinFamilyScreen = ({ navigation }) => {
           {/* Error State */}
           {code.length >= 6 && !preview && !previewLoading && (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />
+              <Ionicons name="alert-circle-outline" size={20} color="#B91C1C" />
               <Text style={styles.errorText}>Invalid or expired code</Text>
             </View>
           )}
@@ -215,7 +215,7 @@ const JoinFamilyScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F7F6F2',
   },
   keyboardView: {
     flex: 1,
@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   content: {
     flex: 1,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 30,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -262,14 +262,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#71717A',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E2DC',
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 22,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
     paddingVertical: 18,
     letterSpacing: 2,
     textAlign: 'center',
@@ -301,8 +301,8 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 20,
     borderWidth: 2,
-    borderColor: '#10B981',
-    shadowColor: '#10B981',
+    borderColor: '#047857',
+    shadowColor: '#047857',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -326,12 +326,12 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   previewMeta: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     marginTop: 2,
   },
   previewMembers: {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#ECEAE4',
   },
   previewAvatar: {
     borderWidth: 2,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -8,
@@ -360,8 +360,8 @@ const styles = StyleSheet.create({
   },
   moreMembersText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
   },
   errorBox: {
     flexDirection: 'row',
@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#EF4444',
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#B91C1C',
   },
   footer: {
     padding: 24,
@@ -385,11 +385,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#134E4A',
     height: 56,
     borderRadius: 16,
     gap: 10,
-    shadowColor: '#6C63FF',
+    shadowColor: '#134E4A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   joinBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
 });

@@ -130,7 +130,7 @@ const FamilyDashboardScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -141,7 +141,7 @@ const FamilyDashboardScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -156,13 +156,13 @@ const FamilyDashboardScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#6C63FF"]}
+            colors={["#134E4A"]}
           />
         }
       >
         {/* Header */}
         <LinearGradient
-          colors={["#6C63FF", "#4F46E5"]}
+          colors={[Theme.colors.heroStart, Theme.colors.heroEnd]}
           style={styles.headerGradient}
         >
           <View style={styles.header}>
@@ -308,7 +308,7 @@ const FamilyDashboardScreen = ({ navigation }) => {
                 style={styles.addMemberBtn}
                 onPress={() => navigation.navigate("FamilyInvite")}
               >
-                <Ionicons name="add-circle-outline" size={20} color="#6C63FF" />
+                <Ionicons name="add-circle-outline" size={20} color="#134E4A" />
                 <Text style={styles.addMemberText}>
                   Invite more members ({6 - members.length} slots available)
                 </Text>
@@ -356,13 +356,13 @@ const FamilyDashboardScreen = ({ navigation }) => {
                       <View
                         style={[
                           styles.expenseIcon,
-                          { backgroundColor: "#F0EFFF" },
+                          { backgroundColor: "#E6F2F0" },
                         ]}
                       >
                         <Ionicons
                           name={expense.categoryIcon || "ellipsis-horizontal"}
                           size={20}
-                          color="#6C63FF"
+                          color="#134E4A"
                         />
                       </View>
                       <View>
@@ -413,10 +413,10 @@ const FamilyDashboardScreen = ({ navigation }) => {
                           width: `${Math.min((totalSpent / budget.overall) * 100, 100)}%`,
                           backgroundColor:
                             (totalSpent / budget.overall) * 100 >= 100
-                              ? "#EF4444"
+                              ? "#B91C1C"
                               : (totalSpent / budget.overall) * 100 >= 80
                                 ? "#F59E0B"
-                                : "#10B981",
+                                : "#047857",
                         },
                       ]}
                     />
@@ -431,10 +431,10 @@ const FamilyDashboardScreen = ({ navigation }) => {
                         {
                           color:
                             (totalSpent / budget.overall) * 100 >= 100
-                              ? "#EF4444"
+                              ? "#B91C1C"
                               : (totalSpent / budget.overall) * 100 >= 80
                                 ? "#F59E0B"
-                                : "#10B981",
+                                : "#047857",
                         },
                       ]}
                     >
@@ -473,7 +473,7 @@ const FamilyDashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
   },
   loadingContainer: {
     flex: 1,
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   },
   familyName: {
     fontSize: 24,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   roleText: {
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   statLabel: {
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.7)",
     marginTop: 4,
     textTransform: "uppercase",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   statDivider: {
     width: 1,
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
-    shadowColor: "#64748B",
+    shadowColor: "#71717A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   },
   gridSectionTitle: {
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
     marginBottom: 16,
   },
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   },
   gridActionText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
     textAlign: "center",
   },
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   comingSoonText: {
     fontSize: 7,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#FFFFFF",
   },
   section: {
@@ -614,14 +614,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 12,
   },
   seeAll: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#134E4A",
   },
   membersGrid: {
     flexDirection: "row",
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
-    shadowColor: "#64748B",
+    shadowColor: "#71717A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
   },
   noMembersText: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#71717A",
     textAlign: "center",
     width: "100%",
     paddingVertical: 20,
@@ -653,14 +653,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     marginTop: 12,
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     borderRadius: 12,
     gap: 8,
   },
   addMemberText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#134E4A",
   },
   comingSoonCard: {
     backgroundColor: "#FFFFFF",
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     borderStyle: "dashed",
   },
   comingSoonIcon: {
@@ -676,8 +676,8 @@ const styles = StyleSheet.create({
   },
   comingSoonTitle: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontFamily: 'Manrope_700Bold',
+    color: "#71717A",
     marginBottom: 6,
   },
   comingSoonDesc: {
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 4,
-    shadowColor: "#64748B",
+    shadowColor: "#71717A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -719,18 +719,18 @@ const styles = StyleSheet.create({
   },
   expenseName: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#18181B",
   },
   expenseMeta: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
   },
   expenseAmount: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "#EF4444",
+    fontFamily: 'Manrope_700Bold',
+    color: "#B91C1C",
   },
 
   // NEW: Budget styles
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#64748B",
+    shadowColor: "#71717A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -752,20 +752,20 @@ const styles = StyleSheet.create({
   },
   budgetLabel: {
     fontSize: 13,
-    color: "#94A3B8",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
   },
   budgetValue: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
   },
   budgetProgress: {
     marginTop: 0,
   },
   budgetProgressBar: {
     height: 8,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 8,
@@ -781,12 +781,12 @@ const styles = StyleSheet.create({
   },
   budgetSpent: {
     fontSize: 13,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
   },
   budgetPercent: {
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: 'Manrope_700Bold',
   },
 
   // NEW: Action button
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#134E4A",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 12,
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
   },
   addExpenseBtnText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#FFFFFF",
   },
 });

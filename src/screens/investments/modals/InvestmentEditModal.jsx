@@ -168,7 +168,7 @@ const InvestmentEditModal = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -184,7 +184,7 @@ const InvestmentEditModal = ({
               value={name}
               onChangeText={setName}
               placeholder="e.g. Parag Parikh Flexi Cap"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
             />
 
             {/* Platform */}
@@ -194,7 +194,7 @@ const InvestmentEditModal = ({
               value={platform}
               onChangeText={setPlatform}
               placeholder="e.g. Groww, Zerodha, HDFC Bank"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
             />
 
             {/* Early Foreign Asset Detection Suggestion */}
@@ -267,7 +267,7 @@ const InvestmentEditModal = ({
                     onChangeText={(v) => setExchangeRate(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="e.g. 86.5"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#71717A"
                   />
                   {numRate > 0 && numInvested > 0 && (
                     <Text style={styles.ratePreviewText}>
@@ -284,7 +284,7 @@ const InvestmentEditModal = ({
                 <Text style={styles.sectionTitle}>Capital & Valuation</Text>
                 {numInvested > 0 && (
                   <View style={[styles.gainBadge, { backgroundColor: isGain ? "#ECFDF5" : "#FEF2F2" }]}>
-                    <Text style={[styles.gainBadgeText, { color: isGain ? "#10B981" : "#EF4444" }]}>
+                    <Text style={[styles.gainBadgeText, { color: isGain ? "#047857" : "#B91C1C" }]}>
                       {isGain ? "+" : ""}{gainPercent}% ({isGain ? "+" : ""}{currentInvSymbol}{Math.abs(Math.round(absoluteGain)).toLocaleString("en-IN")})
                     </Text>
                   </View>
@@ -300,7 +300,7 @@ const InvestmentEditModal = ({
                     onChangeText={(v) => setInvestedAmount(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="0"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#71717A"
                   />
                   {isForeign && numInvested > 0 && (
                     <Text style={styles.convertedMiniText}>
@@ -316,7 +316,7 @@ const InvestmentEditModal = ({
                     onChangeText={(v) => setCurrentValue(cleanDecimal(v))}
                     keyboardType="numeric"
                     placeholder="0"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#71717A"
                   />
                   {isForeign && numCurrent > 0 && (
                     <Text style={styles.convertedMiniText}>
@@ -340,7 +340,7 @@ const InvestmentEditModal = ({
                       onChangeText={(v) => setSipAmount(v.replace(/[^0-9]/g, ""))}
                       keyboardType="numeric"
                       placeholder="5000"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor="#71717A"
                     />
                   </View>
                   <View style={{ flex: 1, marginLeft: 8 }}>
@@ -351,7 +351,7 @@ const InvestmentEditModal = ({
                       onChangeText={(v) => setSipDate(v.replace(/[^0-9]/g, ""))}
                       keyboardType="numeric"
                       placeholder="e.g. 5"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor="#71717A"
                       maxLength={2}
                     />
                   </View>
@@ -370,7 +370,7 @@ const InvestmentEditModal = ({
                   onChangeText={setInterestRate}
                   keyboardType="numeric"
                   placeholder="e.g. 7.1"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#71717A"
                 />
 
                 <View style={styles.row}>
@@ -384,7 +384,7 @@ const InvestmentEditModal = ({
                       }
                       keyboardType="numeric"
                       placeholder="Maturity payoff"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor="#71717A"
                     />
                   </View>
                   <View style={{ flex: 1, marginLeft: 8 }}>
@@ -394,7 +394,7 @@ const InvestmentEditModal = ({
                       value={maturityDate}
                       onChangeText={setMaturityDate}
                       placeholder="DD/MM/YYYY"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor="#71717A"
                     />
                   </View>
                 </View>
@@ -408,7 +408,7 @@ const InvestmentEditModal = ({
               value={note}
               onChangeText={setNote}
               placeholder="Investment goals, folio number, etc."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor="#71717A"
               multiline
             />
 
@@ -425,7 +425,7 @@ const InvestmentEditModal = ({
                 value={isActive}
                 onValueChange={setIsActive}
                 trackColor={{ false: "#CBD5E1", true: "#818CF8" }}
-                thumbColor={isActive ? "#4F46E5" : "#F8FAFC"}
+                thumbColor={isActive ? "#0F766E" : "#F8FAFC"}
               />
             </View>
 
@@ -451,7 +451,7 @@ const InvestmentEditModal = ({
                   onDelete(investment);
                 }}
               >
-                <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                <Ionicons name="trash-outline" size={16} color="#B91C1C" />
                 <Text style={styles.deleteBtnText}>Delete Investment</Text>
               </TouchableOpacity>
             )}
@@ -483,25 +483,25 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
   },
   label: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
     marginBottom: 6,
     marginTop: 10,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   sectionHeaderRow: {
     flexDirection: "row",
@@ -532,8 +532,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    fontFamily: 'Manrope_700Bold',
+    color: "#0F766E",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   },
   gainBadgeText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   row: {
     flexDirection: "row",
@@ -558,21 +558,21 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   switchTitle: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0F172A",
   },
   switchSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#71717A",
     marginTop: 2,
     marginRight: 10,
   },
   saveBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#0F766E",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
   },
   deleteBtn: {
     flexDirection: "row",
@@ -593,41 +593,41 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   deleteBtnText: {
-    color: "#EF4444",
+    color: "#B91C1C",
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
   },
   currencyChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
   },
   activeCurrencyChip: {
-    backgroundColor: "#EEF2FF",
-    borderColor: "#6366F1",
+    backgroundColor: "#E6F2F0",
+    borderColor: "#134E4A",
   },
   currencyChipText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     color: "#475569",
   },
   activeCurrencyChipText: {
-    color: "#4F46E5",
-    fontWeight: "700",
+    color: "#0F766E",
+    fontFamily: 'Manrope_700Bold',
   },
   ratePreviewText: {
     fontSize: 11,
     color: "#0284C7",
-    fontWeight: "600",
+    fontFamily: 'Manrope_600SemiBold',
     marginTop: 4,
   },
   convertedMiniText: {
     fontSize: 10,
-    color: "#64748B",
-    fontWeight: "600",
+    color: "#71717A",
+    fontFamily: 'Manrope_600SemiBold',
     marginTop: 2,
   },
   suggestionBanner: {
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
   },
   suggestionTitle: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: 'Manrope_700Bold',
     color: "#0369A1",
   },
   suggestionSub: {

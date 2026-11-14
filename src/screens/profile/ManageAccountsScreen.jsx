@@ -12,9 +12,12 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import AppButton from '../../components/ui/AppButton';
+import BalanceHero from '../../components/ui/BalanceHero';
+import ScreenHeader from '../../components/ui/ScreenHeader';
 import { deleteAccount, getAccounts } from '../../services/accountService';
 import useAccountStore from '../../store/useAccountStore';
+import { Theme } from '../../theme/theme';
 
 const ManageAccountsScreen = ({ navigation }) => {
   const { accounts, setAccounts } = useAccountStore();
@@ -71,10 +74,10 @@ const ManageAccountsScreen = ({ navigation }) => {
 
   const getTypeInfo = (type) => {
     switch (type) {
-      case 'BANK': return { emoji: '🏦', label: 'Bank Account', color: '#3B82F6' };
-      case 'CREDIT_CARD': return { emoji: '💳', label: 'Credit Card', color: '#F59E0B' };
-      case 'CASH': return { emoji: '💵', label: 'Cash', color: '#10B981' };
-      default: return { emoji: '💰', label: 'Account', color: '#6B7280' };
+      case 'BANK': return { icon: 'business-outline', label: 'Bank Account', color: '#2563EB' };
+      case 'CREDIT_CARD': return { icon: 'card-outline', label: 'Credit Card', color: '#D97706' };
+      case 'CASH': return { icon: 'cash-outline', label: 'Cash', color: '#047857' };
+      default: return { icon: 'wallet-outline', label: 'Account', color: '#0F766E' };
     }
   };
 
@@ -93,14 +96,14 @@ const ManageAccountsScreen = ({ navigation }) => {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={24} color="#111827" />
+              <Ionicons name="chevron-back" size={24} color="#18181B" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>My Accounts</Text>
             <View style={{ width: 44 }} />
           </View>
         </SafeAreaView>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </View>
     );
@@ -109,68 +112,51 @@ const ManageAccountsScreen = ({ navigation }) => {
   const netWorth = totalAssets - totalDebts;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#111827" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Accounts</Text>
+      <ScreenHeader
+        title="My Accounts"
+        subtitle="Banks, cards & cash"
+        showBack
+        navigation={navigation}
+        rightActions={
           <TouchableOpacity
             onPress={() => navigation.navigate('AddAccount')}
             style={styles.addBtn}
+            accessibilityLabel="Add account"
           >
-            <Ionicons name="add" size={24} color="#6366F1" />
+            <Ionicons name="add" size={22} color={Theme.colors.primary} />
           </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        }
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#134E4A']} />
         }
       >
-        {/* Modern Net Worth Summary Card */}
+        {/* Net Worth Editorial Summary */}
         {accounts.length > 0 && (
-          <LinearGradient
-            colors={['#6366F1', '#4338CA']}
-            style={styles.summaryCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.summaryHeader}>
-              <Text style={styles.summaryLabel}>ESTIMATED NET WORTH</Text>
-              <View style={styles.trendingBadge}>
-                <Ionicons name="trending-up" size={12} color="#FFFFFF" />
-                <Text style={styles.trendingText}>+2.4%</Text>
-              </View>
-            </View>
-            <Text style={styles.netWorthAmount}>
-              ₹{netWorth.toLocaleString('en-IN')}
-            </Text>
-            
-            <View style={styles.summaryGrid}>
-              <View style={styles.summaryItem}>
-                <Text style={styles.gridLabel}>ASSETS</Text>
-                <Text style={styles.gridVal}>₹{totalAssets.toLocaleString('en-IN')}</Text>
-              </View>
-              <View style={styles.gridDivider} />
-              <View style={styles.summaryItem}>
-                <Text style={styles.gridLabel}>LIABILITIES</Text>
-                <Text style={styles.gridVal}>₹{totalDebts.toLocaleString('en-IN')}</Text>
-              </View>
-            </View>
-          </LinearGradient>
+          <View style={styles.heroWrap}>
+            <BalanceHero
+              eyebrow="NET WORTH"
+              amountText={`₹${netWorth.toLocaleString('en-IN')}`}
+              leftLabel="ASSETS"
+              leftValue={`₹${totalAssets.toLocaleString('en-IN')}`}
+              rightLabel="LIABILITIES"
+              rightValue={`₹${totalDebts.toLocaleString('en-IN')}`}
+              rightHighlightError={totalDebts > 0}
+            />
+          </View>
         )}
 
         {/* Accounts List */}
         {accounts.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="wallet-outline" size={48} color="#6366F1" />
+              <Ionicons name="wallet-outline" size={48} color="#134E4A" />
             </View>
             <Text style={styles.emptyTitle}>Secure Your Accounts</Text>
             <Text style={styles.emptyText}>Add your bank accounts, credit cards & cash to get the full picture of your wealth.</Text>
@@ -194,7 +180,7 @@ const ManageAccountsScreen = ({ navigation }) => {
               >
                 <View style={styles.cardHeader}>
                   <View style={[styles.iconBox, { backgroundColor: typeInfo.color + '15' }]}>
-                    <Text style={styles.accountEmoji}>{typeInfo.emoji}</Text>
+                    <Ionicons name={typeInfo.icon} size={20} color={typeInfo.color} />
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.accountName} numberOfLines={1}>{account.name}</Text>
@@ -228,10 +214,10 @@ const ManageAccountsScreen = ({ navigation }) => {
                             width: `${Math.min(((account.currentUsage || 0) / (account.creditLimit || 1)) * 100, 100)}%`,
                             backgroundColor:
                               ((account.currentUsage || 0) / (account.creditLimit || 1)) > 0.8
-                                ? '#EF4444'
+                                ? '#B91C1C'
                                 : ((account.currentUsage || 0) / (account.creditLimit || 1)) > 0.5
                                 ? '#F59E0B'
-                                : '#10B981',
+                                : '#047857',
                           },
                         ]}
                       />
@@ -244,28 +230,23 @@ const ManageAccountsScreen = ({ navigation }) => {
         )}
 
         {accounts.length > 0 && (
-          <TouchableOpacity
-            style={styles.addMoreBtn}
+          <AppButton
+            title="Add Another Account"
+            icon="add-outline"
+            variant="secondary"
             onPress={() => navigation.navigate('AddAccount')}
-          >
-            <LinearGradient
-              colors={['#EEF2FF', '#E0E7FF']}
-              style={styles.addMoreGradient}
-            >
-              <Ionicons name="add" size={20} color="#6366F1" />
-              <Text style={styles.addMoreText}>Add Another Account</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            style={{ marginTop: 8 }}
+          />
         )}
 
         <Text style={styles.hint}>Long press on an account to delete it</Text>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: 'row',
@@ -274,114 +255,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1EFEA',
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
-  headerTitle: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: "#18181B", letterSpacing: -0.5 },
   addBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EEF2FF',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  heroWrap: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
   },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
 
-  // Summary Card
-  summaryCard: {
-    borderRadius: 24,
-    padding: 24,
-    marginTop: 20,
-    marginBottom: 28,
-    elevation: 8,
-    shadowColor: '#6366F1',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 20,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
-  },
-  trendingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  trendingText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginLeft: 4,
-  },
-  netWorthAmount: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: -1,
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  gridDivider: { width: 1, height: '60%', backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginHorizontal: 20 },
-  gridLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  gridVal: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
   // Account Card
   accountCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
+    borderColor: Theme.colors.border,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
   iconBox: {
@@ -392,29 +305,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   accountEmoji: { fontSize: 24 },
-  accountName: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  accountType: { fontSize: 12, color: '#6B7280', fontWeight: '500', marginTop: 2 },
+  accountName: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  accountType: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_500Medium', marginTop: 2 },
   balContainer: { alignItems: 'flex-end' },
-  accountBalance: { fontSize: 17, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  accountBalance: { fontSize: 17, fontFamily: 'Manrope_700Bold', color: '#18181B', letterSpacing: -0.5 },
   
-  usageContainer: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F9FAFB' },
+  usageContainer: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F7F6F2' },
   usageLabels: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  usagePercent: { fontSize: 11, fontWeight: '800', color: '#111827' },
-  creditLimit: { fontSize: 11, fontWeight: '600', color: '#9CA3AF' },
-  usageBarBg: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
+  usagePercent: { fontSize: 11, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  creditLimit: { fontSize: 11, fontFamily: 'Manrope_600SemiBold', color: '#71717A' },
+  usageBarBg: { height: 6, backgroundColor: '#F1EFEA', borderRadius: 3, overflow: 'hidden' },
   usageBarFill: { height: '100%', borderRadius: 3 },
 
-  // Buttons
-  addMoreBtn: { marginTop: 8, borderRadius: 16, overflow: 'hidden' },
-  addMoreGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  addMoreText: { fontSize: 15, color: '#6366F1', fontWeight: '800', marginLeft: 8 },
-
-  hint: { textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 16 },
+  hint: { textAlign: 'center', fontSize: 11, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 16 },
 
   // Empty State
   emptyContainer: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: 40 },
@@ -422,25 +325,25 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
-  emptyTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
-  emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginTop: 8, lineHeight: 20, fontWeight: '500' },
+  emptyTitle: { fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', letterSpacing: -0.5 },
+  emptyText: { fontSize: 14, color: '#71717A', textAlign: 'center', marginTop: 8, lineHeight: 20, fontFamily: 'Manrope_500Medium' },
   emptyBtn: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#134E4A',
     paddingVertical: 16,
     paddingHorizontal: 28,
     borderRadius: 16,
     marginTop: 28,
     elevation: 4,
-    shadowColor: '#6366F1',
+    shadowColor: '#134E4A',
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 4 },
   },
-  emptyBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  emptyBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: 'Manrope_700Bold' },
 });
 
 export default ManageAccountsScreen;

@@ -149,13 +149,13 @@ const FamilyTemplatesScreen = ({ navigation }) => {
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: item.categoryIcon + "15" || "#F1F5F9" },
+                { backgroundColor: item.categoryIcon + "15" || "#ECEAE4" },
               ]}
             >
               <Ionicons
                 name={item.categoryIcon || "repeat"}
                 size={20}
-                color="#6C63FF"
+                color="#134E4A"
               />
             </View>
             <View>
@@ -192,7 +192,7 @@ const FamilyTemplatesScreen = ({ navigation }) => {
 
         <View style={styles.templateDetails}>
           <View style={styles.detailItem}>
-            <Ionicons name="repeat-outline" size={14} color="#94A3B8" />
+            <Ionicons name="repeat-outline" size={14} color="#71717A" />
             <Text style={styles.detailText}>
               {item.recurrence.frequency > 1
                 ? `Every ${item.recurrence.frequency} `
@@ -202,12 +202,12 @@ const FamilyTemplatesScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.detailItem}>
-            <Ionicons name="calendar-outline" size={14} color="#94A3B8" />
+            <Ionicons name="calendar-outline" size={14} color="#71717A" />
             <Text
               style={[
                 styles.detailText,
                 isDue &&
-                  item.isActive && { color: "#EF4444", fontWeight: "600" },
+                  item.isActive && { color: "#B91C1C", fontFamily: 'Manrope_600SemiBold' },
               ]}
             >
               Next: {formatDate(item.nextDue)}
@@ -223,7 +223,7 @@ const FamilyTemplatesScreen = ({ navigation }) => {
                 navigation.navigate("EditTemplate", { templateId: item.id })
               }
             >
-              <Ionicons name="pencil" size={16} color="#64748B" />
+              <Ionicons name="pencil" size={16} color="#71717A" />
               <Text style={styles.actionText}>Edit</Text>
             </TouchableOpacity>
 
@@ -231,8 +231,8 @@ const FamilyTemplatesScreen = ({ navigation }) => {
               style={styles.actionBtn}
               onPress={() => handleDelete(item.id)}
             >
-              <Ionicons name="trash" size={16} color="#EF4444" />
-              <Text style={[styles.actionText, { color: "#EF4444" }]}>
+              <Ionicons name="trash" size={16} color="#B91C1C" />
+              <Text style={[styles.actionText, { color: "#B91C1C" }]}>
                 Delete
               </Text>
             </TouchableOpacity>
@@ -250,13 +250,13 @@ const FamilyTemplatesScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+            <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Recurring Expenses</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </SafeAreaView>
     );
@@ -270,14 +270,14 @@ const FamilyTemplatesScreen = ({ navigation }) => {
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          <Ionicons name="arrow-back" size={24} color="#18181B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Recurring Expenses</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => navigation.navigate("AddTemplate")}
         >
-          <Ionicons name="add" size={24} color="#6C63FF" />
+          <Ionicons name="add" size={24} color="#134E4A" />
         </TouchableOpacity>
       </View>
 
@@ -329,7 +329,7 @@ const FamilyTemplatesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FE" },
+  container: { flex: 1, backgroundColor: "#F7F6F2" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -338,22 +338,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "#ECEAE4",
   },
   backBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#F8F9FE",
+    backgroundColor: "#F7F6F2",
     justifyContent: "center",
     alignItems: "center",
   },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B" },
+  headerTitle: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   addBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "#E6F2F0",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -368,14 +368,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 10,
   },
-  alertText: { flex: 1, fontSize: 12, color: "#B45309", fontWeight: "500" },
+  alertText: { flex: 1, fontSize: 12, color: "#B45309", fontFamily: 'Manrope_500Medium' },
   processBtn: {
     backgroundColor: "#F59E0B",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
-  processText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
+  processText: { color: "#FFFFFF", fontSize: 12, fontFamily: 'Manrope_700Bold' },
   listContent: { padding: 20 },
   templateCard: {
     backgroundColor: "#FFFFFF",
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5E2DC",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -406,11 +406,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  templateName: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
+  templateName: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: "#18181B" },
   templateAmount: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#6C63FF",
+    fontFamily: 'Manrope_600SemiBold',
+    color: "#134E4A",
     marginTop: 2,
   },
   templateStatus: { alignItems: "flex-end", gap: 6 },
@@ -420,28 +420,28 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  dueText: { fontSize: 9, fontWeight: "800", color: "#EF4444" },
+  dueText: { fontSize: 9, fontFamily: 'Manrope_700Bold', color: "#B91C1C" },
   toggleBtn: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
   },
-  toggleActive: { backgroundColor: "#F0EFFF", borderColor: "#C7D2FE" },
-  toggleInactive: { backgroundColor: "#F1F5F9", borderColor: "#E2E8F0" },
-  toggleText: { fontSize: 11, fontWeight: "600", color: "#64748B" },
-  toggleTextActive: { color: "#6C63FF" },
+  toggleActive: { backgroundColor: "#E6F2F0", borderColor: "#C7D2FE" },
+  toggleInactive: { backgroundColor: "#ECEAE4", borderColor: "#E5E2DC" },
+  toggleText: { fontSize: 11, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
+  toggleTextActive: { color: "#134E4A" },
   templateDetails: {
     flexDirection: "row",
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#ECEAE4",
     paddingVertical: 12,
     marginBottom: 12,
     gap: 16,
   },
   detailItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  detailText: { fontSize: 12, color: "#64748B" },
+  detailText: { fontSize: 12, color: "#71717A" },
   templateActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -454,26 +454,26 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  actionText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
+  actionText: { fontSize: 13, fontFamily: 'Manrope_600SemiBold', color: "#71717A" },
   emptyContainer: { alignItems: "center", paddingVertical: 60 },
   emptyIcon: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECEAE4",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontFamily: 'Manrope_700Bold',
+    color: "#18181B",
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#71717A",
     textAlign: "center",
     paddingHorizontal: 20,
   },

@@ -4,10 +4,13 @@ import {
     deleteDoc,
     doc,
     getDoc,
+    increment,
+    serverTimestamp,
     setDoc,
     updateDoc,
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { fromPaise, toPaise } from './financialCalculationService';
 import {
     clearPoisonedEntries,
     dequeue,
@@ -104,6 +107,23 @@ const replayOperation = async (userId, entry) => {
           _offlineSynced: true,
         });
       }
+      if (entry.accountUpdate?.accountId) {
+        const { accountId, paymentMode, amount } = entry.accountUpdate;
+        const amt = fromPaise(toPaise(amount));
+        const accRef = doc(db, 'users', userId, 'accounts', accountId);
+        if (paymentMode === 'CREDIT_CARD') {
+          await updateDoc(accRef, {
+            currentUsage: increment(amt),
+            availableCredit: increment(-amt),
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          await updateDoc(accRef, {
+            balance: increment(-amt),
+            updatedAt: serverTimestamp(),
+          });
+        }
+      }
       break;
     }
 
@@ -120,6 +140,41 @@ const replayOperation = async (userId, entry) => {
         ...data,
         _offlineSynced: true,
       });
+      if (entry.oldData) {
+        const oldData = entry.oldData;
+        const oldAmt = fromPaise(toPaise(oldData.amount));
+        const newAmt = fromPaise(toPaise(data?.amount));
+        if (oldData.accountId) {
+          const oldAccRef = doc(db, 'users', userId, 'accounts', oldData.accountId);
+          if (oldData.paymentMode === 'CREDIT_CARD' || oldData.isCredit) {
+            await updateDoc(oldAccRef, {
+              currentUsage: increment(-oldAmt),
+              availableCredit: increment(oldAmt),
+              updatedAt: serverTimestamp(),
+            });
+          } else {
+            await updateDoc(oldAccRef, {
+              balance: increment(oldAmt),
+              updatedAt: serverTimestamp(),
+            });
+          }
+        }
+        if (data?.accountId) {
+          const newAccRef = doc(db, 'users', userId, 'accounts', data.accountId);
+          if (data.paymentMode === 'CREDIT_CARD' || data.isCredit) {
+            await updateDoc(newAccRef, {
+              currentUsage: increment(newAmt),
+              availableCredit: increment(-newAmt),
+              updatedAt: serverTimestamp(),
+            });
+          } else {
+            await updateDoc(newAccRef, {
+              balance: increment(-newAmt),
+              updatedAt: serverTimestamp(),
+            });
+          }
+        }
+      }
       break;
     }
 
@@ -133,6 +188,22 @@ const replayOperation = async (userId, entry) => {
         return;
       }
       await deleteDoc(docRef);
+      if (data?.accountId && data?.amount) {
+        const amt = fromPaise(toPaise(data.amount));
+        const accRef = doc(db, 'users', userId, 'accounts', data.accountId);
+        if (data.paymentMode === 'CREDIT_CARD' || data.isCredit) {
+          await updateDoc(accRef, {
+            currentUsage: increment(-amt),
+            availableCredit: increment(amt),
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          await updateDoc(accRef, {
+            balance: increment(amt),
+            updatedAt: serverTimestamp(),
+          });
+        }
+      }
       break;
     }
 

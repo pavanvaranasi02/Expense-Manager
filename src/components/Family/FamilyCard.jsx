@@ -10,7 +10,7 @@ const FamilyCard = ({ family, members, onPress }) => {
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <Ionicons name="home" size={24} color="#6C63FF" />
+          <Ionicons name="home" size={24} color="#134E4A" />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.familyName}>{family?.name || 'My Family'}</Text>
@@ -18,7 +18,7 @@ const FamilyCard = ({ family, members, onPress }) => {
             {members?.length || 0} member{members?.length !== 1 ? 's' : ''}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+        <Ionicons name="chevron-forward" size={20} color="#71717A" />
       </View>
 
       <View style={styles.membersRow}>
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#64748B',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#F0EFFF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -66,12 +66,12 @@ const styles = StyleSheet.create({
   },
   familyName: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
   memberCount: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#71717A',
     marginTop: 2,
   },
   membersRow: {
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#ECEAE4',
   },
   memberAvatar: {
     borderWidth: 2,
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#ECEAE4',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -10,
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   },
   extraText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: 'Manrope_700Bold',
+    color: '#71717A',
   },
 });
 

@@ -16,6 +16,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenHeader from '../../components/ui/ScreenHeader';
+import SurfaceCard from '../../components/ui/SurfaceCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAccounts } from '../../services/accountService';
 import { logoutUser, updateUserProfile } from '../../services/authService';
@@ -57,27 +59,18 @@ const FAQ_ITEMS = [
 
 const menuSections = [
   {
-    title: 'FINANCES',
+    title: 'APP & PREFERENCES',
     items: [
-      { id: 'accounts', icon: 'wallet-outline', label: 'My Accounts', screen: 'ManageAccounts', color: '#6C63FF' },
-      { id: 'portfolio', icon: 'trending-up-outline', label: 'Portfolio & Investments', screen: 'Portfolio', color: '#10B981' },
-      { id: 'budgets', icon: 'pie-chart-outline', label: 'Budgets', screen: 'BudgetList', color: '#8B5CF6' },
-      { id: 'creditBill', icon: 'card-outline', label: 'Credit Card Bills', screen: 'CreditCardBill', color: '#EF4444' },
+      { id: 'categories', icon: 'grid-outline', label: 'Categories', screen: 'ManageCategories', color: '#D97706' },
+      { id: 'activityLogs', icon: 'document-text-outline', label: 'Activity & Audit Logs', screen: 'ActivityLogs', color: '#0F766E' },
+      { id: 'settings', icon: 'settings-outline', label: 'Settings & Storage', screen: 'Settings', color: '#475569' },
     ]
   },
   {
-    title: 'CUSTOMIZATION',
+    title: 'SUPPORT & ABOUT',
     items: [
-      { id: 'categories', icon: 'grid-outline', label: 'Categories', screen: 'ManageCategories', color: '#F59E0B' },
-      { id: 'activityLogs', icon: 'document-text-outline', label: 'Activity Logs', screen: 'ActivityLogs', color: '#6C63FF' },
-      { id: 'settings', icon: 'settings-outline', label: 'Settings', screen: 'Settings', color: '#64748B' },
-    ]
-  },
-  {
-    title: 'SUPPORT',
-    items: [
-      { id: 'help', icon: 'help-circle-outline', label: 'Help & FAQ', color: '#3B82F6' },
-      { id: 'share', icon: 'share-social-outline', label: 'Invite Friends', color: '#EC4899' },
+      { id: 'help', icon: 'help-circle-outline', label: 'Help & FAQ', color: '#2563EB' },
+      { id: 'share', icon: 'share-social-outline', label: 'Invite Friends', color: '#134E4A' },
     ]
   }
 ];
@@ -268,57 +261,45 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenHeader
+        title="Profile"
+        subtitle="Account & preferences"
+        showBack
+        navigation={navigation}
+        rightActions={
+          <TouchableOpacity
+            style={styles.editHeaderBtn}
+            onPress={openEditModal}
+            accessibilityLabel="Edit account details"
+          >
+            <Ionicons name="create-outline" size={18} color={Theme.colors.text} />
+          </TouchableOpacity>
+        }
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Header Gradient Background */}
-        <LinearGradient
-          colors={[Theme.colors.primary, Theme.colors.primaryDark]}
-          style={styles.headerBackground}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <SafeAreaView edges={['top']}>
-            <View style={styles.topNav}>
-              <Text style={styles.headerTitle}>Profile</Text>
-              <TouchableOpacity
-                style={styles.editBtn}
-                onPress={openEditModal}
-                accessibilityLabel="Edit account details"
-              >
-                <Ionicons name="pencil" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
+        {/* Clean Editorial Identity Card */}
+        <SurfaceCard style={styles.profileCard}>
+          <View style={styles.identityRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{getInitial()}</Text>
             </View>
-          </SafeAreaView>
-        </LinearGradient>
-
-        {/* Profile Info Overlay Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={['#FFFFFF', '#F0F9FF']}
-              style={styles.avatarBorder}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitial()}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>{userName}</Text>
+              <Text style={styles.email}>{userEmail}</Text>
+              <View style={styles.badgeRow}>
+                <View style={styles.currencyBadge}>
+                  <Ionicons name="cash-outline" size={12} color={Theme.colors.primary} style={{ marginRight: 4 }} />
+                  <Text style={styles.currencyText}>{getCurrencyLabel()}</Text>
+                </View>
+                <View style={[styles.currencyBadge, { backgroundColor: Theme.colors.successLight }]}>
+                  <Ionicons name="shield-checkmark-outline" size={12} color={Theme.colors.success} style={{ marginRight: 4 }} />
+                  <Text style={[styles.currencyText, { color: Theme.colors.success }]}>Verified</Text>
+                </View>
               </View>
-            </LinearGradient>
-            <View style={styles.onlineBadge} />
-          </View>
-          
-          <Text style={styles.name}>{userName}</Text>
-          <Text style={styles.email}>{userEmail}</Text>
-          
-          <View style={styles.badgeRow}>
-            <View style={styles.currencyBadge}>
-              <Ionicons name="cash-outline" size={12} color="#6C63FF" style={{ marginRight: 4 }} />
-              <Text style={styles.currencyText}>{getCurrencyLabel()}</Text>
-            </View>
-            <View style={[styles.currencyBadge, { backgroundColor: '#F0FDF4' }]}>
-              <Ionicons name="shield-checkmark" size={12} color="#10B981" style={{ marginRight: 4 }} />
-              <Text style={[styles.currencyText, { color: '#10B981' }]}>Verified</Text>
             </View>
           </View>
-        </View>
+        </SurfaceCard>
 
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
@@ -346,23 +327,19 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Premium Banner */}
-        <TouchableOpacity style={styles.premiumCard}>
-          <LinearGradient
-            colors={['#1F2937', '#1E293B']}
-            style={styles.premiumGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.premiumTitle}>Upgrade to KOSH Pro</Text>
-              <Text style={styles.premiumSubtitle}>Get advanced insights & reports</Text>
-            </View>
+        {/* Subtle KOSH Pro Banner */}
+        <SurfaceCard style={styles.premiumCard} onPress={() => {}}>
+          <View style={styles.premiumRow}>
             <View style={styles.premiumIconContainer}>
-              <Ionicons name="diamond" size={24} color="#F59E0B" />
+              <Ionicons name="sparkles-outline" size={20} color={Theme.colors.primary} />
             </View>
-          </LinearGradient>
-        </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.premiumTitle}>KOSH Pro</Text>
+              <Text style={styles.premiumSubtitle}>Advanced insights & custom reports</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Theme.colors.textLight} />
+          </View>
+        </SurfaceCard>
 
         {/* Menu Sections */}
         {menuSections.map((section) => (
@@ -379,7 +356,7 @@ const ProfileScreen = ({ navigation }) => {
                       <Ionicons name={item.icon} size={20} color={Theme.colors.primary} />
                     </View>
                     <Text style={styles.menuLabel}>{item.label}</Text>
-                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+                    <Ionicons name="chevron-forward" size={16} color="#71717A" />
                   </TouchableOpacity>
                   {idx < section.items.length - 1 && <View style={styles.menuDivider} />}
                 </View>
@@ -390,7 +367,7 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Danger Zone */}
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: '#EF4444' }]}>DANGER ZONE</Text>
+          <Text style={[styles.sectionTitle, { color: '#B91C1C' }]}>DANGER ZONE</Text>
           <View style={styles.menuGroup}>
             <TouchableOpacity
               style={[styles.menuCard, loggingOut && { opacity: 0.5 }]}
@@ -398,13 +375,13 @@ const ProfileScreen = ({ navigation }) => {
               disabled={loggingOut}
             >
               <View style={[styles.menuIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+                <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
               </View>
-              <Text style={[styles.menuLabel, { color: '#EF4444' }]}>Logout</Text>
+              <Text style={[styles.menuLabel, { color: '#B91C1C' }]}>Logout</Text>
               {loggingOut ? (
-                <ActivityIndicator color="#EF4444" size="small" />
+                <ActivityIndicator color="#B91C1C" size="small" />
               ) : (
-                <Ionicons name="chevron-forward" size={16} color="#EF4444" />
+                <Ionicons name="chevron-forward" size={16} color="#B91C1C" />
               )}
             </TouchableOpacity>
           </View>
@@ -581,115 +558,84 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
   content: { paddingBottom: 100 },
-
-  headerBackground: {
-    height: 180,
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  topNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  editBtn: {
+  editHeaderBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    borderRadius: 24,
-    marginTop: -60,
-    alignItems: 'center',
-    paddingBottom: 24,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
+    backgroundColor: Theme.colors.surface,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  avatarContainer: {
-    marginTop: -45,
-    position: 'relative',
-  },
-  avatarBorder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    padding: 3,
-    elevation: 4,
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 45,
-    backgroundColor: '#6C63FF',
+    borderColor: Theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
   },
-  avatarText: { fontSize: 36, fontWeight: '800', color: '#FFFFFF' },
-  onlineBadge: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#10B981',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
+  profileCard: {
+    marginHorizontal: 20,
+    marginTop: 6,
   },
-  name: { fontSize: 24, fontWeight: '900', color: '#1E293B', marginTop: 12, letterSpacing: -0.5 },
-  email: { fontSize: 14, color: '#64748B', marginTop: 2, fontWeight: '500' },
-  badgeRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  currencyBadge: {
-    backgroundColor: '#E0E7FF',
+  identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    gap: 14,
   },
-  currencyText: { fontSize: 11, color: '#6C63FF', fontWeight: '800', textTransform: 'uppercase' },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Theme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: 'rgba(19, 78, 74, 0.22)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 22,
+    color: Theme.colors.primary,
+  },
+  name: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 19,
+    color: Theme.colors.text,
+    letterSpacing: -0.3,
+  },
+  email: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 13,
+    color: Theme.colors.textMuted,
+    marginTop: 2,
+  },
+  badgeRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  currencyBadge: {
+    backgroundColor: Theme.colors.primaryLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Theme.radius.full,
+  },
+  currencyText: {
+    fontFamily: Theme.typography.fontFamily.semibold,
+    fontSize: 11,
+    color: Theme.colors.primary,
+    textTransform: 'uppercase',
+  },
 
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Theme.colors.surface,
     marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 20,
-    paddingVertical: 18,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 10,
+    marginTop: 14,
+    borderRadius: Theme.radius.lg,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: Theme.colors.border,
     position: 'relative',
   },
   statsInfoBtn: {
@@ -700,51 +646,43 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, height: '70%', backgroundColor: '#F1F5F9', alignSelf: 'center' },
-  statVal: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
-  statLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', marginTop: 2 },
+  statDivider: { width: 1, height: '70%', backgroundColor: Theme.colors.borderSubtle, alignSelf: 'center' },
+  statVal: { ...Theme.typography.presets.monoValue, fontSize: 16, color: Theme.colors.text },
+  statLabel: { ...Theme.typography.presets.rowSubtitle, color: Theme.colors.textMuted, marginTop: 2 },
 
   premiumCard: {
     marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
+    marginTop: 14,
   },
-  premiumGradient: {
+  premiumRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    gap: 12,
   },
-  premiumTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  premiumSubtitle: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 12, marginTop: 2, fontWeight: '500' },
+  premiumTitle: { ...Theme.typography.presets.rowTitle, color: Theme.colors.text },
+  premiumSubtitle: { ...Theme.typography.presets.rowSubtitle, color: Theme.colors.textMuted, marginTop: 2 },
   premiumIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  sectionContainer: { marginTop: 28, paddingHorizontal: 20 },
+  sectionContainer: { marginTop: 24, paddingHorizontal: 20 },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#94A3B8',
+    ...Theme.typography.presets.sectionEyebrow,
+    color: Theme.colors.textMuted,
     marginBottom: 10,
-    letterSpacing: 1.5,
     paddingLeft: 4,
   },
   menuGroup: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.radius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: Theme.colors.border,
   },
   menuCard: {
     flexDirection: 'row',
@@ -759,8 +697,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1F2937' },
-  menuDivider: { height: 1, backgroundColor: '#F8F9FE', marginHorizontal: 16 },
+  menuLabel: { flex: 1, fontSize: 15, fontFamily: 'Manrope_600SemiBold', color: '#1F2937' },
+  menuDivider: { height: 1, backgroundColor: '#F7F6F2', marginHorizontal: 16 },
 
   footer: { marginTop: 48, alignItems: 'center', paddingBottom: 40 },
   versionBadge: {
@@ -774,14 +712,14 @@ const styles = StyleSheet.create({
   versionText: { 
     fontSize: 10, 
     color: '#D97706', 
-    fontWeight: '900',
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 1,
   },
   footerSlogan: { 
     fontSize: 11, 
-    color: '#94A3B8', 
+    color: '#71717A', 
     marginTop: 10, 
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.5,
   },
 
@@ -807,7 +745,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
   },
   modalCloseBtn: {
@@ -820,7 +758,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
     marginBottom: 6,
     marginTop: 12,
@@ -835,7 +773,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Manrope_600SemiBold',
     color: Theme.colors.text,
   },
   readOnlyField: {
@@ -852,7 +790,7 @@ const styles = StyleSheet.create({
   readOnlyText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'Manrope_500Medium',
     color: Theme.colors.textMuted,
   },
   currencyRow: {
@@ -876,7 +814,7 @@ const styles = StyleSheet.create({
   },
   currencyChipText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
   },
   currencyChipTextActive: {
@@ -897,7 +835,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.textMuted,
   },
   saveBtn: {
@@ -910,7 +848,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: '#FFFFFF',
   },
   faqItem: {
@@ -920,7 +858,7 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Theme.colors.text,
     marginBottom: 4,
   },

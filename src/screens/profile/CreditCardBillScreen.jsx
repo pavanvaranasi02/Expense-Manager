@@ -1,3 +1,4 @@
+import { Theme } from '../../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -119,9 +120,9 @@ const CreditCardBillScreen = ({ navigation }) => {
   };
 
   const getStatusColor = (daysLeft) => {
-    if (daysLeft <= 3) return '#EF4444';
+    if (daysLeft <= 3) return '#B91C1C';
     if (daysLeft <= 7) return '#F59E0B';
-    return '#10B981';
+    return '#047857';
   };
 
   const openPayModal = (card) => {
@@ -150,11 +151,13 @@ const CreditCardBillScreen = ({ navigation }) => {
         const expenseResult = await addExpense({
           amount: payAmount,
           categoryId: 'bills',
-          categoryName: 'Bills & Utilities',
-          categoryIcon: '📱',
+          categoryName: 'Credit Card Bill',
+          categoryIcon: '💳',
           accountId: payFromAccount.id,
           accountName: payFromAccount.name,
           paymentMode: payFromAccount.type,
+          isTransfer: true,
+          transactionType: 'transfer',
           note: `Credit Card Bill: ${selectedCard.name}`,
           date: new Date().toISOString(),
         });
@@ -162,7 +165,9 @@ const CreditCardBillScreen = ({ navigation }) => {
         if (expenseResult.success) {
           expenseId = expenseResult.id;
         } else {
-          Alert.alert('Warning', 'Bill marked as paid but failed to record expense: ' + expenseResult.error);
+          Alert.alert('Payment Failed', expenseResult.error || 'Could not debit source account.');
+          setPaying(false);
+          return;
         }
       }
 
@@ -455,14 +460,14 @@ const CreditCardBillScreen = ({ navigation }) => {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={24} color="#111827" />
+              <Ionicons name="chevron-back" size={24} color="#18181B" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Bills & EMIs</Text>
             <View style={{ width: 44 }} />
           </View>
         </SafeAreaView>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color="#134E4A" />
         </View>
       </View>
     );
@@ -474,12 +479,12 @@ const CreditCardBillScreen = ({ navigation }) => {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#111827" />
+            <Ionicons name="chevron-back" size={24} color="#18181B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Bills & EMIs</Text>
           {activeTab === 'emis' ? (
             <TouchableOpacity onPress={openAddEmiModal} style={styles.addHeaderBtn}>
-              <Ionicons name="add" size={22} color="#6366F1" />
+              <Ionicons name="add" size={22} color="#134E4A" />
             </TouchableOpacity>
           ) : (
             <View style={{ width: 44 }} />
@@ -495,7 +500,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             <Ionicons
               name="card"
               size={16}
-              color={activeTab === 'bills' ? '#6366F1' : '#6B7280'}
+              color={activeTab === 'bills' ? '#134E4A' : '#71717A'}
             />
             <Text style={[styles.tabText, activeTab === 'bills' && styles.activeTabText]}>
               Card Bills ({creditCards.length})
@@ -509,7 +514,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             <Ionicons
               name="calendar"
               size={16}
-              color={activeTab === 'emis' ? '#6366F1' : '#6B7280'}
+              color={activeTab === 'emis' ? '#134E4A' : '#71717A'}
             />
             <Text style={[styles.tabText, activeTab === 'emis' && styles.activeTabText]}>
               EMIs & Loans ({emiTotals.activeCount})
@@ -527,7 +532,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             {creditCards.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <View style={styles.emptyIconCircle}>
-                  <Ionicons name="card-outline" size={48} color="#9CA3AF" />
+                  <Ionicons name="card-outline" size={48} color="#71717A" />
                 </View>
                 <Text style={styles.emptyTitle}>No Credit Cards Found</Text>
                 <Text style={styles.emptyText}>
@@ -538,7 +543,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   onPress={() => navigation.navigate('Accounts')}
                 >
                   <LinearGradient
-                    colors={['#6366F1', '#4F46E5']}
+                    colors={['#134E4A', '#0F766E']}
                     style={styles.emptyBtnGradient}
                   >
                     <Text style={styles.emptyBtnText}>Add Credit Card</Text>
@@ -558,7 +563,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   <View key={card.id} style={styles.cardContainer}>
                     {/* Visual Card */}
                     <LinearGradient
-                      colors={[card.color || '#374151', '#111827']}
+                      colors={[card.color || '#3F3F46', '#18181B']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.creditCard}
@@ -578,7 +583,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                               styles.usageBarFill,
                               {
                                 width: `${usagePercent}%`,
-                                backgroundColor: usagePercent > 80 ? '#EF4444' : usagePercent > 50 ? '#F59E0B' : '#10B981',
+                                backgroundColor: usagePercent > 80 ? '#B91C1C' : usagePercent > 50 ? '#F59E0B' : '#047857',
                               },
                             ]}
                           />
@@ -615,7 +620,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         </View>
                         <View style={styles.statBox}>
                           <Text style={styles.statLabel}>STATUS</Text>
-                          <Text style={[styles.statValue, { color: hasOutstanding ? statusColor : '#10B981' }]}>
+                          <Text style={[styles.statValue, { color: hasOutstanding ? statusColor : '#047857' }]}>
                             {hasOutstanding
                               ? daysLeft === 0
                                 ? 'Due Today!'
@@ -634,7 +639,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                       {hasOutstanding && (
                         <View style={styles.reminderCard}>
                           <View style={styles.reminderIconBox}>
-                            <Ionicons name="notifications" size={20} color="#6366F1" />
+                            <Ionicons name="notifications" size={20} color="#134E4A" />
                           </View>
                           <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text style={styles.reminderLabel}>Smart Reminder</Text>
@@ -649,7 +654,7 @@ const CreditCardBillScreen = ({ navigation }) => {
 
                       {usagePercent >= 80 && (
                         <View style={styles.alertBanner}>
-                          <Ionicons name="warning" size={16} color="#EF4444" />
+                          <Ionicons name="warning" size={16} color="#B91C1C" />
                           <Text style={styles.alertText}>
                             High usage! {usagePercent}% of your limit is used.
                           </Text>
@@ -672,7 +677,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                             onPress={() => openPayModal(card)}
                           >
                             <LinearGradient
-                              colors={['#6366F1', '#4338CA']}
+                              colors={['#134E4A', '#0F766E']}
                               start={{ x: 0, y: 0 }}
                               end={{ x: 1, y: 0 }}
                               style={styles.payBtnGradient}
@@ -687,7 +692,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                             style={styles.historyBtn}
                             onPress={() => openHistory(card)}
                           >
-                            <Ionicons name="time" size={18} color="#6366F1" />
+                            <Ionicons name="time" size={18} color="#134E4A" />
                             <Text style={styles.historyBtnText}>HISTORY</Text>
                           </TouchableOpacity>
                         )}
@@ -695,7 +700,7 @@ const CreditCardBillScreen = ({ navigation }) => {
 
                       {!hasOutstanding && (
                         <View style={styles.paidBanner}>
-                          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                          <Ionicons name="checkmark-circle" size={20} color="#047857" />
                           <Text style={styles.paidText}>All Clear! No outstanding balance</Text>
                         </View>
                       )}
@@ -724,7 +729,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 </View>
                 <View style={[styles.emiSummaryCol, { alignItems: 'flex-end' }]}>
                   <Text style={styles.emiSummaryLabel}>OUTSTANDING BALANCE</Text>
-                  <Text style={[styles.emiSummaryValue, { color: '#EF4444' }]}>
+                  <Text style={[styles.emiSummaryValue, { color: '#B91C1C' }]}>
                     ₹{emiTotals.totalRemainingBalance.toLocaleString('en-IN')}
                   </Text>
                 </View>
@@ -732,12 +737,12 @@ const CreditCardBillScreen = ({ navigation }) => {
 
               <View style={styles.emiSummaryFooter}>
                 <View style={styles.emiPillBadge}>
-                  <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                  <View style={[styles.statusDot, { backgroundColor: '#047857' }]} />
                   <Text style={styles.emiPillText}>{emiTotals.activeCount} Active</Text>
                 </View>
-                <View style={[styles.emiPillBadge, { backgroundColor: '#F3F4F6' }]}>
-                  <Ionicons name="checkmark-done" size={14} color="#6B7280" />
-                  <Text style={[styles.emiPillText, { color: '#4B5563', marginLeft: 4 }]}>
+                <View style={[styles.emiPillBadge, { backgroundColor: '#F1EFEA' }]}>
+                  <Ionicons name="checkmark-done" size={14} color="#71717A" />
+                  <Text style={[styles.emiPillText, { color: '#3F3F46', marginLeft: 4 }]}>
                     {emiTotals.completedCount} Completed / Matured
                   </Text>
                 </View>
@@ -780,7 +785,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             {filteredEmis.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <View style={styles.emptyIconCircle}>
-                  <Ionicons name="calendar-outline" size={48} color="#9CA3AF" />
+                  <Ionicons name="calendar-outline" size={48} color="#71717A" />
                 </View>
                 <Text style={styles.emptyTitle}>
                   {emiFilter === 'COMPLETED' ? 'No Completed EMIs Yet' : 'No EMIs Recorded'}
@@ -793,7 +798,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 {emiFilter !== 'COMPLETED' && (
                   <TouchableOpacity style={styles.emptyBtn} onPress={openAddEmiModal}>
                     <LinearGradient
-                      colors={['#6366F1', '#4F46E5']}
+                      colors={['#134E4A', '#0F766E']}
                       style={styles.emptyBtnGradient}
                     >
                       <Ionicons name="add-circle" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -820,12 +825,12 @@ const CreditCardBillScreen = ({ navigation }) => {
                           <Text style={styles.emiCardTitle}>{emi.name}</Text>
                           {isCompleted ? (
                             <View style={styles.completedBadge}>
-                              <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                              <Ionicons name="checkmark-circle" size={12} color="#047857" />
                               <Text style={styles.completedBadgeText}>COMPLETED</Text>
                             </View>
                           ) : (
                             <View style={styles.activePill}>
-                              <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                              <View style={[styles.statusDot, { backgroundColor: '#047857' }]} />
                               <Text style={styles.activePillText}>ACTIVE</Text>
                             </View>
                           )}
@@ -834,7 +839,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                           <Ionicons
                             name={emi.linkedAccountType === 'CREDIT_CARD' ? 'card-outline' : 'business-outline'}
                             size={14}
-                            color="#6B7280"
+                            color="#71717A"
                           />
                           <Text style={styles.emiLinkedText}>
                             {emi.linkedAccountName || 'Credit Card'}
@@ -849,7 +854,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         onPress={() => handleDeleteEmi(emi)}
                         style={styles.emiTrashBtn}
                       >
-                        <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                        <Ionicons name="trash-outline" size={16} color="#B91C1C" />
                       </TouchableOpacity>
                     </View>
 
@@ -867,7 +872,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                             styles.emiProgressBarFill,
                             {
                               width: `${progressPct}%`,
-                              backgroundColor: isCompleted ? '#10B981' : '#6366F1',
+                              backgroundColor: isCompleted ? '#047857' : '#134E4A',
                             },
                           ]}
                         />
@@ -889,7 +894,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         <Text
                           style={[
                             styles.emiStatValue,
-                            { color: isCompleted ? '#10B981' : '#EF4444' },
+                            { color: isCompleted ? '#047857' : '#B91C1C' },
                           ]}
                         >
                           {isCompleted ? 'Matured / Closed' : `₹${remainingAmount.toLocaleString('en-IN')}`}
@@ -906,7 +911,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     {/* Note if any */}
                     {emi.note ? (
                       <View style={styles.emiNoteBox}>
-                        <Ionicons name="document-text-outline" size={14} color="#6B7280" />
+                        <Ionicons name="document-text-outline" size={14} color="#71717A" />
                         <Text style={styles.emiNoteText} numberOfLines={2}>
                           {emi.note}
                         </Text>
@@ -916,7 +921,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     {/* Matured info banner if completed */}
                     {isCompleted && emi.maturedDate && (
                       <View style={styles.maturedInfoBanner}>
-                        <Ionicons name="ribbon-outline" size={16} color="#059669" />
+                        <Ionicons name="ribbon-outline" size={16} color="#047857" />
                         <Text style={styles.maturedInfoText}>
                           Matured on{' '}
                           {new Date(emi.maturedDate).toLocaleDateString('en-IN', {
@@ -936,7 +941,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                           onPress={() => openRecordEmiPaymentModal(emi)}
                         >
                           <LinearGradient
-                            colors={['#6366F1', '#4F46E5']}
+                            colors={['#134E4A', '#0F766E']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={styles.emiPayBtnGradient}
@@ -951,7 +956,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         style={[styles.emiHistoryBtn, isCompleted && { flex: 1 }]}
                         onPress={() => openEmiHistory(emi)}
                       >
-                        <Ionicons name="time" size={16} color="#6366F1" />
+                        <Ionicons name="time" size={16} color="#134E4A" />
                         <Text style={styles.emiHistoryBtnText}>
                           HISTORY ({(emi.paymentHistory || []).length})
                         </Text>
@@ -962,7 +967,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                           style={styles.emiCloseBtn}
                           onPress={() => handleCloseEmi(emi)}
                         >
-                          <Ionicons name="flag-outline" size={16} color="#6B7280" />
+                          <Ionicons name="flag-outline" size={16} color="#71717A" />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -995,7 +1000,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onPress={() => setShowAddEmiModal(false)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -1011,7 +1016,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 value={emiName}
                 onChangeText={setEmiName}
                 placeholder="e.g. iPhone 16 Pro, MacBook, Car Loan"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
               />
 
               {/* Mandatory: Monthly EMI Amount */}
@@ -1024,7 +1029,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   onChangeText={(v) => setEmiMonthlyAmount(v.replace(/[^0-9.]/g, ''))}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor="#D1D5DB"
+                  placeholderTextColor="#A1A1AA"
                 />
               </View>
 
@@ -1057,7 +1062,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onChangeText={(v) => setEmiTotalMonths(v.replace(/[^0-9]/g, ''))}
                 keyboardType="numeric"
                 placeholder="Or custom months (e.g. 18)"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
               />
 
               {/* Mandatory: Linked Card or Bank Account */}
@@ -1086,7 +1091,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 ) : (
                   <Text style={styles.accSelectorPlaceholder}>Select card or account</Text>
                 )}
-                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-down" size={20} color="#71717A" />
               </TouchableOpacity>
 
               {/* Mandatory: Start Date with DateTimePicker (supports past & future) */}
@@ -1096,7 +1101,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onPress={() => setShowEmiStartDatePicker(true)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="calendar-outline" size={20} color="#6366F1" />
+                  <Ionicons name="calendar-outline" size={20} color="#134E4A" />
                   <Text style={styles.dateSelectorText}>
                     {emiStartDate.toLocaleDateString('en-IN', {
                       day: 'numeric',
@@ -1131,7 +1136,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 }}
                 keyboardType="numeric"
                 placeholder="5"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
               />
 
               {/* Expandable Optional Fields Header */}
@@ -1142,7 +1147,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 <Ionicons
                   name={showOptionalEmiFields ? 'chevron-up' : 'chevron-down'}
                   size={18}
-                  color="#6366F1"
+                  color="#134E4A"
                 />
                 <Text style={styles.optionalToggleText}>
                   {showOptionalEmiFields
@@ -1161,7 +1166,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     onChangeText={(v) => setEmiCompletedMonths(v.replace(/[^0-9]/g, ''))}
                     keyboardType="numeric"
                     placeholder="0 (e.g. 3 if started 3 months ago)"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                   />
                   <Text style={styles.fieldHelpText}>
                     If entered, the past installment history entries will be auto-created for you.
@@ -1179,7 +1184,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         ? `Auto: ₹${(parseFloat(emiMonthlyAmount) * parseInt(emiTotalMonths, 10)).toLocaleString('en-IN')}`
                         : 'Total loan value'
                     }
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                   />
 
                   {/* Interest Rate */}
@@ -1190,7 +1195,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     onChangeText={(v) => setEmiInterestRate(v.replace(/[^0-9.]/g, ''))}
                     keyboardType="numeric"
                     placeholder="e.g. 14 for 14% p.a., 0 for No-Cost EMI"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                   />
 
                   {/* Processing Fee */}
@@ -1201,7 +1206,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     onChangeText={(v) => setEmiProcessingFee(v.replace(/[^0-9.]/g, ''))}
                     keyboardType="numeric"
                     placeholder="e.g. 199"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                   />
 
                   {/* Note */}
@@ -1212,7 +1217,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     onChangeText={setEmiNote}
                     multiline
                     placeholder="e.g. No cost EMI via Amazon on HDFC Credit Card"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#71717A"
                   />
                 </View>
               )}
@@ -1224,7 +1229,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 disabled={savingEmi}
               >
                 <LinearGradient
-                  colors={['#6366F1', '#4F46E5']}
+                  colors={['#134E4A', '#0F766E']}
                   style={styles.payModalBtn}
                 >
                   {savingEmi ? (
@@ -1260,7 +1265,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onPress={() => setShowRecordEmiModal(false)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -1270,9 +1275,9 @@ const CreditCardBillScreen = ({ navigation }) => {
               contentContainerStyle={{ paddingBottom: 40 }}
             >
               {/* EMI Info */}
-              <View style={[styles.payCardInfo, { borderLeftColor: '#6366F1' }]}>
+              <View style={[styles.payCardInfo, { borderLeftColor: '#134E4A' }]}>
                 <Text style={styles.payCardName}>{selectedEmi?.name}</Text>
-                <Text style={[styles.payCardOutstanding, { color: '#6366F1' }]}>
+                <Text style={[styles.payCardOutstanding, { color: '#134E4A' }]}>
                   Paying Month {(selectedEmi?.completedMonths || 0) + 1} of {selectedEmi?.totalMonths}
                 </Text>
               </View>
@@ -1287,7 +1292,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   onChangeText={(v) => setPayEmiAmount(v.replace(/[^0-9.]/g, ''))}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor="#D1D5DB"
+                  placeholderTextColor="#A1A1AA"
                 />
               </View>
 
@@ -1298,7 +1303,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onPress={() => setShowPayEmiDatePicker(true)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="calendar-outline" size={20} color="#6366F1" />
+                  <Ionicons name="calendar-outline" size={20} color="#134E4A" />
                   <Text style={styles.dateSelectorText}>
                     {payEmiDate.toLocaleDateString('en-IN', {
                       day: 'numeric',
@@ -1348,7 +1353,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 ) : (
                   <Text style={styles.accSelectorPlaceholder}>{"Don't deduct from balance"}</Text>
                 )}
-                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-down" size={20} color="#71717A" />
               </TouchableOpacity>
 
               {/* Optional Note */}
@@ -1358,7 +1363,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 value={payEmiNote}
                 onChangeText={setPayEmiNote}
                 placeholder="e.g. Auto-debited on schedule, paid early"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#71717A"
               />
 
               {/* Submit Button */}
@@ -1368,7 +1373,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 disabled={recordingEmiPay}
               >
                 <LinearGradient
-                  colors={['#10B981', '#059669']}
+                  colors={['#047857', '#047857']}
                   style={styles.payModalBtn}
                 >
                   {recordingEmiPay ? (
@@ -1401,7 +1406,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 onPress={() => setShowEmiHistoryModal(false)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -1410,7 +1415,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 <Text style={styles.historyCardName}>{selectedEmi?.name}</Text>
                 {selectedEmi?.isActive === false || selectedEmi?.status === 'COMPLETED' ? (
                   <View style={styles.completedBadge}>
-                    <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                    <Ionicons name="checkmark-circle" size={12} color="#047857" />
                     <Text style={styles.completedBadgeText}>COMPLETED</Text>
                   </View>
                 ) : (
@@ -1430,9 +1435,9 @@ const CreditCardBillScreen = ({ navigation }) => {
             {/* Matured info banner if completed */}
             {(selectedEmi?.isActive === false || selectedEmi?.status === 'COMPLETED') && (
               <View style={[styles.maturedInfoBanner, { marginBottom: 16 }]}>
-                <Ionicons name="ribbon" size={20} color="#059669" />
+                <Ionicons name="ribbon" size={20} color="#047857" />
                 <View style={{ marginLeft: 10, flex: 1 }}>
-                  <Text style={[styles.maturedInfoText, { fontWeight: '800' }]}>
+                  <Text style={[styles.maturedInfoText, { fontFamily: 'Manrope_700Bold' }]}>
                     All Installments Completed!
                   </Text>
                   {selectedEmi?.maturedDate && (
@@ -1462,7 +1467,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   <View key={entry.id || idx} style={styles.historyItem}>
                     <View style={styles.historyLeft}>
                       <View style={[styles.historyIconBox, { backgroundColor: '#ECFDF5' }]}>
-                        <Ionicons name="checkmark" size={16} color="#10B981" />
+                        <Ionicons name="checkmark" size={16} color="#047857" />
                       </View>
                       <View style={{ marginLeft: 12 }}>
                         <Text style={styles.historyAmountText}>
@@ -1478,14 +1483,14 @@ const CreditCardBillScreen = ({ navigation }) => {
                             : 'Recorded'}
                         </Text>
                         {entry.note ? (
-                          <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+                          <Text style={{ fontSize: 11, color: '#71717A', marginTop: 2 }}>
                             {entry.note}
                           </Text>
                         ) : null}
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={[styles.historyTypeBadge, { color: '#10B981' }]}>
+                      <Text style={[styles.historyTypeBadge, { color: '#047857' }]}>
                         Month {entry.monthNumber}
                       </Text>
                       {entry.paidFromAccountName && (
@@ -1499,7 +1504,7 @@ const CreditCardBillScreen = ({ navigation }) => {
 
               {(selectedEmi?.paymentHistory || []).length === 0 && (
                 <View style={styles.noHistoryBox}>
-                  <Ionicons name="receipt-outline" size={32} color="#D1D5DB" />
+                  <Ionicons name="receipt-outline" size={32} color="#A1A1AA" />
                   <Text style={styles.noHistoryText}>No payments recorded yet</Text>
                 </View>
               )}
@@ -1511,7 +1516,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     style={styles.forecloseModalBtn}
                     onPress={() => handleCloseEmi(selectedEmi)}
                   >
-                    <Ionicons name="flag-outline" size={16} color="#4B5563" />
+                    <Ionicons name="flag-outline" size={16} color="#3F3F46" />
                     <Text style={styles.forecloseModalBtnText}>Foreclose / Mark Completed</Text>
                   </TouchableOpacity>
                 )}
@@ -1520,7 +1525,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   style={styles.deleteModalBtn}
                   onPress={() => handleDeleteEmi(selectedEmi)}
                 >
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={16} color="#B91C1C" />
                   <Text style={styles.deleteModalBtnText}>Delete EMI Record</Text>
                 </TouchableOpacity>
               </View>
@@ -1544,7 +1549,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Clear Balance</Text>
               <TouchableOpacity onPress={() => setShowPayModal(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -1596,7 +1601,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                   onChangeText={(v) => setPayAmount(v.replace(/[^0-9]/g, ''))}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor="#D1D5DB"
+                  placeholderTextColor="#A1A1AA"
                 />
               </View>
 
@@ -1623,7 +1628,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 ) : (
                   <Text style={styles.accSelectorPlaceholder}>Select payout account</Text>
                 )}
-                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-down" size={20} color="#71717A" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1632,7 +1637,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 disabled={paying || !payAmount}
               >
                 <LinearGradient
-                  colors={['#10B981', '#059669']}
+                  colors={['#047857', '#047857']}
                   style={styles.payModalBtn}
                 >
                   {paying ? (
@@ -1660,7 +1665,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                 {accountPickerTarget === 'emiLink' ? 'Select Linked Account' : 'Pay From Account'}
               </Text>
               <TouchableOpacity onPress={() => setShowAccountPicker(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color="#71717A" />
               </TouchableOpacity>
             </View>
 
@@ -1706,7 +1711,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         <Text style={styles.accPickerBal}>{card.bankName || 'Credit Card'}</Text>
                       </View>
                       {emiLinkedAccount?.id === card.id && (
-                        <Ionicons name="checkmark-circle" size={22} color="#6366F1" />
+                        <Ionicons name="checkmark-circle" size={22} color="#134E4A" />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -1743,7 +1748,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                       </Text>
                     </View>
                     {isSelected && (
-                      <Ionicons name="checkmark-circle" size={22} color="#6366F1" />
+                      <Ionicons name="checkmark-circle" size={22} color="#134E4A" />
                     )}
                   </TouchableOpacity>
                 );
@@ -1768,7 +1773,7 @@ const CreditCardBillScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>History</Text>
               <TouchableOpacity onPress={() => setShowHistoryModal(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color="#71717A" />
               </TouchableOpacity>
             </View>
             <View style={styles.historyHeaderInfo}>
@@ -1786,7 +1791,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                         <Ionicons
                           name={entry.isFullPayment ? 'checkmark' : 'remove'}
                           size={16}
-                          color={entry.isFullPayment ? '#10B981' : '#D97706'}
+                          color={entry.isFullPayment ? '#047857' : '#D97706'}
                         />
                       </View>
                       <View style={{ marginLeft: 12 }}>
@@ -1804,7 +1809,7 @@ const CreditCardBillScreen = ({ navigation }) => {
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ alignItems: 'flex-end', marginRight: 12 }}>
-                        <Text style={[styles.historyTypeBadge, { color: entry.isFullPayment ? '#10B981' : '#D97706' }]}>
+                        <Text style={[styles.historyTypeBadge, { color: entry.isFullPayment ? '#047857' : '#D97706' }]}>
                           {entry.isFullPayment ? 'FULL' : 'PARTIAL'}
                         </Text>
                         {!entry.isFullPayment && (
@@ -1815,14 +1820,14 @@ const CreditCardBillScreen = ({ navigation }) => {
                         onPress={() => handleUndoPayment(entry.id)}
                         style={styles.historyUndoBtn}
                       >
-                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                        <Ionicons name="trash-outline" size={18} color="#B91C1C" />
                       </TouchableOpacity>
                     </View>
                   </View>
                 ))}
               {(selectedCard?.billPaymentHistory || []).length === 0 && (
                 <View style={styles.noHistoryBox}>
-                  <Ionicons name="receipt-outline" size={32} color="#D1D5DB" />
+                  <Ionicons name="receipt-outline" size={32} color="#A1A1AA" />
                   <Text style={styles.noHistoryText}>No records found</Text>
                 </View>
               )}
@@ -1835,7 +1840,7 @@ const CreditCardBillScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   safeArea: { backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: 'row',
@@ -1848,28 +1853,28 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
   addHeaderBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E6F2F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  headerTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: '#18181B', letterSpacing: -0.5 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 50, paddingTop: 10 },
 
   // Segmented Tabs
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     borderRadius: 16,
     padding: 4,
     marginHorizontal: 20,
@@ -1891,24 +1896,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
   },
-  tabText: { fontSize: 13, fontWeight: '700', color: '#6B7280' },
-  activeTabText: { color: '#6366F1', fontWeight: '900' },
+  tabText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#71717A' },
+  activeTabText: { color: '#134E4A', fontFamily: 'Manrope_700Bold' },
 
   // Credit Card View Styles
-  cardContainer: { marginTop: 14, elevation: 6, shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 8 } },
+  cardContainer: { marginTop: 14, borderWidth: 1, borderColor: '#E5E2DC' },
   creditCard: { borderRadius: 24, padding: 24, height: 200, justifyContent: 'space-between', overflow: 'hidden' },
   cardUpper: { flexDirection: 'row', justifyContent: 'space-between' },
-  cardBank: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5 },
-  cardName: { fontSize: 18, fontWeight: '900', color: '#FFFFFF', marginTop: 4 },
+  cardBank: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5 },
+  cardName: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#FFFFFF', marginTop: 4 },
   chipView: { width: 44, height: 32, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between' },
-  cardLabel: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
-  cardAmount: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginTop: 4 },
-  cardLimit: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginTop: 6, opacity: 0.9 },
+  cardLabel: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
+  cardAmount: { fontSize: 26, fontFamily: 'Manrope_700Bold', color: '#FFFFFF', marginTop: 4 },
+  cardLimit: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#FFFFFF', marginTop: 6, opacity: 0.9 },
   usageContainer: { marginTop: 12 },
   usageBarBg: { height: 4, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2 },
   usageBarFill: { height: 4, borderRadius: 2 },
-  usageText: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.8)', marginTop: 8, textAlign: 'right', letterSpacing: 0.5 },
+  usageText: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: 'rgba(255,255,255,0.8)', marginTop: 8, textAlign: 'right', letterSpacing: 0.5 },
 
   billInfo: {
     backgroundColor: '#FFFFFF',
@@ -1917,47 +1922,47 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: -4,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
   statBox: { flex: 1, alignItems: 'center' },
-  statLabel: { fontSize: 10, fontWeight: '900', color: '#9CA3AF', letterSpacing: 1 },
-  statValue: { fontSize: 16, fontWeight: '900', color: '#111827', marginTop: 6 },
+  statLabel: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#71717A', letterSpacing: 1 },
+  statValue: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#18181B', marginTop: 6 },
 
   reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     padding: 12,
     borderRadius: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
   },
-  reminderIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EEF2FF', justifyContent: 'center', alignItems: 'center' },
-  reminderLabel: { fontSize: 14, fontWeight: '800', color: '#111827' },
-  reminderSub: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
+  reminderIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#E6F2F0', justifyContent: 'center', alignItems: 'center' },
+  reminderLabel: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  reminderSub: { fontSize: 11, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 2 },
 
   alertBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', padding: 14, borderRadius: 16, marginBottom: 12 },
-  alertText: { fontSize: 12, color: '#991B1B', fontWeight: '700', marginLeft: 10, flex: 1, lineHeight: 16 },
+  alertText: { fontSize: 12, color: '#991B1B', fontFamily: 'Manrope_700Bold', marginLeft: 10, flex: 1, lineHeight: 16 },
 
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
   payBtn: { flex: 1, height: 52, borderRadius: 18, overflow: 'hidden' },
   payBtnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  payBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
-  historyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF', borderRadius: 18, gap: 8 },
-  historyBtnText: { color: '#6366F1', fontSize: 13, fontWeight: '900', letterSpacing: 0.5 },
+  payBtnText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Manrope_700Bold', letterSpacing: 1 },
+  historyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6F2F0', borderRadius: 18, gap: 8 },
+  historyBtnText: { color: '#134E4A', fontSize: 13, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
 
   paidBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5', padding: 16, borderRadius: 20, marginTop: 8, gap: 10 },
-  paidText: { fontSize: 14, fontWeight: '900', color: '#059669' },
+  paidText: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: '#047857' },
 
   emptyContainer: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 30 },
-  emptyIconCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  emptyTitle: { fontSize: 20, fontWeight: '900', color: '#111827', marginBottom: 8, textAlign: 'center' },
-  emptyText: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 20, fontWeight: '500' },
+  emptyIconCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#F1EFEA', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  emptyTitle: { fontSize: 20, fontFamily: 'Manrope_700Bold', color: '#18181B', marginBottom: 8, textAlign: 'center' },
+  emptyText: { fontSize: 13, color: '#71717A', textAlign: 'center', lineHeight: 20, fontFamily: 'Manrope_500Medium' },
   emptyBtn: { width: '100%', borderRadius: 18, overflow: 'hidden', marginTop: 28 },
   emptyBtnGradient: { height: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  emptyBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.5 },
+  emptyBtnText: { color: '#FFFFFF', fontSize: 15, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
 
   // EMI Summary Banner
   emiSummaryCard: {
@@ -1967,7 +1972,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -1975,15 +1980,15 @@ const styles = StyleSheet.create({
   },
   emiSummaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   emiSummaryCol: { flex: 1 },
-  emiSummaryLabel: { fontSize: 10, fontWeight: '900', color: '#9CA3AF', letterSpacing: 0.8 },
-  emiSummaryValue: { fontSize: 22, fontWeight: '900', color: '#111827', marginTop: 4 },
-  emiSummaryPerMonth: { fontSize: 12, fontWeight: '700', color: '#6B7280' },
+  emiSummaryLabel: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#71717A', letterSpacing: 0.8 },
+  emiSummaryValue: { fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', marginTop: 4 },
+  emiSummaryPerMonth: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#71717A' },
   emiSummaryFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#F1EFEA',
     paddingTop: 12,
   },
   emiPillBadge: {
@@ -1994,7 +1999,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 12,
   },
-  emiPillText: { fontSize: 12, fontWeight: '800', color: '#059669', marginLeft: 5 },
+  emiPillText: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#047857', marginLeft: 5 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
 
   // Filter Row
@@ -2005,10 +2010,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E2DC',
   },
-  filterChipActive: { backgroundColor: '#6366F1', borderColor: '#6366F1' },
-  filterChipText: { fontSize: 12, fontWeight: '800', color: '#6B7280' },
+  filterChipActive: { backgroundColor: '#134E4A', borderColor: '#134E4A' },
+  filterChipText: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#71717A' },
   filterChipTextActive: { color: '#FFFFFF' },
 
   // EMI Cards
@@ -2018,14 +2023,14 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#F1EFEA',
     elevation: 3,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 4 },
   },
   emiCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  emiCardTitle: { fontSize: 17, fontWeight: '900', color: '#111827' },
+  emiCardTitle: { fontSize: 17, fontFamily: 'Manrope_700Bold', color: '#18181B' },
   activePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2035,21 +2040,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 4,
   },
-  activePillText: { fontSize: 10, fontWeight: '900', color: '#059669', letterSpacing: 0.5 },
+  activePillText: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#047857', letterSpacing: 0.5 },
   completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     gap: 4,
   },
-  completedBadgeText: { fontSize: 10, fontWeight: '900', color: '#4B5563', letterSpacing: 0.5 },
+  completedBadgeText: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#3F3F46', letterSpacing: 0.5 },
   emiLinkedRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
-  emiLinkedText: { fontSize: 12, fontWeight: '700', color: '#6B7280' },
-  emiDotSep: { fontSize: 12, color: '#D1D5DB' },
-  emiDebitDayText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
+  emiLinkedText: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#71717A' },
+  emiDotSep: { fontSize: 12, color: '#A1A1AA' },
+  emiDebitDayText: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_600SemiBold' },
   emiTrashBtn: {
     padding: 8,
     backgroundColor: '#FEF2F2',
@@ -2059,34 +2064,34 @@ const styles = StyleSheet.create({
   // Progress Bar
   emiProgressContainer: { marginTop: 16 },
   emiProgressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  emiProgressLabel: { fontSize: 12, fontWeight: '800', color: '#4B5563' },
-  emiProgressPct: { fontSize: 12, fontWeight: '900', color: '#6366F1' },
-  emiProgressBarBg: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
+  emiProgressLabel: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#3F3F46' },
+  emiProgressPct: { fontSize: 12, fontFamily: 'Manrope_700Bold', color: '#134E4A' },
+  emiProgressBarBg: { height: 6, backgroundColor: '#F1EFEA', borderRadius: 3, overflow: 'hidden' },
   emiProgressBarFill: { height: 6, borderRadius: 3 },
 
   // Stats Grid
   emiStatsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     borderRadius: 16,
     padding: 12,
     marginTop: 16,
   },
   emiStatItem: { alignItems: 'center', flex: 1 },
-  emiStatLabel: { fontSize: 9, fontWeight: '900', color: '#9CA3AF', letterSpacing: 0.5 },
-  emiStatValue: { fontSize: 14, fontWeight: '900', color: '#111827', marginTop: 4 },
+  emiStatLabel: { fontSize: 9, fontFamily: 'Manrope_700Bold', color: '#71717A', letterSpacing: 0.5 },
+  emiStatValue: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: '#18181B', marginTop: 4 },
 
   emiNoteBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     padding: 10,
     borderRadius: 12,
     marginTop: 12,
     gap: 6,
   },
-  emiNoteText: { fontSize: 11, color: '#6B7280', flex: 1 },
+  emiNoteText: { fontSize: 11, color: '#71717A', flex: 1 },
 
   maturedInfoBanner: {
     flexDirection: 'row',
@@ -2097,28 +2102,28 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 8,
   },
-  maturedInfoText: { fontSize: 12, color: '#047857', fontWeight: '700' },
+  maturedInfoText: { fontSize: 12, color: '#047857', fontFamily: 'Manrope_700Bold' },
 
   emiActionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
   emiPayBtn: { flex: 1, height: 46, borderRadius: 14, overflow: 'hidden' },
   emiPayBtnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  emiPayBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900', letterSpacing: 0.5 },
+  emiPayBtnText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
   emiHistoryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#E6F2F0',
     borderRadius: 14,
     paddingHorizontal: 16,
     height: 46,
     gap: 6,
   },
-  emiHistoryBtnText: { color: '#6366F1', fontSize: 12, fontWeight: '900', letterSpacing: 0.5 },
+  emiHistoryBtnText: { color: '#134E4A', fontSize: 12, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
   emiCloseBtn: {
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2127,52 +2132,52 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(17, 24, 39, 0.5)', justifyContent: 'flex-end' },
   modalDismiss: { flex: 1 },
   modalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingTop: 8 },
-  modalDragHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginTop: 8, marginBottom: 16 },
+  modalDragHandle: { width: 40, height: 4, backgroundColor: '#E5E2DC', borderRadius: 2, alignSelf: 'center', marginTop: 8, marginBottom: 16 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
-  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
-  modalLabel: { fontSize: 10, fontWeight: '900', color: '#9CA3AF', letterSpacing: 1, marginBottom: 8, marginTop: 14, paddingLeft: 2 },
-  modalSubHeader: { fontSize: 11, fontWeight: '900', color: '#9CA3AF', letterSpacing: 1, marginVertical: 8, paddingLeft: 4 },
+  modalTitle: { fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', letterSpacing: -0.5 },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F1EFEA', justifyContent: 'center', alignItems: 'center' },
+  modalLabel: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: '#71717A', letterSpacing: 1, marginBottom: 8, marginTop: 14, paddingLeft: 2 },
+  modalSubHeader: { fontSize: 11, fontFamily: 'Manrope_700Bold', color: '#71717A', letterSpacing: 1, marginVertical: 8, paddingLeft: 4 },
 
   textInputBox: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E2DC',
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: 'Manrope_700Bold',
+    color: '#18181B',
   },
-  fieldHelpText: { fontSize: 11, color: '#9CA3AF', marginTop: 4, paddingLeft: 4 },
+  fieldHelpText: { fontSize: 11, color: '#71717A', marginTop: 4, paddingLeft: 4 },
 
   tenureChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   tenureChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E2DC',
   },
-  tenureChipActive: { backgroundColor: '#6366F1', borderColor: '#6366F1' },
-  tenureChipText: { fontSize: 13, fontWeight: '800', color: '#4B5563' },
+  tenureChipActive: { backgroundColor: '#134E4A', borderColor: '#134E4A' },
+  tenureChipText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#3F3F46' },
   tenureChipTextActive: { color: '#FFFFFF' },
 
   dateSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E2DC',
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  dateSelectorText: { fontSize: 15, fontWeight: '800', color: '#111827', marginLeft: 10 },
-  changeDateText: { fontSize: 13, fontWeight: '800', color: '#6366F1' },
+  dateSelectorText: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B', marginLeft: 10 },
+  changeDateText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#134E4A' },
 
   optionalToggle: {
     flexDirection: 'row',
@@ -2182,53 +2187,53 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingVertical: 8,
   },
-  optionalToggleText: { fontSize: 13, fontWeight: '800', color: '#6366F1' },
+  optionalToggleText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#134E4A' },
   optionalFieldsContainer: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F6F2',
     padding: 14,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E2DC',
     marginTop: 8,
   },
 
-  payCardInfo: { backgroundColor: '#F9FAFB', borderRadius: 20, padding: 16, marginBottom: 16, borderLeftWidth: 4 },
-  payCardName: { fontSize: 16, fontWeight: '900', color: '#111827' },
-  payCardOutstanding: { fontSize: 14, color: '#EF4444', fontWeight: '800', marginTop: 4 },
+  payCardInfo: { backgroundColor: '#F7F6F2', borderRadius: 20, padding: 16, marginBottom: 16, borderLeftWidth: 4 },
+  payCardName: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  payCardOutstanding: { fontSize: 14, color: '#B91C1C', fontFamily: 'Manrope_700Bold', marginTop: 4 },
 
   quickAmountRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  quickAmountBtn: { flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#F3F4F6', padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05 },
-  activeQuickBtn: { borderColor: '#6366F1', backgroundColor: '#EEF2FF', elevation: 0 },
-  quickAmountLabel: { fontSize: 9, fontWeight: '900', color: '#9CA3AF' },
-  quickAmountValue: { fontSize: 14, fontWeight: '900', color: '#111827', marginTop: 4 },
+  quickAmountBtn: { flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#F1EFEA', padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05 },
+  activeQuickBtn: { borderColor: '#134E4A', backgroundColor: '#E6F2F0', elevation: 0 },
+  quickAmountLabel: { fontSize: 9, fontFamily: 'Manrope_700Bold', color: '#71717A' },
+  quickAmountValue: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: '#18181B', marginTop: 4 },
 
-  amountInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 18, borderWidth: 1, borderColor: '#E5E7EB', paddingLeft: 18, marginBottom: 4 },
-  rupeeSign: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  amountInput: { flex: 1, height: 60, fontSize: 22, fontWeight: '900', color: '#111827', paddingLeft: 10 },
+  amountInputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F7F6F2', borderRadius: 18, borderWidth: 1, borderColor: '#E5E2DC', paddingLeft: 18, marginBottom: 4 },
+  rupeeSign: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  amountInput: { flex: 1, height: 60, fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', paddingLeft: 10 },
 
-  accountSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, elevation: 1, shadowColor: '#000', shadowOpacity: 0.04 },
-  accTypeIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
-  accSelectorName: { fontSize: 15, fontWeight: '800', color: '#111827' },
-  accSelectorBal: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 1 },
-  accSelectorPlaceholder: { fontSize: 14, color: '#9CA3AF', fontWeight: '700' },
+  accountSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: '#E5E2DC', padding: 14, elevation: 1, shadowColor: '#000', shadowOpacity: 0.04 },
+  accTypeIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F1EFEA', justifyContent: 'center', alignItems: 'center' },
+  accSelectorName: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  accSelectorBal: { fontSize: 11, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 1 },
+  accSelectorPlaceholder: { fontSize: 14, color: '#71717A', fontFamily: 'Manrope_700Bold' },
 
-  payModalBtnCont: { borderRadius: 20, overflow: 'hidden', marginTop: 28, marginBottom: 10, elevation: 4, shadowColor: '#6366F1', shadowOpacity: 0.25 },
+  payModalBtnCont: { borderRadius: 20, overflow: 'hidden', marginTop: 28, marginBottom: 10, elevation: 4, shadowColor: '#134E4A', shadowOpacity: 0.25 },
   payModalBtn: { height: 58, justifyContent: 'center', alignItems: 'center' },
-  payModalBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.5 },
+  payModalBtnText: { color: '#FFFFFF', fontSize: 15, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
 
   historyHeaderInfo: { marginBottom: 16, paddingLeft: 2 },
-  historyCardName: { fontSize: 18, fontWeight: '900', color: '#111827' },
-  historyCardSub: { fontSize: 12, color: '#9CA3AF', fontWeight: '700', marginTop: 2 },
-  historyItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  historyCardName: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  historyCardSub: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_700Bold', marginTop: 2 },
+  historyItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F1EFEA' },
   historyLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   historyIconBox: { width: 32, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  historyAmountText: { fontSize: 15, fontWeight: '900', color: '#111827' },
-  historyDateText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
-  historyTypeBadge: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5, textAlign: 'right' },
-  historyBalText: { fontSize: 11, color: '#9CA3AF', fontWeight: '700', textAlign: 'right', marginTop: 2 },
+  historyAmountText: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  historyDateText: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 2 },
+  historyTypeBadge: { fontSize: 11, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5, textAlign: 'right' },
+  historyBalText: { fontSize: 11, color: '#71717A', fontFamily: 'Manrope_700Bold', textAlign: 'right', marginTop: 2 },
   historyUndoBtn: { padding: 10, backgroundColor: '#FEF2F2', borderRadius: 12 },
   noHistoryBox: { alignItems: 'center', paddingVertical: 36 },
-  noHistoryText: { fontSize: 14, color: '#D1D5DB', fontWeight: '700', marginTop: 10 },
+  noHistoryText: { fontSize: 14, color: '#A1A1AA', fontFamily: 'Manrope_700Bold', marginTop: 10 },
 
   forecloseModalBtn: {
     flexDirection: 'row',
@@ -2236,10 +2241,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1EFEA',
     gap: 8,
   },
-  forecloseModalBtnText: { fontSize: 13, fontWeight: '800', color: '#4B5563' },
+  forecloseModalBtnText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#3F3F46' },
   deleteModalBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2249,12 +2254,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     gap: 8,
   },
-  deleteModalBtnText: { fontSize: 13, fontWeight: '800', color: '#EF4444' },
+  deleteModalBtnText: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: '#B91C1C' },
 
-  accPickerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12, borderRadius: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  accPickerActive: { backgroundColor: '#EEF2FF' },
-  accPickerName: { fontSize: 15, fontWeight: '800', color: '#111827' },
-  accPickerBal: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
+  accPickerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12, borderRadius: 14, borderBottomWidth: 1, borderBottomColor: '#F1EFEA' },
+  accPickerActive: { backgroundColor: '#E6F2F0' },
+  accPickerName: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B' },
+  accPickerBal: { fontSize: 12, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 2 },
 });
 
 export default CreditCardBillScreen;
