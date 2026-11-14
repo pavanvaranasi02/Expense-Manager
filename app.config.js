@@ -34,7 +34,18 @@ export default {
       "expo-image",
       "expo-sharing",
       "expo-splash-screen",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+            useLegacyPackaging: true,
+            buildArchs: ["arm64-v8a"]
+          }
+        }
+      ]
     ],
     extra: {
       firebaseApiKey: process.env.FIREBASE_API_KEY || process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
