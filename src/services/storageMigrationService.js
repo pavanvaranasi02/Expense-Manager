@@ -51,21 +51,113 @@ const downloadCollectionFromCloud = async (userId, colName) => {
   return items.length;
 };
 
+const describeDocShape = (data) => {
+  const shape = {};
+  for (const [k, v] of Object.entries(data || {})) {
+    if (v === null) shape[k] = 'null';
+    else if (Array.isArray(v)) shape[k] = `array(${v.length})`;
+    else if (typeof v?.toDate === 'function') shape[k] = 'Timestamp';
+    else if (v?._methodName) shape[k] = `sentinel(${v._methodName})`;
+    else if (typeof v === 'string') shape[k] = `string(${v.length})`;
+    else shape[k] = typeof v;
+  }
+  return shape;
+};
+
 const uploadCollectionToCloud = async (userId, colName) => {
   const items = await getLocalCollection(userId, colName);
-  if (!items || items.length === 0) return 0;
+  if (!items || items.length === 0) {
+    console.log(`⏭️ Skipping empty local collection: ${colName}`);
+    return 0;
+  }
+
+  // Fetch existing doc IDs so we don't overwrite server `createdAt` Timestamps
+  // (round-tripping through ISO strings truncates nanoseconds and fails `createdAtUnchanged()`).
+  const existingSnap = await getDocs(collection(db, 'users', userId, colName));
+  const existingIds = new Set(existingSnap.docs.map((d) => d.id));
+  console.log(
+    `📦 Uploading ${items.length} doc(s) to ${colName} (${existingIds.size} already in cloud)`
+  );
 
   const CHUNK_SIZE = 400; // Firestore batch limit is 500
   for (let i = 0; i < items.length; i += CHUNK_SIZE) {
     const chunk = items.slice(i, i + CHUNK_SIZE);
+    const preparedDocs = [];
     const batch = writeBatch(db);
     for (const item of chunk) {
       if (!item.id) continue;
       const docRef = doc(db, 'users', userId, colName, item.id);
       const firestoreData = deserializeForFirestore(item, colName);
+      if (existingIds.has(item.id)) {
+        delete firestoreData.createdAt;
+      } else if (!firestoreData.createdAt) {
+        firestoreData.createdAt = serverTimestamp();
+      }
+      if (firestoreData.accountId === '') {
+        delete firestoreData.accountId;
+      }
+      if (colName === LOCAL_COLLECTIONS.INVESTMENTS) {
+        if (!firestoreData.currency) firestoreData.currency = 'INR';
+        if (
+          typeof firestoreData.exchangeRate !== 'number' ||
+          firestoreData.exchangeRate <= 0
+        ) {
+          firestoreData.exchangeRate = 1;
+        }
+        if (
+          typeof firestoreData.investedAmount !== 'number' ||
+          firestoreData.investedAmount < 0
+        ) {
+          firestoreData.investedAmount = Math.max(
+            0,
+            Number(firestoreData.investedAmount) || 0
+          );
+        }
+        if (
+          typeof firestoreData.currentValue !== 'number' ||
+          firestoreData.currentValue < 0
+        ) {
+          firestoreData.currentValue = Math.max(
+            0,
+            Number(firestoreData.currentValue) || 0
+          );
+        }
+        if (typeof firestoreData.isActive !== 'boolean') {
+          firestoreData.isActive = true;
+        }
+        for (const strKey of ['typeName', 'typeIcon', 'startDate']) {
+          if (firestoreData[strKey] === '') delete firestoreData[strKey];
+        }
+        for (const listKey of ['sipHistory', 'rdPaymentHistory', 'transactions']) {
+          if (firestoreData[listKey] === null) delete firestoreData[listKey];
+        }
+        for (const boolKey of ['autoMaturityCredit', 'maturityCredited']) {
+          if (firestoreData[boolKey] === null) delete firestoreData[boolKey];
+        }
+      }
+      preparedDocs.push({ id: item.id, docRef, firestoreData });
       batch.set(docRef, firestoreData, { merge: true });
     }
-    await batch.commit();
+    try {
+      await batch.commit();
+      console.log(`✅ Uploaded ${colName} chunk (${preparedDocs.length} docs)`);
+    } catch (err) {
+      console.log(`❌ Failed uploading collection ${colName}:`, err?.code, err?.message);
+      // Probe each doc individually to pinpoint the exact failing doc and field shapes
+      for (const entry of preparedDocs) {
+        try {
+          await setDoc(entry.docRef, entry.firestoreData, { merge: true });
+        } catch (docErr) {
+          console.log(
+            `🔍 Failing doc in ${colName}/${entry.id} (existsInCloud=${existingIds.has(entry.id)}):`,
+            docErr?.code || docErr?.message,
+            'shape:',
+            JSON.stringify(describeDocShape(entry.firestoreData))
+          );
+        }
+      }
+      throw err;
+    }
     await yieldToUI();
   }
   return items.length;
@@ -242,12 +334,28 @@ export const migrateLocalToCloud = async (userId) => {
     });
     const localProfile =
       (await getLocalProfile(userId)) || useAuthStore.getState().userProfile || {};
+    const userDocRef = doc(db, 'users', userId);
+    const existingUserSnap = await getDoc(userDocRef);
     const firestoreProfile = deserializeForFirestore({
       ...localProfile,
       storageMode: 'cloud',
     });
+    if (existingUserSnap.exists()) {
+      // Preserve server immutable fields (createdAt nanoseconds, role)
+      delete firestoreProfile.createdAt;
+      if (existingUserSnap.data()?.role) {
+        firestoreProfile.role = existingUserSnap.data().role;
+      }
+    } else {
+      if (!firestoreProfile.createdAt) {
+        firestoreProfile.createdAt = serverTimestamp();
+      }
+      if (!firestoreProfile.role) {
+        firestoreProfile.role = 'USER';
+      }
+    }
     await setDoc(
-      doc(db, 'users', userId),
+      userDocRef,
       {
         ...firestoreProfile,
         storageMode: 'cloud',
@@ -262,10 +370,15 @@ export const migrateLocalToCloud = async (userId) => {
       if (col === LOCAL_COLLECTIONS.PROFILE) {
         const latestProfile = await getLocalProfile(userId);
         if (latestProfile) {
+          const latestFirestoreProfile = deserializeForFirestore(latestProfile);
+          delete latestFirestoreProfile.createdAt;
+          if (existingUserSnap.exists() && existingUserSnap.data()?.role) {
+            latestFirestoreProfile.role = existingUserSnap.data().role;
+          }
           await setDoc(
-            doc(db, 'users', userId),
+            userDocRef,
             {
-              ...deserializeForFirestore(latestProfile),
+              ...latestFirestoreProfile,
               storageMode: 'cloud',
               updatedAt: serverTimestamp(),
             },
