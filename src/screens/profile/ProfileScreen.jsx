@@ -390,7 +390,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App Version */}
         <View style={styles.footer}>
           <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>v{CURRENT_APP_VERSION} ALPHA</Text>
+            <Text style={styles.versionText}>v{CURRENT_APP_VERSION}</Text>
           </View>
           <Text style={styles.footerSlogan}>Built with Pride 🇮🇳 in India</Text>
         </View>
