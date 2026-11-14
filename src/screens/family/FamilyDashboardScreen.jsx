@@ -166,19 +166,31 @@ const FamilyDashboardScreen = ({ navigation }) => {
           style={styles.headerGradient}
         >
           <View style={styles.header}>
-            <View>
-              <Text style={styles.familyName}>
-                {family?.name || "My Family"}
-              </Text>
-              <Text style={styles.roleText}>
-                You are {ROLE_LABELS[currentRole]}
-              </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
+              <TouchableOpacity
+                style={styles.settingsBtn}
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Back to Home"
+              >
+                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.familyName} numberOfLines={1}>
+                  {family?.name || "My Family"}
+                </Text>
+                <Text style={styles.roleText}>
+                  You are {ROLE_LABELS[currentRole]}
+                </Text>
+              </View>
             </View>
             <View style={styles.headerActions}>
               <NotificationBell
                 unreadCount={unreadCount}
                 onPress={() =>
-                  navigation.navigate("Home", { screen: "Notifications" })
+                  navigation.navigate("Main", {
+                    screen: "Home",
+                    params: { screen: "Notifications" },
+                  })
                 }
               />
               <TouchableOpacity

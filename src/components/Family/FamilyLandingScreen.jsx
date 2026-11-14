@@ -99,6 +99,24 @@ const FamilyLandingScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: '#FFFFFF',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+          }}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color="#18181B" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.content}>
         {/* Illustration */}
         <View style={styles.illustrationContainer}>

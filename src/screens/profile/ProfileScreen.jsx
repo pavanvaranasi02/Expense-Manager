@@ -24,6 +24,7 @@ import { logoutUser, updateUserProfile } from '../../services/authService';
 import { getExpenses } from '../../services/expenseService';
 import { CURRENT_APP_VERSION } from '../../services/updateService';
 import useAuthStore from '../../store/useAuthStore';
+import useStorageStore from '../../store/useStorageStore';
 import { Theme } from '../../theme/theme';
 import { formatCurrency } from '../../utils/format';
 
@@ -61,6 +62,7 @@ const menuSections = [
   {
     title: 'APP & PREFERENCES',
     items: [
+      { id: 'family', icon: 'people-outline', label: 'Family & Shared Finances', color: '#134E4A' },
       { id: 'categories', icon: 'grid-outline', label: 'Categories', screen: 'ManageCategories', color: '#D97706' },
       { id: 'activityLogs', icon: 'document-text-outline', label: 'Activity & Audit Logs', screen: 'ActivityLogs', color: '#0F766E' },
       { id: 'settings', icon: 'settings-outline', label: 'Settings & Storage', screen: 'Settings', color: '#475569' },
@@ -91,6 +93,8 @@ const ProfileScreen = ({ navigation }) => {
   const userId = useAuthStore((state) => state.getUserId());
   const userProfile = useAuthStore((state) => state.userProfile);
   const isStealthMode = useAuthStore((state) => state.isStealthMode);
+  const storageMode = useStorageStore((state) => state.storageMode);
+  const isLocalMode = storageMode === 'local';
   const updateProfileStore = useAuthStore((state) => state.updateProfile);
   const logout = useAuthStore((state) => state.logout);
 
@@ -163,6 +167,17 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleMenuPress = async (item) => {
+    if (item.id === 'family') {
+      if (isLocalMode) {
+        Alert.alert(
+          'Family Disabled in Local Mode',
+          'Family sharing requires Cloud Storage. Switch to Cloud Storage in Settings to use Family features.'
+        );
+        return;
+      }
+      navigation.navigate('Family');
+      return;
+    }
     if (item.id === 'help') {
       setShowHelpModal(true);
       return;

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAuthStore from '../../store/useAuthStore';
 import useStorageStore from '../../store/useStorageStore';
 import { Theme } from '../../theme/theme';
 
@@ -70,6 +71,7 @@ const ACTIONS = [
 const QuickActionSheet = ({ visible, onClose, navigation }) => {
   const insets = useSafeAreaInsets();
   const storageMode = useStorageStore((s) => s.storageMode);
+  const familyId = useAuthStore((s) => s.userProfile?.familyId);
   const isLocalMode = storageMode === 'local';
 
   const handleSelect = (actionId) => {
@@ -109,7 +111,11 @@ const QuickActionSheet = ({ visible, onClose, navigation }) => {
           );
           return;
         }
-        navigation.navigate('Family', { screen: 'AddFamilyExpense' });
+        if (familyId) {
+          navigation.navigate('Family', { screen: 'AddFamilyExpense' });
+        } else {
+          navigation.navigate('Family');
+        }
         break;
       default:
         break;
