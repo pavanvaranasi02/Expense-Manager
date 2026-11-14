@@ -2,29 +2,29 @@
   "expo": {
     "name": "KOSH",
     "slug": "kosh",
-    "version": "1.5.2-beta",
+    "version": "1.5.3-beta",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/ExpenseManager.jpg",
+    "icon": "./assets/kosh-icon.png",
     "splash": {
-      "image": "./assets/ExpenseManager.jpg",
+      "image": "./assets/kosh-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1A1A2E"
+      "backgroundColor": "#0F3D3A"
     },
     "scheme": "kosh",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pavan.kosh",
-      "buildNumber": "1.5.2"
+      "buildNumber": "1.5.3"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/ExpenseManager.jpg",
-        "backgroundColor": "#1A1A2E"
+        "foregroundImage": "./assets/kosh-icon.png",
+        "backgroundColor": "#0F3D3A"
       },
       "package": "com.pavan.kosh",
-      "versionCode": 22
+      "versionCode": 23
     },
     "plugins": [
       "expo-secure-store",
