@@ -422,9 +422,33 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={styles.userNameText}>{userName}</Text>
             </View>
             <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={[
+                  styles.headerIconBtn,
+                  isStealthMode && {
+                    backgroundColor: Theme.colors.primaryLight,
+                    borderColor: 'rgba(19, 78, 74, 0.22)',
+                  },
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  toggleStealthMode();
+                }}
+                activeOpacity={0.8}
+                accessibilityLabel={isStealthMode ? "Disable stealth mode" : "Enable stealth mode"}
+              >
+                <Ionicons
+                  name={isStealthMode ? "eye-off-outline" : "eye-outline"}
+                  size={18}
+                  color={isStealthMode ? Theme.colors.primary : Theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
               <NotificationBell
                 unreadCount={unreadCount}
                 onPress={() => navigation.navigate("Notifications")}
+                style={[styles.headerIconBtn, { shadowOpacity: 0, elevation: 0 }]}
+                iconSize={18}
+                iconColor={Theme.colors.textSecondary}
               />
               <TouchableOpacity
                 style={styles.avatarBtn}

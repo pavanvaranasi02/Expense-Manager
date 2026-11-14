@@ -3,10 +3,10 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Theme } from '../../theme/theme';
 
-const NotificationBell = ({ unreadCount = 0, onPress }) => {
+const NotificationBell = ({ unreadCount = 0, onPress, style, iconSize = 22, iconColor = Theme.colors.textMuted }) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      <Ionicons name="notifications-outline" size={22} color={Theme.colors.textMuted} />
+    <TouchableOpacity style={[styles.container, style]} onPress={onPress} activeOpacity={0.8}>
+      <Ionicons name="notifications-outline" size={iconSize} color={iconColor} />
       {unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
