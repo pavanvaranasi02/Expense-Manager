@@ -389,12 +389,372 @@ export const exportTransactionHistoryCSV = async (transactions) => {
  * SAMPLE CSV TEMPLATE FOR IMPORT
  * ============================================
  */
-export const getSampleCSVTemplate = () => {
-  return `Name,Type,Platform,InvestedAmount,CurrentValue,InterestRate,StartDate,Note
-Parag Parikh Flexi Cap,mutual_fund,Groww,100000,128000,,2025-01-15,Long term wealth
-HDFC Bank Stock,stocks,Zerodha,50000,54200,,2025-03-10,Core banking bet
-SBI Fixed Deposit,fd,SBI,200000,214000,7.1,2025-02-01,1 Year FD
-Digital Gold,gold,Paytm,30000,34500,,2025-01-20,Hedge asset`;
+export const getSampleCSVTemplate = (importMode = "kite_mf") => {
+  if (importMode === "kite_stocks") {
+    return `symbol,isin,trade_date,exchange,segment,series,trade_type,auction,quantity,price,trade_id,order_id,order_execution_time
+SILVERBEES,INF204KC1402,2026-01-01,NSE,EQ,EQ,buy,false,18.000000,215.309998,601559772,1300000015228017,2026-01-01T10:21:58
+GOLDIETF,INF109KC1NT3,2026-01-01,NSE,EQ,EQ,buy,false,44.000000,114.099998,202226327,1100000021758340,2026-01-01T10:28:01`;
+  }
+  return `symbol,isin,trade_date,exchange,segment,series,trade_type,auction,quantity,price,trade_id,order_id,order_execution_time
+MIRAE ASSET ELSS TAX SAVER FUND - DIRECT PLAN,INF769K01DM9,2024-06-05,BSE,MF,,buy,false,10.443000,47.877000,1198087270,1198087270,2024-06-05T00:00:00
+PARAG PARIKH ELSS TAX SAVER FUND - DIRECT PLAN,INF879O01100,2024-06-05,BSE,MF,,buy,false,17.366000,28.790000,1198083288,1198083288,2024-06-05T00:00:00`;
+};
+
+const splitCSVRow = (row) => {
+  const parts = [];
+  let currentPart = "";
+  let insideQuotes = false;
+
+  for (const char of row) {
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      parts.push(currentPart.trim().replace(/^["']|["']$/g, ""));
+      currentPart = "";
+    } else {
+      currentPart += char;
+    }
+  }
+  parts.push(currentPart.trim().replace(/^["']|["']$/g, ""));
+  return parts;
+};
+
+const parseTradeTimestamp = (execTime, tradeDate) => {
+  const raw = (execTime || tradeDate || "").trim();
+  if (!raw) return null;
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? `${raw}T00:00:00` : raw;
+  const ms = Date.parse(normalized);
+  if (Number.isNaN(ms)) return null;
+  return { ms, iso: new Date(ms).toISOString() };
+};
+
+const mapSegmentToInvestmentType = (segment = "", symbol = "", importMode = null) => {
+  if (importMode === "kite_mf") {
+    return INVESTMENT_TYPES.find((t) => t.id === "mutual_fund") || INVESTMENT_TYPES[0];
+  }
+  if (importMode === "kite_stocks") {
+    return INVESTMENT_TYPES.find((t) => t.id === "stocks") || INVESTMENT_TYPES[0];
+  }
+  const seg = segment.trim().toUpperCase();
+  const sym = symbol.trim().toUpperCase();
+  if (seg === "MF" || sym.includes("FUND") || sym.includes("ELSS") || sym.includes("NIFTY")) {
+    return INVESTMENT_TYPES.find((t) => t.id === "mutual_fund") || INVESTMENT_TYPES[0];
+  }
+  if (seg === "EQ" || seg === "FO") {
+    return INVESTMENT_TYPES.find((t) => t.id === "stocks") || INVESTMENT_TYPES[0];
+  }
+  return INVESTMENT_TYPES.find((t) => t.id === "other") || INVESTMENT_TYPES[INVESTMENT_TYPES.length - 1];
+};
+
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+/**
+ * Parse one or many CSV contents (supporting Broker Tradebook CSV format and legacy KOSH holdings CSV),
+ * sort trades chronologically by date, deduplicate by trade_id, and match against existing investments.
+ */
+export const parseInvestmentsFromMultipleCSVs = (
+  csvInputs,
+  existingInvestments = [],
+  options = {},
+) => {
+  const { importMode = null } = options;
+  const sources = (Array.isArray(csvInputs) ? csvInputs : [csvInputs])
+    .map((entry, idx) =>
+      typeof entry === "string"
+        ? { name: `CSV #${idx + 1}`, content: entry }
+        : { name: entry?.name || `CSV #${idx + 1}`, content: entry?.content || "" },
+    )
+    .filter((s) => s.content && s.content.trim().length > 0);
+
+  if (sources.length === 0) {
+    return { success: false, error: "Empty or invalid CSV input" };
+  }
+
+  // Detect format from first non-empty header
+  const firstLines = sources[0].content
+    .split(/\r?\n/)
+    .filter((l) => l.trim().length > 0);
+  if (firstLines.length < 2) {
+    return {
+      success: false,
+      error: "CSV must contain a header row and at least one data row",
+    };
+  }
+
+  const firstHeaders = splitCSVRow(firstLines[0]).map((h) => h.toLowerCase());
+  const isTradebookFormat =
+    firstHeaders.includes("symbol") &&
+    (firstHeaders.includes("trade_date") || firstHeaders.includes("order_execution_time")) &&
+    firstHeaders.includes("quantity") &&
+    firstHeaders.includes("price");
+
+  if (!isTradebookFormat) {
+    // Fallback to legacy holdings CSV across all sources
+    const combinedHoldings = [];
+    const combinedErrors = [];
+    for (const src of sources) {
+      const res = parseInvestmentsFromCSV(src.content);
+      if (res.success) {
+        for (const item of res.investments) {
+          const existing = existingInvestments.find(
+            (e) => e.name?.trim().toLowerCase() === item.name.trim().toLowerCase(),
+          );
+          combinedHoldings.push({
+            ...item,
+            action: existing ? "update" : "create",
+            existingInvestmentId: existing?.id || null,
+            tradeCount: 1,
+          });
+        }
+        if (res.errors?.length) {
+          combinedErrors.push(...res.errors.map((e) => `[${src.name}] ${e}`));
+        }
+      } else {
+        combinedErrors.push(`[${src.name}] ${res.error}`);
+      }
+    }
+    if (combinedHoldings.length === 0) {
+      return {
+        success: false,
+        error: combinedErrors[0] || "No valid rows found to import",
+        details: combinedErrors,
+      };
+    }
+    return {
+      success: true,
+      mode: "holdings",
+      holdings: combinedHoldings,
+      totalRows: combinedHoldings.length,
+      validTradesCount: combinedHoldings.length,
+      duplicateTradesCount: 0,
+      dateRange: null,
+      errors: combinedErrors,
+    };
+  }
+
+  // Collect existing trade IDs and composite signatures for deduplication
+  const buildTradeSignature = (isinOrSym, dateIso, tradeType, qty, price) =>
+    `${String(isinOrSym || "").trim().toUpperCase()}|${String(dateIso || "").slice(0, 10)}|${String(tradeType || "buy").toLowerCase()}|${Number(qty)}|${Number(price)}`;
+
+  const existingTradeIds = new Set();
+  const existingSignatures = new Set();
+  for (const inv of existingInvestments) {
+    const idKey = inv.isin || inv.name;
+    for (const txn of inv.transactions || []) {
+      if (txn.tradeId) existingTradeIds.add(String(txn.tradeId).trim());
+      if (txn.units !== undefined && txn.price !== undefined) {
+        const txnType = txn.type === "WITHDRAW" ? "sell" : "buy";
+        existingSignatures.add(
+          buildTradeSignature(txn.isin || idKey, txn.date, txnType, txn.units, txn.price),
+        );
+      }
+    }
+  }
+
+  const rawTrades = [];
+  const errors = [];
+  let totalRows = 0;
+
+  for (const src of sources) {
+    const lines = src.content.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length < 2) continue;
+
+    const headers = splitCSVRow(lines[0]).map((h) => h.toLowerCase());
+    const idx = {
+      symbol: headers.indexOf("symbol"),
+      isin: headers.indexOf("isin"),
+      tradeDate: headers.indexOf("trade_date"),
+      exchange: headers.indexOf("exchange"),
+      segment: headers.indexOf("segment"),
+      series: headers.indexOf("series"),
+      tradeType: headers.indexOf("trade_type"),
+      quantity: headers.indexOf("quantity"),
+      price: headers.indexOf("price"),
+      tradeId: headers.indexOf("trade_id"),
+      orderId: headers.indexOf("order_id"),
+      execTime: headers.indexOf("order_execution_time"),
+    };
+
+    if (idx.symbol === -1 || idx.quantity === -1 || idx.price === -1) {
+      errors.push(`[${src.name}] Missing required columns (symbol, quantity, price)`);
+      continue;
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+      totalRows++;
+      const parts = splitCSVRow(lines[i]);
+      const symbol = parts[idx.symbol]?.trim();
+      if (!symbol) {
+        errors.push(`[${src.name}] Row ${i + 1}: symbol is required`);
+        continue;
+      }
+
+      const quantity = parseFloat(parts[idx.quantity]);
+      const price = parseFloat(parts[idx.price]);
+      if (Number.isNaN(quantity) || quantity <= 0 || Number.isNaN(price) || price < 0) {
+        errors.push(`[${src.name}] Row ${i + 1}: invalid quantity or price`);
+        continue;
+      }
+
+      const parsedDate = parseTradeTimestamp(
+        idx.execTime !== -1 ? parts[idx.execTime] : "",
+        idx.tradeDate !== -1 ? parts[idx.tradeDate] : "",
+      );
+      if (!parsedDate) {
+        errors.push(`[${src.name}] Row ${i + 1}: invalid trade_date`);
+        continue;
+      }
+
+      const tradeTypeRaw =
+        idx.tradeType !== -1 ? parts[idx.tradeType]?.trim().toLowerCase() : "buy";
+      const tradeType = tradeTypeRaw === "sell" ? "sell" : "buy";
+
+      rawTrades.push({
+        symbol,
+        isin: idx.isin !== -1 ? parts[idx.isin]?.trim() || "" : "",
+        exchange: idx.exchange !== -1 ? parts[idx.exchange]?.trim() || "" : "",
+        segment: idx.segment !== -1 ? parts[idx.segment]?.trim() || "" : "",
+        series: idx.series !== -1 ? parts[idx.series]?.trim() || "" : "",
+        tradeType,
+        quantity,
+        price,
+        amount: round2(quantity * price),
+        tradeId: idx.tradeId !== -1 ? parts[idx.tradeId]?.trim() || "" : "",
+        orderId: idx.orderId !== -1 ? parts[idx.orderId]?.trim() || "" : "",
+        dateMs: parsedDate.ms,
+        dateIso: parsedDate.iso,
+      });
+    }
+  }
+
+  // Sort all trades chronologically (oldest -> newest)
+  rawTrades.sort((a, b) => {
+    if (a.dateMs !== b.dateMs) return a.dateMs - b.dateMs;
+    return String(a.tradeId || a.orderId).localeCompare(String(b.tradeId || b.orderId));
+  });
+
+  // Deduplicate by trade_id and composite signature across files & existing portfolio
+  const seenBatchTradeIds = new Set();
+  const seenBatchSignatures = new Set();
+  const uniqueTrades = [];
+  let duplicateTradesCount = 0;
+
+  for (const t of rawTrades) {
+    const sig = buildTradeSignature(
+      t.isin || t.symbol,
+      t.dateIso,
+      t.tradeType,
+      t.quantity,
+      t.price,
+    );
+    const isDupId =
+      t.tradeId && (existingTradeIds.has(t.tradeId) || seenBatchTradeIds.has(t.tradeId));
+    const isDupSig = existingSignatures.has(sig) || seenBatchSignatures.has(sig);
+
+    if (isDupId || isDupSig) {
+      duplicateTradesCount++;
+      continue;
+    }
+    if (t.tradeId) seenBatchTradeIds.add(t.tradeId);
+    seenBatchSignatures.add(sig);
+    uniqueTrades.push(t);
+  }
+
+  if (uniqueTrades.length === 0 && duplicateTradesCount === 0) {
+    return {
+      success: false,
+      error: errors[0] || "No valid trade rows found to import",
+      details: errors,
+    };
+  }
+
+  // Group chronologically sorted trades into holdings (by ISIN or normalized symbol)
+  const holdingsMap = new Map();
+  for (const t of uniqueTrades) {
+    const key = t.isin ? `isin:${t.isin.toUpperCase()}` : `sym:${t.symbol.toLowerCase()}`;
+    if (!holdingsMap.has(key)) {
+      const matchedType = mapSegmentToInvestmentType(t.segment, t.symbol, importMode);
+      const existing = existingInvestments.find(
+        (e) =>
+          (t.isin && e.isin && e.isin.toUpperCase() === t.isin.toUpperCase()) ||
+          e.name?.trim().toLowerCase() === t.symbol.trim().toLowerCase(),
+      );
+
+      holdingsMap.set(key, {
+        key,
+        name: existing?.name || t.symbol,
+        isin: t.isin || existing?.isin || null,
+        type: existing?.type || matchedType.id,
+        typeName: existing?.typeName || matchedType.name,
+        typeIcon: existing?.typeIcon || matchedType.icon,
+        platform: existing?.platform || t.exchange || null,
+        currency: existing?.currency || "INR",
+        exchangeRate: existing?.exchangeRate || 1,
+        action: existing ? "update" : "create",
+        existingInvestmentId: existing?.id || null,
+        existingInvestmentName: existing?.name || null,
+        startDate: t.dateIso,
+        netInvestedDelta: 0,
+        netCurrentDelta: 0,
+        investedAmount: 0,
+        currentValue: 0,
+        tradeCount: 0,
+        buyCount: 0,
+        sellCount: 0,
+        transactions: [],
+      });
+    }
+
+    const h = holdingsMap.get(key);
+    h.tradeCount += 1;
+    if (t.tradeType === "sell") {
+      h.sellCount += 1;
+      h.netInvestedDelta = round2(h.netInvestedDelta - t.amount);
+      h.netCurrentDelta = round2(h.netCurrentDelta - t.amount);
+    } else {
+      h.buyCount += 1;
+      h.netInvestedDelta = round2(h.netInvestedDelta + t.amount);
+      h.netCurrentDelta = round2(h.netCurrentDelta + t.amount);
+    }
+    h.investedAmount = Math.max(0, h.netInvestedDelta);
+    h.currentValue = Math.max(0, h.netCurrentDelta);
+
+    h.transactions.push({
+      id: t.tradeId ? `trade_${t.tradeId}` : `txn_${t.dateMs}_${h.tradeCount}`,
+      type: t.tradeType === "sell" ? "WITHDRAW" : "INVEST",
+      amount: t.amount,
+      units: t.quantity,
+      price: t.price,
+      tradeId: t.tradeId || null,
+      orderId: t.orderId || null,
+      isin: t.isin || null,
+      exchange: t.exchange || null,
+      date: t.dateIso,
+      symbol: t.symbol,
+      note: `${t.symbol} • ${t.tradeType.toUpperCase()} ${t.quantity} units @ ₹${t.price}`,
+      balanceAfter: Math.max(0, h.netInvestedDelta),
+    });
+  }
+
+  const holdings = Array.from(holdingsMap.values());
+  const dateRange =
+    uniqueTrades.length > 0
+      ? {
+          from: uniqueTrades[0].dateIso,
+          to: uniqueTrades[uniqueTrades.length - 1].dateIso,
+        }
+      : null;
+
+  return {
+    success: true,
+    mode: "tradebook",
+    holdings,
+    totalRows,
+    validTradesCount: uniqueTrades.length,
+    duplicateTradesCount,
+    dateRange,
+    errors,
+  };
 };
 
 /**
