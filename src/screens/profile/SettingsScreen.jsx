@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   Linking,
   ScrollView,
@@ -11,8 +10,8 @@ import {
   Switch,
   Text,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { auth } from "../../config/firebase";
@@ -860,12 +859,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#ECEAE4",
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
+    borderColor: "#E5E2DC",
   },
   
   currencyGrid: {

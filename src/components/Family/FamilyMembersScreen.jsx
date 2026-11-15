@@ -3,14 +3,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-} from 'react-native';
+    View} from 'react-native';
+import { AppAlert as Alert } from "../ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import FamilyMemberItem from '../../components/Family/FamilyMemberItem';

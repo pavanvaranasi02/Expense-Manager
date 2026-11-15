@@ -1,12 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Google from 'expo-auth-session/providers/google';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import React, { memo, useCallback, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -14,8 +12,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
-} from 'react-native';
+    View} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Analytics } from '../../config/firebase';
@@ -29,7 +27,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const RegisterLink = memo(({ onNavigate }) => (
   <View style={styles.registerRow}>
-    <Text style={styles.registerText}>Don't have an account? </Text>
+    <Text style={styles.registerText}>Don&apos;t have an account? </Text>
     <TouchableOpacity 
         onPress={onNavigate}
         accessibilityRole="button"
@@ -155,34 +153,32 @@ const LoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Hero Section */}
-          <Animated.View 
-              entering={FadeInDown.delay(200).duration(800)} 
-              style={styles.heroSection}
+          {/* Editorial Brand Header */}
+          <Animated.View
+            entering={FadeInDown.delay(100).duration(500)}
+            style={styles.heroSection}
           >
-            <View style={styles.heroHeader}>
-                <KoshLogo size={80} />
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>EXCLUSIVE ACCESS</Text>
-                </View>
-            </View>
+            <KoshLogo size={58} />
             <Text style={styles.appName}>KOSH</Text>
-            <Text style={styles.tagline}>Future of Wealth Management</Text>
+            <Text style={styles.tagline}>Personal Wealth &amp; Expense Treasury</Text>
           </Animated.View>
 
-          <Animated.View 
-            entering={FadeInUp.delay(400).duration(800)}
-            style={styles.formSection}
+          {/* Treasury Form Card */}
+          <Animated.View
+            entering={FadeInUp.delay(180).duration(500)}
+            style={styles.formCard}
           >
             <View style={styles.formHeader}>
-              <Text style={styles.formTitle}>Welcome Back</Text>
-              <Text style={styles.formSubtitle}>Enter your details to continue</Text>
+              <Text style={styles.formTitle}>Welcome back</Text>
+              <Text style={styles.formSubtitle}>
+                Sign in to access your accounts, investments, and insights.
+              </Text>
             </View>
 
             {/* General Error */}
             {errors.general && (
               <Animated.View entering={FadeInDown} style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={18} color={Theme.colors.error} />
+                <Ionicons name="alert-circle-outline" size={18} color="#B91C1C" />
                 <Text style={styles.errorBannerText}>{errors.general}</Text>
               </Animated.View>
             )}
@@ -190,31 +186,31 @@ const LoginScreen = ({ navigation }) => {
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <View 
+              <View
                 style={[
-                  styles.inputContainer, 
+                  styles.inputContainer,
                   errors.email && styles.inputError,
-                  focusedField === 'email' && styles.inputFocused
+                  focusedField === 'email' && styles.inputFocused,
                 ]}
               >
-                <Ionicons 
-                    name="mail-outline" 
-                    size={20} 
-                    color={focusedField === 'email' ? Theme.colors.primary : Theme.colors.textLight} 
-                    style={styles.inputIcon} 
+                <Ionicons
+                  name="mail-outline"
+                  size={18}
+                  color={focusedField === 'email' ? '#134E4A' : '#64748B'}
+                  style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="name@example.com"
-                  placeholderTextColor={Theme.colors.textLight}
+                  placeholderTextColor="#94A3B8"
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
                     if (errors.email) setErrors({ ...errors, email: null });
                   }}
                   onFocus={() => {
-                      setFocusedField('email');
-                      Haptics.selectionAsync();
+                    setFocusedField('email');
+                    Haptics.selectionAsync();
                   }}
                   onBlur={() => setFocusedField(null)}
                   keyboardType="email-address"
@@ -229,32 +225,42 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View 
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Password</Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ForgotPassword')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Reset Password"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.forgotText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </View>
+              <View
                 style={[
-                  styles.inputContainer, 
+                  styles.inputContainer,
                   errors.password && styles.inputError,
-                  focusedField === 'password' && styles.inputFocused
+                  focusedField === 'password' && styles.inputFocused,
                 ]}
               >
-                <Ionicons 
-                    name="lock-closed-outline" 
-                    size={20} 
-                    color={focusedField === 'password' ? Theme.colors.primary : Theme.colors.textLight} 
-                    style={styles.inputIcon} 
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={18}
+                  color={focusedField === 'password' ? '#134E4A' : '#64748B'}
+                  style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
-                  placeholderTextColor={Theme.colors.textLight}
+                  placeholderTextColor="#94A3B8"
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
                     if (errors.password) setErrors({ ...errors, password: null });
                   }}
                   onFocus={() => {
-                      setFocusedField('password');
-                      Haptics.selectionAsync();
+                    setFocusedField('password');
+                    Haptics.selectionAsync();
                   }}
                   onBlur={() => setFocusedField(null)}
                   secureTextEntry={!showPassword}
@@ -262,69 +268,58 @@ const LoginScreen = ({ navigation }) => {
                   accessibilityLabel="Password input"
                   accessibilityHint="Input your secure password"
                 />
-                <TouchableOpacity 
-                    onPress={() => {
-                        setShowPassword(!showPassword);
-                        Haptics.selectionAsync();
-                    }}
-                    style={styles.passwordToggle}
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowPassword(!showPassword);
+                    Haptics.selectionAsync();
+                  }}
+                  style={styles.passwordToggle}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={Theme.colors.textLight}
+                    size={19}
+                    color="#64748B"
                   />
                 </TouchableOpacity>
               </View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
-            {/* Forgot Password */}
-            <TouchableOpacity
-              style={styles.forgotBtn}
-              onPress={() => navigation.navigate('ForgotPassword')}
-              accessibilityRole="button"
-              accessibilityLabel="Reset Password"
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
+            {/* Sign In Button */}
             <Animated.View style={[styles.loginBtnWrapper, buttonAnimatedStyle]}>
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
-                  onPress={handleEmailLogin}
-                  disabled={loading}
-                  accessibilityRole="button"
-                  accessibilityLabel="Sign In"
-                >
-                    <LinearGradient
-                        colors={[Theme.colors.primary, Theme.colors.secondary]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={[styles.loginBtn, loading && styles.btnDisabled]}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color={Theme.colors.surface} />
-                        ) : (
-                            <Text style={styles.loginBtnText}>Sign In</Text>
-                        )}
-                    </LinearGradient>
-                </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={handleEmailLogin}
+                disabled={loading}
+                style={[styles.loginBtn, loading && styles.btnDisabled]}
+                accessibilityRole="button"
+                accessibilityLabel="Sign In"
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <View style={styles.loginBtnInner}>
+                    <Text style={styles.loginBtnText}>Sign In</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                  </View>
+                )}
+              </TouchableOpacity>
             </Animated.View>
 
             {/* Divider */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
+              <Text style={styles.dividerText}>or continue with</Text>
               <View style={styles.dividerLine} />
             </View>
 
             {/* Google Sign In */}
             <TouchableOpacity
-              activeOpacity={0.7}
+              activeOpacity={0.75}
               style={[styles.googleBtn, googleLoading && styles.btnDisabled]}
               onPress={() => promptAsync()}
               disabled={!request || googleLoading}
@@ -332,17 +327,23 @@ const LoginScreen = ({ navigation }) => {
               accessibilityLabel="Continue with Google"
             >
               {googleLoading ? (
-                <ActivityIndicator color={Theme.colors.text} />
+                <ActivityIndicator color="#0F172A" />
               ) : (
                 <View style={styles.googleContent}>
-                  <Ionicons name="logo-google" size={20} color={Theme.colors.googleRed} />
-                  <Text style={styles.googleBtnText}>Google</Text>
+                  <Ionicons name="logo-google" size={18} color="#DC2626" />
+                  <Text style={styles.googleBtnText}>Continue with Google</Text>
                 </View>
               )}
             </TouchableOpacity>
-
-            <RegisterLink onNavigate={handleRegisterNavigation} />
           </Animated.View>
+
+          <View style={styles.footerSection}>
+            <RegisterLink onNavigate={handleRegisterNavigation} />
+            <View style={styles.trustRow}>
+              <Ionicons name="shield-checkmark-outline" size={13} color="#64748B" />
+              <Text style={styles.trustText}>Private &amp; encrypted financial workspace</Text>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -350,199 +351,222 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+  container: { flex: 1, backgroundColor: '#F7F6F2' },
   keyboardView: { flex: 1 },
-  scrollContent: { 
-    flexGrow: 1, 
-    paddingHorizontal: Theme.spacing.lg + Theme.spacing.xs, 
-    paddingBottom: Theme.spacing.xl + Theme.spacing.sm 
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 24,
   },
 
-  // Hero
+  // Editorial Header
   heroSection: {
-    alignItems: 'center', 
-    marginTop: Theme.spacing.xl + Theme.spacing.sm, 
-    marginBottom: Theme.spacing.xxl 
-  },
-  heroHeader: {
     alignItems: 'center',
-    marginBottom: Theme.spacing.md,
+    marginBottom: 24,
   },
-  badge: {
-    backgroundColor: Theme.colors.primaryLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-    marginTop: Theme.spacing.md,
+  appName: {
+    fontSize: 22,
+    fontFamily: 'Manrope_800ExtraBold',
+    color: '#0F172A',
+    marginTop: 12,
+    letterSpacing: 3,
   },
-  badgeText: {
-    fontSize: 10,
-    color: Theme.colors.primary,
-    fontWeight: Theme.typography.weight.extrabold,
-    letterSpacing: 1,
-  },
-  appName: { 
-    fontSize: Theme.typography.size.xxl, 
-    fontWeight: Theme.typography.weight.extrabold, 
-    color: Theme.colors.text, 
-    marginTop: Theme.spacing.sm, 
-    letterSpacing: -0.5 
-  },
-  tagline: { 
-    fontSize: Theme.typography.size.sm - 1, 
-    color: Theme.colors.textMuted, 
-    marginTop: Theme.spacing.xs, 
-    fontWeight: Theme.typography.weight.medium 
+  tagline: {
+    fontSize: 13,
+    fontFamily: 'Manrope_500Medium',
+    color: '#64748B',
+    marginTop: 4,
   },
 
-  // Form
-  formSection: { flex: 1 },
-  formHeader: { marginBottom: Theme.spacing.lg + Theme.spacing.xs },
-  formTitle: { 
-    fontSize: Theme.typography.size.xxl + 2, 
-    fontWeight: Theme.typography.weight.extrabold, 
-    color: Theme.colors.text, 
-    letterSpacing: -0.8 
+  // Card
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#E5E2DC',
+    overflow: 'hidden',
   },
-  formSubtitle: { 
-    fontSize: Theme.typography.size.base - 1, 
-    color: Theme.colors.textMuted, 
-    marginTop: Theme.spacing.xs 
+  formHeader: {
+    marginBottom: 20,
+  },
+  formTitle: {
+    fontSize: 22,
+    fontFamily: 'Manrope_700Bold',
+    color: '#0F172A',
+    letterSpacing: -0.4,
+  },
+  formSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Manrope_400Regular',
+    color: '#64748B',
+    marginTop: 4,
+    lineHeight: 19,
   },
 
   // Error Banner
   errorBanner: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: Theme.colors.errorBackground,
-    padding: Theme.spacing.sm + Theme.spacing.xs, 
-    borderRadius: Theme.radius.md, 
-    marginBottom: Theme.spacing.xl - Theme.spacing.sm,
-    borderWidth: 1, 
-    borderColor: Theme.colors.error + '20',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
-  errorBannerText: { 
-    fontSize: Theme.typography.size.sm, 
-    color: Theme.colors.error, 
-    marginLeft: Theme.spacing.sm + Theme.spacing.xs, 
-    flex: 1, 
-    fontWeight: Theme.typography.weight.medium 
+  errorBannerText: {
+    fontSize: 13,
+    fontFamily: 'Manrope_500Medium',
+    color: '#B91C1C',
+    marginLeft: 10,
+    flex: 1,
   },
 
-  // Input
-  inputGroup: { marginBottom: Theme.spacing.lg },
-  label: { 
-    fontSize: Theme.typography.size.sm - 1, 
-    fontWeight: Theme.typography.weight.semibold, 
-    color: Theme.colors.text, 
-    marginBottom: Theme.spacing.sm, 
-    marginLeft: Theme.spacing.xs / 2 
+  // Inputs
+  inputGroup: { marginBottom: 16 },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: 12,
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#334155',
+    marginBottom: 6,
+  },
+  forgotText: {
+    fontSize: 12,
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
+    marginBottom: 6,
   },
   inputContainer: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.radius.lg, 
-    borderWidth: 1.5, 
-    borderColor: Theme.colors.border,
-    paddingHorizontal: Theme.spacing.md, 
-    height: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F6F2',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E2DC',
+    paddingHorizontal: 14,
+    height: 52,
   },
-  inputFocused: { 
-    borderColor: Theme.colors.primary, 
-    backgroundColor: Theme.colors.surface 
+  inputFocused: {
+    borderColor: '#134E4A',
+    backgroundColor: '#FFFFFF',
   },
-  inputError: { 
-    borderColor: Theme.colors.error, 
-    backgroundColor: Theme.colors.errorBackground + '40' 
+  inputError: {
+    borderColor: '#B91C1C',
+    backgroundColor: '#FEF2F2',
   },
-  inputIcon: { marginRight: Theme.spacing.sm + Theme.spacing.xs },
-  input: { 
-    flex: 1, 
-    fontSize: Theme.typography.size.base, 
-    color: Theme.colors.text, 
-    fontWeight: Theme.typography.weight.medium 
+  inputIcon: { marginRight: 10 },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Manrope_500Medium',
+    color: '#0F172A',
   },
-  passwordToggle: { padding: Theme.spacing.xs },
-  errorText: { 
-    fontSize: Theme.typography.size.xs, 
-    color: Theme.colors.error, 
-    marginTop: Theme.spacing.xs + Theme.spacing.xs/2, 
-    marginLeft: Theme.spacing.xs, 
-    fontWeight: Theme.typography.weight.medium 
-  },
-
-  // Forgot
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: Theme.spacing.lg + Theme.spacing.xs },
-  forgotText: { 
-    fontSize: Theme.typography.size.sm, 
-    color: Theme.colors.primary, 
-    fontWeight: Theme.typography.weight.bold 
+  passwordToggle: { padding: 6 },
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Manrope_500Medium',
+    color: '#B91C1C',
+    marginTop: 5,
+    marginLeft: 2,
   },
 
-  // Login Button
+  // Sign In Button
   loginBtnWrapper: {
-    marginBottom: Theme.spacing.lg + Theme.spacing.sm,
-    borderRadius: Theme.radius.lg,
+    marginTop: 4,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   loginBtn: {
-    height: 58, 
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center', 
+    height: 52,
+    backgroundColor: '#134E4A',
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  loginBtnText: { 
-    color: Theme.colors.surface, 
-    fontSize: Theme.typography.size.lg - 1, 
-    fontWeight: Theme.typography.weight.bold, 
-    letterSpacing: 0.5 
+  loginBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loginBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Manrope_700Bold',
+    letterSpacing: 0.2,
   },
   btnDisabled: { opacity: 0.7 },
 
   // Divider
-  divider: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginVertical: Theme.spacing.lg + Theme.spacing.sm 
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Theme.colors.border },
-  dividerText: { 
-    marginHorizontal: Theme.spacing.md, 
-    fontSize: Theme.typography.size.xs, 
-    color: Theme.colors.textLight, 
-    fontWeight: Theme.typography.weight.extrabold, 
-    letterSpacing: 1 
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#E5E2DC' },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 11,
+    fontFamily: 'Manrope_600SemiBold',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
 
   // Google
   googleBtn: {
-    backgroundColor: Theme.colors.surface, 
-    height: 58, 
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1.5, 
-    borderColor: Theme.colors.border,
-    marginBottom: Theme.spacing.xl,
+    backgroundColor: '#FFFFFF',
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E2DC',
     justifyContent: 'center',
   },
-  googleContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  googleBtnText: { 
-    fontSize: Theme.typography.size.base, 
-    fontWeight: Theme.typography.weight.bold, 
-    color: Theme.colors.text, 
-    marginLeft: Theme.spacing.md - Theme.spacing.xs 
+  googleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  googleBtnText: {
+    fontSize: 14,
+    fontFamily: 'Manrope_700Bold',
+    color: '#0F172A',
   },
 
-  // Register
-  registerRow: { flexDirection: 'row', justifyContent: 'center' },
-  registerText: { 
-    fontSize: Theme.typography.size.base - 1, 
-    color: Theme.colors.textMuted, 
-    fontWeight: Theme.typography.weight.medium 
+  // Footer
+  footerSection: {
+    marginTop: 22,
+    alignItems: 'center',
+    gap: 10,
   },
-  registerLink: { 
-    fontSize: Theme.typography.size.base - 1, 
-    color: Theme.colors.primary, 
-    fontWeight: Theme.typography.weight.bold 
+  registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  registerText: {
+    fontSize: 14,
+    fontFamily: 'Manrope_500Medium',
+    color: '#64748B',
+  },
+  registerLink: {
+    fontSize: 14,
+    fontFamily: 'Manrope_700Bold',
+    color: '#134E4A',
+  },
+  trustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  trustText: {
+    fontSize: 12,
+    fontFamily: 'Manrope_500Medium',
+    color: '#64748B',
   },
 });
 

@@ -6,7 +6,6 @@ import { Theme } from "../../theme/theme";
 
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Modal,
   RefreshControl,
@@ -15,8 +14,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import NotificationBell from "../../components/Notifications/NotificationBell";
 import BalanceHero from "../../components/ui/BalanceHero";

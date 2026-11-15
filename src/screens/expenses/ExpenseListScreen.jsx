@@ -5,7 +5,6 @@ import * as Haptics from 'expo-haptics';
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   RefreshControl,
   ScrollView,
@@ -13,8 +12,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EmptyState from "../../components/ui/EmptyState";
 import MetricStrip from "../../components/ui/MetricStrip";

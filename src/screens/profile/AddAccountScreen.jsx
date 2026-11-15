@@ -1,14 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-  ActivityIndicator, Alert,
-  KeyboardAvoidingView, Platform,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
   ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addAccount, updateAccount } from '../../services/accountService';

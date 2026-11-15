@@ -22,7 +22,13 @@ const Stack = createNativeStackNavigator();
 
 const FamilyNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
+      }}
+    >
       <Stack.Screen name="FamilyLanding" component={FamilyLandingScreen} />
       <Stack.Screen name="CreateFamily" component={CreateFamilyScreen} />
       <Stack.Screen name="JoinFamily" component={JoinFamilyScreen} />

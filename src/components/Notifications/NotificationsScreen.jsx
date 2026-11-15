@@ -77,7 +77,7 @@ const NotificationsScreen = ({ navigation }) => {
         navigation.navigate("Family", { screen: "FamilyBudget" });
         break;
       case "CreditCardBill":
-        navigation.navigate("Wealth", { screen: "CreditCardBill" });
+        navigation.navigate("Wealth", { screen: "CreditCardBill", initial: false });
         break;
       case "Portfolio":
         navigation.navigate("Wealth", { screen: "Portfolio" });

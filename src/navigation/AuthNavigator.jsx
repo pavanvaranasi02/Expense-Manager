@@ -11,8 +11,10 @@ const AuthNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#F8F9FE' },
+        contentStyle: { backgroundColor: '#F7F6F2' },
         animation: 'slide_from_right',
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />

@@ -2,15 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../../components/ui/AppAlert";
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
   getNotificationPreferences,

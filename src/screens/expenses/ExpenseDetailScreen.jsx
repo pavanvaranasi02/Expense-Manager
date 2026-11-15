@@ -1,18 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-} from 'react-native';
+  View} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppButton from '../../components/ui/AppButton';
 import ScreenHeader from '../../components/ui/ScreenHeader';
 import SurfaceCard from '../../components/ui/SurfaceCard';
-import { deleteExpense } from '../../services/expenseService';
-import { deleteIncome } from '../../services/incomeService';
+import { deleteExpense, getExpenses } from '../../services/expenseService';
+import { deleteIncome, getIncomes } from '../../services/incomeService';
 import { Theme } from '../../theme/theme';
 
 const getOutlineIcon = (rawIcon, isIncome) => {
@@ -23,7 +24,32 @@ const getOutlineIcon = (rawIcon, isIncome) => {
 };
 
 const TransactionDetailScreen = ({ navigation, route }) => {
-  const txn = route?.params?.expense || route?.params?.income;
+  const routeTxn = route?.params?.expense || route?.params?.income;
+  const [txn, setTxn] = useState(routeTxn);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const refreshTxn = async () => {
+        if (!routeTxn?.id) return;
+        const isInc = routeTxn.type === 'income' || !!routeTxn.sourceName;
+        if (isInc) {
+          const list = await getIncomes();
+          const updated = Array.isArray(list) ? list.find((i) => i.id === routeTxn.id) : null;
+          if (active && updated) setTxn(updated);
+        } else {
+          const list = await getExpenses();
+          const updated = Array.isArray(list) ? list.find((e) => e.id === routeTxn.id) : null;
+          if (active && updated) setTxn(updated);
+        }
+      };
+      refreshTxn();
+      return () => {
+        active = false;
+      };
+    }, [routeTxn?.id, routeTxn?.type, routeTxn?.sourceName]),
+  );
+
   if (!txn) return null;
 
   const isIncome = txn.type === 'income' || !!txn.sourceName;

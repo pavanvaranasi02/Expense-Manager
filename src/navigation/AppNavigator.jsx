@@ -2,12 +2,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import KoshSplashScreen from '../components/Branding/KoshSplashScreen';
 import { auth } from '../config/firebase';
 import { getUserProfile } from '../services/authService';
 import useAuthStore from '../store/useAuthStore';
-import { Theme } from '../theme/theme';
 
 import AuthNavigator from './AuthNavigator';
 import FamilyNavigator from './FamilyNavigator';
@@ -30,23 +29,17 @@ import ManageCategoriesScreen from '../screens/profile/ManageCategoriesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 
-const LoadingScreen = () => (
-  <View style={loadingStyles.container}>
-    <ActivityIndicator size="large" color={Theme.colors.primary} />
-    <Text style={loadingStyles.text}>Loading KOSH...</Text>
-  </View>
-);
-
-const loadingStyles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background },
-  text: { marginTop: 12, fontSize: 14, color: Theme.colors.textMuted },
-});
-
 const Stack = createNativeStackNavigator();
 const ProfileStackNav = createNativeStackNavigator();
 
+const STACK_SCREEN_OPTIONS = {
+  headerShown: false,
+  gestureEnabled: true,
+  fullScreenGestureEnabled: true,
+};
+
 const ProfileStack = () => (
-  <ProfileStackNav.Navigator screenOptions={{ headerShown: false }}>
+  <ProfileStackNav.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
     <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
     <ProfileStackNav.Screen name="ManageCategories" component={ManageCategoriesScreen} />
     <ProfileStackNav.Screen name="ActivityLogs" component={ActivityLogsScreen} />
@@ -69,6 +62,12 @@ const AppNavigator = () => {
   const setUser = useAuthStore((state) => state.setUser);
   const setUserProfile = useAuthStore((state) => state.setUserProfile);
   const setLoading = useAuthStore((state) => state.setLoading);
+  const [minSplashDone, setMinSplashDone] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinSplashDone(true), 1100);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     console.log('🔄 Setting up auth listener...');
@@ -127,12 +126,12 @@ const AppNavigator = () => {
     },
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
+  if (isLoading || !minSplashDone) {
+    return <KoshSplashScreen />;
   }
 
   return (
-    <NavigationContainer linking={isAuthenticated && isOnboardingComplete ? linking : undefined}>
+    <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />

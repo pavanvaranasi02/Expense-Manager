@@ -1,14 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-  Alert,
   Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../../components/ui/AppAlert";
 import { getCurrencySymbol } from "../../../constants/currencies";
 import { formatCurrency } from "../../../utils/format";
 import {
@@ -309,6 +308,73 @@ const InvestmentDetailModal = ({
                 <Text style={styles.noteText}>{inv.note}</Text>
               </View>
             ) : null}
+
+            {/* Constituent Added Entries / Recent Trades */}
+            {Array.isArray(inv.transactions) && inv.transactions.length > 0 && (
+              <View style={styles.entriesCard}>
+                <View style={styles.entriesHeader}>
+                  <Text style={styles.entriesTitle}>
+                    Added Entries ({inv.transactions.length})
+                  </Text>
+                  {onOpenHistory && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        onClose();
+                        onOpenHistory(inv);
+                      }}
+                    >
+                      <Text style={styles.entriesViewAll}>View All</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {[...inv.transactions]
+                  .slice(-4)
+                  .reverse()
+                  .map((txn, idx) => {
+                    const sym = getCurrencySymbol(inv.currency, currencySymbol);
+                    const d = txn.date ? new Date(txn.date) : null;
+                    const dateLabel =
+                      d && !isNaN(d.getTime())
+                        ? d.toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "2-digit",
+                          })
+                        : "";
+                    const isWithdraw = txn.type === "WITHDRAW" || txn.type === "SELL";
+                    return (
+                      <View
+                        key={txn.id || `${idx}`}
+                        style={[
+                          styles.entryRow,
+                          idx === Math.min(inv.transactions.length, 4) - 1 && {
+                            borderBottomWidth: 0,
+                            paddingBottom: 0,
+                          },
+                        ]}
+                      >
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                          <Text style={styles.entryNote} numberOfLines={1}>
+                            {txn.note || (isWithdraw ? "Withdrawal" : "Added Funds")}
+                          </Text>
+                          {dateLabel ? (
+                            <Text style={styles.entryDate}>{dateLabel}</Text>
+                          ) : null}
+                        </View>
+                        <Text
+                          style={[
+                            styles.entryAmount,
+                            { color: isWithdraw ? "#B91C1C" : "#047857" },
+                          ]}
+                        >
+                          {isWithdraw ? "-" : "+"}
+                          {formatCurrency(Math.abs(parseFloat(txn.amount) || 0), isStealthMode, sym)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+              </View>
+            )}
 
             {/* Operations Section */}
             <Text style={styles.sectionHeading}>Manage Investment</Text>
@@ -650,6 +716,55 @@ const styles = StyleSheet.create({
     color: "#475569",
     flex: 1,
     fontStyle: "italic",
+  },
+  entriesCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E2DC",
+    marginBottom: 14,
+  },
+  entriesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  entriesTitle: {
+    fontSize: 12,
+    fontFamily: "Manrope_700Bold",
+    color: "#475569",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  entriesViewAll: {
+    fontSize: 12,
+    fontFamily: "Manrope_700Bold",
+    color: "#134E4A",
+  },
+  entryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1EFEA",
+  },
+  entryNote: {
+    fontSize: 13,
+    fontFamily: "Manrope_600SemiBold",
+    color: "#0F172A",
+  },
+  entryDate: {
+    fontSize: 11,
+    fontFamily: "Manrope_500Medium",
+    color: "#71717A",
+    marginTop: 2,
+  },
+  entryAmount: {
+    fontSize: 13,
+    fontFamily: "Manrope_700Bold",
   },
   sectionHeading: {
     fontSize: 13,

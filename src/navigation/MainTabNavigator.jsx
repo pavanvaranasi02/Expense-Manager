@@ -35,8 +35,14 @@ import WealthScreen from '../screens/wealth/WealthScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+const STACK_SCREEN_OPTIONS = {
+  headerShown: false,
+  gestureEnabled: true,
+  fullScreenGestureEnabled: true,
+};
+
 const HomeStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
     <Stack.Screen name="Dashboard" component={DashboardScreen} />
     <Stack.Screen name="AnalyticsMain" component={AnalyticsScreen} />
     <Stack.Screen name="BudgetStatus" component={BudgetStatusScreen} />
@@ -45,7 +51,7 @@ const HomeStack = () => (
 );
 
 const ActivityStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
     <Stack.Screen name="ExpenseList" component={ExpenseListScreen} />
     <Stack.Screen name="ExpenseDetail" component={ExpenseDetailScreen} />
     <Stack.Screen name="IncomeList" component={IncomeListScreen} />
@@ -54,7 +60,7 @@ const ActivityStack = () => (
 );
 
 const PlanStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
     <Stack.Screen name="PlanMain" component={PlanScreen} />
     <Stack.Screen name="BudgetList" component={BudgetListScreen} />
     <Stack.Screen name="BudgetStatus" component={BudgetStatusScreen} />
@@ -64,7 +70,7 @@ const PlanStack = () => (
 );
 
 const WealthStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
     <Stack.Screen name="WealthMain" component={WealthScreen} />
     <Stack.Screen name="ManageAccounts" component={ManageAccountsScreen} />
     <Stack.Screen name="AddAccount" component={AddAccountScreen} />
@@ -103,6 +109,7 @@ const MainTabNavigator = ({ navigation }) => {
   return (
     <>
       <Tab.Navigator
+        backBehavior="history"
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarIcon: ({ focused, color }) => {

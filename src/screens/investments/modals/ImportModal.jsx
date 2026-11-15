@@ -6,7 +6,6 @@ import * as FileSystem from "expo-file-system/legacy";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,8 +14,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../../components/ui/AppAlert";
 import {
   getInvestments,
   importTradebookHoldings,
@@ -545,7 +544,13 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
 
                 {previewList.map((item, idx) => (
                   <View key={idx} style={styles.previewItem}>
-                    <Text style={styles.previewIcon}>{item.typeIcon}</Text>
+                    <View style={styles.previewIconBox}>
+                      <Ionicons
+                        name={item.type === "stocks" ? "trending-up-outline" : "pie-chart-outline"}
+                        size={18}
+                        color="#134E4A"
+                      />
+                    </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                         <Text style={[styles.previewName, { flexShrink: 1 }]} numberOfLines={1}>
@@ -576,26 +581,96 @@ const ImportModal = ({ visible, onClose, onSuccessImport }) => {
                         {item.platform ? ` • ${item.platform}` : ""}
                         {item.tradeCount ? ` • ${item.tradeCount} trade${item.tradeCount === 1 ? "" : "s"}` : ""}
                       </Text>
-                      {existingInvestments.length > 0 && (
+                      <View style={styles.targetToggleRow}>
                         <TouchableOpacity
-                          style={styles.targetPill}
-                          onPress={() => setTargetPickerIndex(idx)}
+                          style={[
+                            styles.targetPill,
+                            item.action === "create" && styles.targetPillActive,
+                          ]}
+                          onPress={() => {
+                            const updated = previewList.map((h, i) =>
+                              i === idx
+                                ? { ...h, action: "create", existingInvestmentId: null, existingInvestmentName: null }
+                                : h
+                            );
+                            setPreviewList(updated);
+                            if (previewSummary) {
+                              setPreviewSummary({
+                                ...previewSummary,
+                                newCount: updated.filter((h) => h.action === "create").length,
+                                updateCount: updated.filter((h) => h.action === "update").length,
+                              });
+                            }
+                          }}
                           disabled={importing}
                           activeOpacity={0.7}
                         >
                           <Ionicons
-                            name={item.action === "update" ? "git-merge-outline" : "add-circle-outline"}
+                            name="add-circle-outline"
                             size={12}
-                            color="#0F766E"
+                            color={item.action === "create" ? "#FFFFFF" : "#134E4A"}
                           />
-                          <Text style={styles.targetPillText} numberOfLines={1}>
-                            {item.action === "update" && item.existingInvestmentName
-                              ? `Add into: ${item.existingInvestmentName}`
-                              : "Create as New Investment"}
+                          <Text
+                            style={[
+                              styles.targetPillText,
+                              item.action === "create" && styles.targetPillTextActive,
+                            ]}
+                          >
+                            Create New
                           </Text>
-                          <Ionicons name="chevron-down" size={12} color="#0F766E" />
                         </TouchableOpacity>
-                      )}
+
+                        <TouchableOpacity
+                          style={[
+                            styles.targetPill,
+                            item.action === "update" && styles.targetPillActive,
+                            existingInvestments.length === 0 && styles.targetPillDisabled,
+                          ]}
+                          onPress={() => {
+                            if (existingInvestments.length === 0) {
+                              Alert.alert(
+                                "No Existing Holdings",
+                                "This is your first import. These investments will be created as new holdings in your portfolio."
+                              );
+                              return;
+                            }
+                            setTargetPickerIndex(idx);
+                          }}
+                          disabled={importing}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons
+                            name="git-merge-outline"
+                            size={12}
+                            color={
+                              existingInvestments.length === 0
+                                ? "#9CA3AF"
+                                : item.action === "update"
+                                ? "#FFFFFF"
+                                : "#134E4A"
+                            }
+                          />
+                          <Text
+                            style={[
+                              styles.targetPillText,
+                              item.action === "update" && styles.targetPillTextActive,
+                              existingInvestments.length === 0 && { color: "#9CA3AF" },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {item.action === "update" && item.existingInvestmentName
+                              ? `Into: ${item.existingInvestmentName}`
+                              : "Add to Existing"}
+                          </Text>
+                          {existingInvestments.length > 0 && (
+                            <Ionicons
+                              name="chevron-down"
+                              size={12}
+                              color={item.action === "update" ? "#FFFFFF" : "#134E4A"}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     <View style={{ alignItems: "flex-end" }}>
                       <Text style={styles.previewAmount}>
@@ -1030,6 +1105,30 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     color: "#0F766E",
     flexShrink: 1,
+  },
+  previewIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "#E6F2F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  targetToggleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 6,
+  },
+  targetPillActive: {
+    backgroundColor: "#134E4A",
+  },
+  targetPillTextActive: {
+    color: "#FFFFFF",
+  },
+  targetPillDisabled: {
+    backgroundColor: "#F1F5F9",
+    opacity: 0.65,
   },
   pickerOverlay: {
     flex: 1,

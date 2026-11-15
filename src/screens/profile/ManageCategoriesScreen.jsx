@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -13,8 +12,8 @@ import {
     TouchableOpacity,
     View,
     StatusBar,
-    Dimensions,
-} from 'react-native';
+    Dimensions} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {

@@ -2,15 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppButton from '../../components/ui/AppButton';
 import BalanceHero from '../../components/ui/BalanceHero';
@@ -338,10 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 16,
     marginTop: 28,
-    elevation: 4,
-    shadowColor: '#134E4A',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
+    overflow: 'hidden',
   },
   emptyBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: 'Manrope_700Bold' },
 });

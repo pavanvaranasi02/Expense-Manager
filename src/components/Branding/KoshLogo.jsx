@@ -1,38 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Theme } from '../../theme/theme';
+import { Image, StyleSheet, Text, View } from 'react-native';
+
+const KOSH_APP_ICON = require('../../../assets/kosh-icon.png');
 
 const KoshLogo = ({ size = 60, showText = false, fontSize = 20 }) => {
-  const iconSize = size;
-  const radius = size * 0.3;
+  const radius = Math.round(size * 0.28);
 
   return (
-    <View style={[styles.container, { width: iconSize, height: iconSize }]}>
-      {/* Glass Layer */}
-      <View style={[
-        styles.glass, 
-        { 
-          width: iconSize, 
-          height: iconSize, 
-          borderRadius: radius,
-          backgroundColor: Theme.colors.glass,
-          borderColor: Theme.colors.glassBorder,
-        }
-      ]} />
-      
-      {/* Content Layer (Gold) */}
-      <View style={styles.content}>
-        <LinearGradient
-          colors={[Theme.colors.goldLight, Theme.colors.gold, Theme.colors.goldDark]}
-          style={[styles.logoBox, { width: iconSize * 0.7, height: iconSize * 0.7, borderRadius: radius * 0.8 }]}
-        >
-          <Text style={[styles.logoText, { fontSize: iconSize * 0.35 }]}>K</Text>
-        </LinearGradient>
+    <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.logoFrame,
+          {
+            width: size,
+            height: size,
+            borderRadius: radius,
+          },
+        ]}
+      >
+        <Image
+          source={KOSH_APP_ICON}
+          style={{ width: size, height: size }}
+          resizeMode="cover"
+        />
       </View>
 
       {showText && (
-        <Text style={[styles.brandName, { fontSize, marginTop: size * 0.2 }]}>
+        <Text style={[styles.brandName, { fontSize, marginTop: size * 0.18 }]}>
           KOSH
         </Text>
       )}
@@ -41,56 +34,20 @@ const KoshLogo = ({ size = 60, showText = false, fontSize = 20 }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
+  wrapper: {
     alignItems: 'center',
-  },
-  glass: {
-    position: 'absolute',
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  content: {
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  logoBox: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: Theme.colors.gold,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  logoText: {
-    color: '#FFF',
-    fontWeight: '900',
-    letterSpacing: -1,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  logoFrame: {
+    overflow: 'hidden',
+    backgroundColor: '#0F3D3A',
+    borderWidth: 1,
+    borderColor: '#E5E2DC',
   },
   brandName: {
-    fontWeight: '800',
-    color: Theme.colors.text,
-    letterSpacing: 2,
+    fontFamily: 'Manrope_700Bold',
+    color: '#0F172A',
+    letterSpacing: 3,
   },
 });
 

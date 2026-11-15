@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import {
-    ActivityIndicator, Alert,
-    KeyboardAvoidingView, Platform,
+    ActivityIndicator, KeyboardAvoidingView, Platform,
     ScrollView,
     StyleSheet,
     Text, TextInput, TouchableOpacity,
-    View,
-} from 'react-native';
+    View} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebase';
 import { completeOnboarding } from '../../services/authService';

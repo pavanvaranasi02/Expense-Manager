@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -14,8 +13,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -127,19 +126,30 @@ const CreditCardBillScreen = ({ navigation }) => {
 
   const openPayModal = (card) => {
     setSelectedCard(card);
-    setPayAmount((card.currentUsage || 0).toString());
-    setPayFromAccount(bankAccounts.length > 0 ? bankAccounts[0] : null);
+    const usage = card.currentUsage || 0;
+    setPayAmount(usage.toString());
+    const sufficientAccount = bankAccounts.find((a) => (a.balance || 0) >= usage);
+    setPayFromAccount(sufficientAccount || (bankAccounts.length > 0 ? bankAccounts[0] : null));
     setShowPayModal(true);
   };
 
   const handlePayBill = async () => {
-    if (!payAmount || parseFloat(payAmount) <= 0) {
+    const numericPay = parseFloat(payAmount);
+    if (!payAmount || isNaN(numericPay) || numericPay <= 0) {
       Alert.alert('Invalid', 'Enter a valid payment amount');
       return;
     }
 
-    if (parseFloat(payAmount) > (selectedCard.currentUsage || 0)) {
+    if (numericPay > (selectedCard.currentUsage || 0)) {
       Alert.alert('Invalid', 'Payment amount cannot exceed outstanding balance');
+      return;
+    }
+
+    if (payFromAccount && numericPay > (payFromAccount.balance || 0)) {
+      Alert.alert(
+        'Insufficient Balance',
+        `${payFromAccount.name} only has ₹${(payFromAccount.balance || 0).toLocaleString('en-IN')} available. Please choose another account or pay a smaller amount.`
+      );
       return;
     }
 
@@ -573,7 +583,9 @@ const CreditCardBillScreen = ({ navigation }) => {
                           <Text style={styles.cardBank}>{card.bankName || 'BANK'}</Text>
                           <Text style={styles.cardName}>{card.name}</Text>
                         </View>
-                        <View style={styles.chipView} />
+                        <View style={styles.chipView}>
+                          <Ionicons name="card-outline" size={18} color="rgba(255,255,255,0.85)" />
+                        </View>
                       </View>
 
                       <View style={styles.usageContainer}>
@@ -1900,12 +1912,17 @@ const styles = StyleSheet.create({
   activeTabText: { color: '#134E4A', fontFamily: 'Manrope_700Bold' },
 
   // Credit Card View Styles
-  cardContainer: { marginTop: 14, borderWidth: 1, borderColor: '#E5E2DC' },
+  cardContainer: {
+    marginTop: 14,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: Theme.colors.surface,
+  },
   creditCard: { borderRadius: 24, padding: 24, height: 200, justifyContent: 'space-between', overflow: 'hidden' },
   cardUpper: { flexDirection: 'row', justifyContent: 'space-between' },
   cardBank: { fontSize: 13, fontFamily: 'Manrope_700Bold', color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5 },
   cardName: { fontSize: 18, fontFamily: 'Manrope_700Bold', color: '#FFFFFF', marginTop: 4 },
-  chipView: { width: 44, height: 32, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  chipView: { width: 44, height: 32, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', justifyContent: 'center', alignItems: 'center' },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between' },
   cardLabel: { fontSize: 10, fontFamily: 'Manrope_700Bold', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
   cardAmount: { fontSize: 26, fontFamily: 'Manrope_700Bold', color: '#FFFFFF', marginTop: 4 },
@@ -1967,16 +1984,13 @@ const styles = StyleSheet.create({
   // EMI Summary Banner
   emiSummaryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 20,
     marginTop: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F1EFEA',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
+    borderColor: '#E5E2DC',
+    overflow: 'hidden',
   },
   emiSummaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   emiSummaryCol: { flex: 1 },
@@ -2202,7 +2216,7 @@ const styles = StyleSheet.create({
   payCardOutstanding: { fontSize: 14, color: '#B91C1C', fontFamily: 'Manrope_700Bold', marginTop: 4 },
 
   quickAmountRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  quickAmountBtn: { flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#F1EFEA', padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05 },
+  quickAmountBtn: { flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E5E2DC', padding: 12 },
   activeQuickBtn: { borderColor: '#134E4A', backgroundColor: '#E6F2F0', elevation: 0 },
   quickAmountLabel: { fontSize: 9, fontFamily: 'Manrope_700Bold', color: '#71717A' },
   quickAmountValue: { fontSize: 14, fontFamily: 'Manrope_700Bold', color: '#18181B', marginTop: 4 },
@@ -2211,13 +2225,13 @@ const styles = StyleSheet.create({
   rupeeSign: { fontSize: 24, fontFamily: 'Manrope_700Bold', color: '#18181B' },
   amountInput: { flex: 1, height: 60, fontSize: 22, fontFamily: 'Manrope_700Bold', color: '#18181B', paddingLeft: 10 },
 
-  accountSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 18, borderWidth: 1, borderColor: '#E5E2DC', padding: 14, elevation: 1, shadowColor: '#000', shadowOpacity: 0.04 },
+  accountSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E5E2DC', padding: 14 },
   accTypeIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F1EFEA', justifyContent: 'center', alignItems: 'center' },
   accSelectorName: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: '#18181B' },
   accSelectorBal: { fontSize: 11, color: '#71717A', fontFamily: 'Manrope_600SemiBold', marginTop: 1 },
   accSelectorPlaceholder: { fontSize: 14, color: '#71717A', fontFamily: 'Manrope_700Bold' },
 
-  payModalBtnCont: { borderRadius: 20, overflow: 'hidden', marginTop: 28, marginBottom: 10, elevation: 4, shadowColor: '#134E4A', shadowOpacity: 0.25 },
+  payModalBtnCont: { borderRadius: 16, overflow: 'hidden', marginTop: 28, marginBottom: 10 },
   payModalBtn: { height: 58, justifyContent: 'center', alignItems: 'center' },
   payModalBtnText: { color: '#FFFFFF', fontSize: 15, fontFamily: 'Manrope_700Bold', letterSpacing: 0.5 },
 

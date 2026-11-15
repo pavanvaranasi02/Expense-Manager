@@ -309,10 +309,12 @@ const RegisterScreen = ({ navigation }) => {
                     <Ionicons name="logo-google" size={20} color={Theme.colors.googleRed} />
                     <Text style={styles.socialBtnText}>Google</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                    <Ionicons name="logo-apple" size={20} color={Theme.colors.text} />
-                    <Text style={styles.socialBtnText}>Apple</Text>
-                </TouchableOpacity>
+                {Platform.OS === 'ios' && (
+                  <TouchableOpacity style={styles.socialBtn}>
+                      <Ionicons name="logo-apple" size={20} color={Theme.colors.text} />
+                      <Text style={styles.socialBtnText}>Apple</Text>
+                  </TouchableOpacity>
+                )}
             </View>
 
             {/* Login Link */}

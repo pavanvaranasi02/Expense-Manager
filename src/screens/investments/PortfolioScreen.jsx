@@ -5,7 +5,6 @@ import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -17,8 +16,8 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
-} from "react-native";
+  View} from "react-native";
+import { AppAlert as Alert } from "../../components/ui/AppAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAccounts } from "../../services/accountService";
 import { addExpense } from "../../services/expenseService";
@@ -133,6 +132,8 @@ const PortfolioScreen = ({ navigation }) => {
   const [currentSipInvestment, setCurrentSipInvestment] = useState(null);
 
   // Add Form State
+  const [addMode, setAddMode] = useState("new"); // 'new' | 'existing'
+  const [selectedExistingInv, setSelectedExistingInv] = useState(null);
   const [invName, setInvName] = useState("");
   const [invType, setInvType] = useState(INVESTMENT_TYPES[0]);
   const [invPlatform, setInvPlatform] = useState("");
@@ -303,6 +304,8 @@ const PortfolioScreen = ({ navigation }) => {
   }, [invType, invRdMonthly, invAmount, invInterestRate, invRdMonths]);
 
   const resetAddForm = () => {
+    setAddMode("new");
+    setSelectedExistingInv(null);
     setInvName("");
     setInvPlatform("");
     setInvCurrency(baseCurrency);
@@ -354,6 +357,71 @@ const PortfolioScreen = ({ navigation }) => {
 
   // ── ADD INVESTMENT ──
   const handleAdd = async () => {
+    if (addMode === "existing") {
+      if (!selectedExistingInv) {
+        Alert.alert("Required", "Select an existing investment");
+        return;
+      }
+      if (!invAmount || parseFloat(invAmount) <= 0) {
+        Alert.alert("Required", "Enter invested amount");
+        return;
+      }
+      setSaving(true);
+      try {
+        const targetCurrency = selectedExistingInv.currency || baseCurrency;
+        const targetRate =
+          targetCurrency === baseCurrency
+            ? 1
+            : parseFloat(selectedExistingInv.exchangeRate) || 1;
+        const rawAmt = parseFloat(invAmount) || 0;
+        const amountToPay = rawAmt * targetRate;
+
+        if (payFromAccount && amountToPay > 0) {
+          await addExpense({
+            amount: amountToPay,
+            categoryId: "investment",
+            categoryName: "Investment",
+            categoryIcon: selectedExistingInv.typeIcon,
+            accountId: payFromAccount.id,
+            accountName: payFromAccount.name,
+            paymentMode: payFromAccount.type,
+            note: invNote?.trim()
+              ? `Added to ${selectedExistingInv.name}: ${invNote.trim()}`
+              : `Added to ${selectedExistingInv.name}`,
+            date: new Date().toISOString(),
+          });
+        }
+
+        const nextCurrentValue =
+          (parseFloat(selectedExistingInv.currentValue) ||
+            parseFloat(selectedExistingInv.investedAmount) ||
+            0) + (parseFloat(invCurrentValue || invAmount) || 0);
+
+        const result = await addInvestmentAmount(
+          selectedExistingInv.id,
+          invAmount,
+          nextCurrentValue,
+          invNote?.trim() || "",
+          new Date().toISOString(),
+          null,
+        );
+
+        if (result.success) {
+          setShowAddModal(false);
+          resetAddForm();
+          await fetchInvestments();
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          Alert.alert("Error", result.error);
+        }
+      } catch (error) {
+        Alert.alert("Error", error.message);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     if (!invName.trim()) {
       Alert.alert("Required", "Enter investment name");
       return;
@@ -403,40 +471,67 @@ const PortfolioScreen = ({ navigation }) => {
         if (expRes.success) expenseId = expRes.id;
       }
 
-      const result = await addInvestment({
-        name: invName,
-        type: invType.id,
-        typeName: invType.name,
-        typeIcon: invType.icon,
-        platform: invPlatform,
-        currency: invCurrency,
-        exchangeRate: rate,
-        investedAmount:
-          invType.id === "rd"
-            ? parseFloat(invRdMonthly) * (parseInt(invRdCompletedMonths) || 0)
-            : invAmount,
-        currentValue:
-          invType.id === "rd"
-            ? parseFloat(invRdMonthly) * (parseInt(invRdCompletedMonths) || 0)
-            : invCurrentValue || invAmount,
-        interestRate: invInterestRate,
-        note: invNote,
-        sipAmount: invSipAmount,
-        sipDate: invSipDate,
-        maturityAmount: invMaturityAmount,
-        maturityDate: parseMaturityDate(invMaturityDate),
-        rdMonthlyAmount: invRdMonthly,
-        rdTotalMonths: invRdMonths,
-        rdPaymentDate: invRdPaymentDate || "1",
-        rdCompletedMonths: parseInt(invRdCompletedMonths) || 0,
-        expenseId,
-        paidFromAccountId: payFromAccount?.id,
-      });
+      const normalizedName = invName.trim().toLowerCase();
+      const duplicateMatch =
+        invType.id !== "rd"
+          ? investments.find(
+              (item) =>
+                item.status !== "closed" &&
+                item.name?.trim().toLowerCase() === normalizedName &&
+                item.type === invType.id,
+            )
+          : null;
+
+      let result;
+      if (duplicateMatch) {
+        const nextCurrentValue =
+          (parseFloat(duplicateMatch.currentValue) ||
+            parseFloat(duplicateMatch.investedAmount) ||
+            0) + (parseFloat(invCurrentValue || invAmount) || 0);
+        result = await addInvestmentAmount(
+          duplicateMatch.id,
+          invAmount,
+          nextCurrentValue,
+          invNote?.trim() || "",
+          new Date().toISOString(),
+          invCurrency !== baseCurrency ? rate : null,
+        );
+      } else {
+        result = await addInvestment({
+          name: invName,
+          type: invType.id,
+          typeName: invType.name,
+          typeIcon: invType.icon,
+          platform: invPlatform,
+          currency: invCurrency,
+          exchangeRate: rate,
+          investedAmount:
+            invType.id === "rd"
+              ? parseFloat(invRdMonthly) * (parseInt(invRdCompletedMonths) || 0)
+              : invAmount,
+          currentValue:
+            invType.id === "rd"
+              ? parseFloat(invRdMonthly) * (parseInt(invRdCompletedMonths) || 0)
+              : invCurrentValue || invAmount,
+          interestRate: invInterestRate,
+          note: invNote,
+          sipAmount: invSipAmount,
+          sipDate: invSipDate,
+          maturityAmount: invMaturityAmount,
+          maturityDate: parseMaturityDate(invMaturityDate),
+          rdMonthlyAmount: invRdMonthly,
+          rdTotalMonths: invRdMonths,
+          rdPaymentDate: invRdPaymentDate || "1",
+          rdCompletedMonths: parseInt(invRdCompletedMonths) || 0,
+          expenseId,
+          paidFromAccountId: payFromAccount?.id,
+        });
+      }
 
       if (result.success) {
         setShowAddModal(false);
         resetAddForm();
-        fetchInvestments();
+        await fetchInvestments();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         Alert.alert("Error", result.error);
@@ -1281,7 +1376,9 @@ const PortfolioScreen = ({ navigation }) => {
                   contentContainerStyle={{ paddingBottom: 30 }}
                 >
                   <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Add Investment</Text>
+                    <Text style={styles.modalTitle}>
+                      {addMode === "existing" ? "Add to Existing" : "Add Investment"}
+                    </Text>
                     <TouchableOpacity
                       onPress={() => {
                         setShowAddModal(false);
@@ -1292,8 +1389,104 @@ const PortfolioScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
 
-                  {/* Type */}
-                  <Text style={styles.modalLabel}>Type</Text>
+                  {investments.filter((i) => i.status !== "closed").length > 0 && (
+                    <View style={styles.addModeToggle}>
+                      <TouchableOpacity
+                        style={[
+                          styles.addModeBtn,
+                          addMode === "new" && styles.addModeBtnActive,
+                        ]}
+                        onPress={() => setAddMode("new")}
+                      >
+                        <Ionicons
+                          name="add-circle-outline"
+                          size={15}
+                          color={addMode === "new" ? "#FFFFFF" : "#475569"}
+                        />
+                        <Text
+                          style={[
+                            styles.addModeText,
+                            addMode === "new" && styles.addModeTextActive,
+                          ]}
+                        >
+                          Create New
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.addModeBtn,
+                          addMode === "existing" && styles.addModeBtnActive,
+                        ]}
+                        onPress={() => {
+                          setAddMode("existing");
+                          if (!selectedExistingInv) {
+                            const firstActive = investments.find((i) => i.status !== "closed");
+                            if (firstActive) setSelectedExistingInv(firstActive);
+                          }
+                        }}
+                      >
+                        <Ionicons
+                          name="layers-outline"
+                          size={15}
+                          color={addMode === "existing" ? "#FFFFFF" : "#475569"}
+                        />
+                        <Text
+                          style={[
+                            styles.addModeText,
+                            addMode === "existing" && styles.addModeTextActive,
+                          ]}
+                        >
+                          Add to Existing
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {addMode === "existing" ? (
+                    <View style={styles.existingPickerList}>
+                      <Text style={styles.modalLabel}>Select Holding *</Text>
+                      <ScrollView
+                        style={{ maxHeight: 170 }}
+                        nestedScrollEnabled
+                        showsVerticalScrollIndicator={false}
+                      >
+                        {investments
+                          .filter((i) => i.status !== "closed")
+                          .map((item) => {
+                            const isSelected = selectedExistingInv?.id === item.id;
+                            const sym = getCurrencySymbol(item.currency, currencySymbol);
+                            return (
+                              <TouchableOpacity
+                                key={item.id}
+                                style={[
+                                  styles.existingPickerRow,
+                                  isSelected && styles.existingPickerRowActive,
+                                ]}
+                                onPress={() => setSelectedExistingInv(item)}
+                              >
+                                <View style={{ flex: 1, marginRight: 8 }}>
+                                  <Text style={styles.existingPickerTitle} numberOfLines={1}>
+                                    {item.name}
+                                  </Text>
+                                  <Text style={styles.existingPickerSub} numberOfLines={1}>
+                                    {item.typeName || item.type} • Invested{" "}
+                                    {formatCurrency(item.investedAmount || 0, isStealthMode, sym)}
+                                  </Text>
+                                </View>
+                                <Ionicons
+                                  name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                                  size={20}
+                                  color={isSelected ? "#134E4A" : "#94A3B8"}
+                                />
+                              </TouchableOpacity>
+                            );
+                          })}
+                      </ScrollView>
+                    </View>
+                  ) : (
+                    <>
+                      {/* Type */}
+                      <Text style={styles.modalLabel}>Type</Text>
                   <TouchableOpacity
                     style={styles.typeSelector}
                     onPress={() => setShowTypeModal(true)}
@@ -1441,9 +1634,11 @@ const PortfolioScreen = ({ navigation }) => {
                       />
                     </>
                   )}
+                    </>
+                  )}
 
                   {/* Non-RD Invested & Current Value */}
-                  {invType.id !== "rd" && (
+                  {(addMode === "existing" || invType.id !== "rd") && (
                     <>
                       <Text style={styles.modalLabel}>
                         Invested Amount ({getCurrencySymbol(invCurrency, currencySymbol)}) *
@@ -1486,7 +1681,7 @@ const PortfolioScreen = ({ navigation }) => {
                   )}
 
                   {/* SIP Fields */}
-                  {invType.id === "mutual_fund" && (
+                  {addMode === "new" && invType.id === "mutual_fund" && (
                     <>
                       <Text style={styles.modalLabel}>
                         Monthly SIP Amount (Optional) ({getCurrencySymbol(invCurrency, currencySymbol)})
@@ -1523,7 +1718,7 @@ const PortfolioScreen = ({ navigation }) => {
                   )}
 
                   {/* Fixed Income / FD / RD Interest */}
-                  {["fd", "rd", "ppf", "nps", "bonds"].includes(invType.id) && (
+                  {addMode === "new" && ["fd", "rd", "ppf", "nps", "bonds"].includes(invType.id) && (
                     <>
                       <Text style={styles.modalLabel}>Interest Rate (% p.a.)</Text>
                       <TextInput
@@ -1597,7 +1792,9 @@ const PortfolioScreen = ({ navigation }) => {
                     {saving ? (
                       <ActivityIndicator color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.modalSaveBtnText}>Add Investment</Text>
+                      <Text style={styles.modalSaveBtnText}>
+                        {addMode === "existing" ? "Add to Selected Investment" : "Add Investment"}
+                      </Text>
                     )}
                   </TouchableOpacity>
                 </ScrollView>
@@ -2458,6 +2655,64 @@ const styles = StyleSheet.create({
   accountBalance: {
     fontSize: 12,
     color: "#71717A",
+  },
+  addModeToggle: {
+    flexDirection: "row",
+    backgroundColor: "#F1EFEA",
+    borderRadius: 12,
+    padding: 4,
+    gap: 6,
+    marginBottom: 14,
+  },
+  addModeBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
+  addModeBtnActive: {
+    backgroundColor: "#134E4A",
+  },
+  addModeText: {
+    fontSize: 13,
+    fontFamily: "Manrope_700Bold",
+    color: "#475569",
+  },
+  addModeTextActive: {
+    color: "#FFFFFF",
+  },
+  existingPickerList: {
+    marginBottom: 10,
+  },
+  existingPickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F7F6F2",
+    borderWidth: 1,
+    borderColor: "#E5E2DC",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  existingPickerRowActive: {
+    backgroundColor: "#E6F2F0",
+    borderColor: "#134E4A",
+  },
+  existingPickerTitle: {
+    fontSize: 14,
+    fontFamily: "Manrope_700Bold",
+    color: "#0F172A",
+  },
+  existingPickerSub: {
+    fontSize: 12,
+    fontFamily: "Manrope_500Medium",
+    color: "#64748B",
+    marginTop: 2,
   },
   modalBackdrop: {
     flex: 1,

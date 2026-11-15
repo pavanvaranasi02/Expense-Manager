@@ -9,7 +9,8 @@ export const formatCurrency = (value, isStealth, symbol = '₹') => {
   if (isStealth) return '****';
   const num = typeof value === 'string' ? parseFloat(value) : value;
   if (isNaN(num)) return `${symbol}0`;
-  
+
+  if (num < 0) return `-${symbol}${Math.abs(num).toLocaleString('en-IN')}`;
   return `${symbol}${num.toLocaleString('en-IN')}`;
 };
 

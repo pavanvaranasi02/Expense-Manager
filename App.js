@@ -6,11 +6,14 @@ import {
 } from '@expo-google-fonts/manrope';
 import { registerRootComponent } from 'expo';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppState, Platform, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-url-polyfill/auto';
+import { AppAlertHost } from './src/components/ui/AppAlert';
 import OfflineBanner from './src/components/OfflineBanner';
 import UpdateModal from './src/components/UpdateModal';
 import useNetworkSync from './src/hooks/useNetworkSync';
@@ -28,6 +31,8 @@ if (Platform.OS === 'android') {
     console.log('⚠️ Widget task handler registration skipped:', e?.message || e);
   }
 }
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const SyncProvider = ({ children }) => {
   useNetworkSync();
@@ -69,25 +74,34 @@ function App() {
     };
   }, []);
 
+  const onLayoutRootView = useCallback(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <SyncProvider>
-      <View style={styles.root}>
-        <SafeAreaProvider>
-          <OfflineBanner />
-          <StatusBar style="dark" />
-          <AppNavigator />
-          <UpdateModal
-            visible={showUpdateModal}
-            updateInfo={updateInfo}
-            onClose={() => setShowUpdateModal(false)}
-          />
-        </SafeAreaProvider>
-      </View>
-    </SyncProvider>
+    <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+      <SyncProvider>
+        <View style={styles.root}>
+          <SafeAreaProvider>
+            <OfflineBanner />
+            <StatusBar style="dark" />
+            <AppNavigator />
+            <AppAlertHost />
+            <UpdateModal
+              visible={showUpdateModal}
+              updateInfo={updateInfo}
+              onClose={() => setShowUpdateModal(false)}
+            />
+          </SafeAreaProvider>
+        </View>
+      </SyncProvider>
+    </GestureHandlerRootView>
   );
 }
 

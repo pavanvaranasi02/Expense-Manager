@@ -1,14 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import {
-  Alert,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-} from 'react-native';
+  View} from 'react-native';
+import { AppAlert as Alert } from "./AppAlert";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useAuthStore from '../../store/useAuthStore';
 import useStorageStore from '../../store/useStorageStore';

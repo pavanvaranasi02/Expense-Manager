@@ -2,12 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-} from 'react-native';
+    View} from 'react-native';
+import { AppAlert as Alert } from "../ui/AppAlert";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import InviteCodeCard from '../../components/Family/InviteCodeCard';

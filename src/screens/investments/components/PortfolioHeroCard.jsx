@@ -239,11 +239,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
-    elevation: 6,
-    shadowColor: "#0F766E",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
+    overflow: "hidden",
   },
   topRow: {
     flexDirection: "row",
@@ -391,11 +387,8 @@ const styles = StyleSheet.create({
   },
   tabBtnActive: {
     backgroundColor: "#FFFFFF",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "#E5E2DC",
   },
   tabBtnText: {
     fontSize: 13,

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
     ActivityIndicator,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -108,7 +109,14 @@ const CreateFamilyScreen = ({ navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backBtn} 
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              Keyboard.dismiss();
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.getParent()?.goBack();
+              }
+            }}
           >
             <Ionicons name="arrow-back" size={24} color="#18181B" />
           </TouchableOpacity>
