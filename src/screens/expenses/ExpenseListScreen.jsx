@@ -29,6 +29,7 @@ import {
   TRANSACTION_TYPES,
 } from "../../services/financialCalculationService";
 import { deleteIncome, getIncomes } from "../../services/incomeService";
+import { refreshWidgetSnapshot } from "../../services/widgetService";
 import useAuthStore from "../../store/useAuthStore";
 import { Theme } from "../../theme/theme";
 import { formatCurrency } from "../../utils/format";
@@ -40,13 +41,23 @@ const FILTER_OPTIONS = [
   { id: "month", label: "Month" },
 ];
 
-const ExpenseListScreen = ({ navigation }) => {
+const ExpenseListScreen = ({ navigation, route }) => {
   const isStealthMode = useAuthStore((s) => s.isStealthMode);
   const userName = useAuthStore((s) => s.getUserName());
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState("today");
+  const [filter, setFilter] = useState(() => {
+    const paramFilter = route?.params?.filter;
+    return FILTER_OPTIONS.some((o) => o.id === paramFilter) ? paramFilter : "today";
+  });
+
+  React.useEffect(() => {
+    const paramFilter = route?.params?.filter;
+    if (paramFilter && FILTER_OPTIONS.some((o) => o.id === paramFilter)) {
+      setFilter(paramFilter);
+    }
+  }, [route?.params?.filter]);
   const [typeFilter, setTypeFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFlowChart, setShowFlowChart] = useState(false);
@@ -171,7 +182,10 @@ const ExpenseListScreen = ({ navigation }) => {
         { text: "Cancel", style: "cancel" },
         { text: "Delete", style: "destructive", onPress: async () => {
              const res = tx.type === "income" ? await deleteIncome(tx.id, tx) : await deleteExpense(tx.id, tx);
-             if (res.success) fetchTransactions();
+             if (res.success) {
+               fetchTransactions();
+               refreshWidgetSnapshot();
+             }
         }}
       ]
     );

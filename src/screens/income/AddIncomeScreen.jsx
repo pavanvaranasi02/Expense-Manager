@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAccounts } from '../../services/accountService';
 import { addIncome, INCOME_SOURCES, updateIncome } from '../../services/incomeService';
 import { generateStableId } from '../../services/transactionValidation';
+import { refreshWidgetSnapshot } from '../../services/widgetService';
 import { Theme } from '../../theme/theme';
 import { formatCurrency } from '../../utils/format';
 
@@ -171,6 +172,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
         : await addIncome(incomePayload);
 
       if (result.success) {
+        refreshWidgetSnapshot();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         navigation.goBack();
       } else {

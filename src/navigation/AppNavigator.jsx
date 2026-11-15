@@ -1,5 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Linking from 'expo-linking';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -102,12 +103,36 @@ const AppNavigator = () => {
     return () => unsubscribe();
   }, []);
 
+  const linking = {
+    prefixes: [Linking.createURL('/'), 'kosh://'],
+    config: {
+      screens: {
+        AddExpenseModal: 'add-expense',
+        AddIncomeModal: 'add-income',
+        Main: {
+          screens: {
+            Home: {
+              screens: {
+                Dashboard: '',
+              },
+            },
+            Activity: {
+              screens: {
+                ExpenseList: 'history',
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={isAuthenticated && isOnboardingComplete ? linking : undefined}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />

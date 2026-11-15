@@ -7,11 +7,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node --import ./tests/registerLoader.mjs --test tests/financialIntegrity.test.mjs"
+    "test": "node --import ./tests/registerLoader.mjs --test tests/financialIntegrity.test.mjs tests/widgetService.test.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/manrope": "^0.4.3",
+    "@expo/ui": "^58.0.28",
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -44,11 +45,13 @@
     "expo-symbols": "~58.0.4",
     "expo-system-ui": "~58.0.7",
     "expo-web-browser": "~58.0.7",
+    "expo-widgets": "^58.0.28",
     "firebase": "^12.10.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.71.2",
     "react-native": "0.88.1",
+    "react-native-android-widget": "^0.26.0",
     "react-native-chart-kit": "^6.12.0",
     "react-native-gesture-handler": "~3.3.0",
     "react-native-reanimated": "4.7.1",
