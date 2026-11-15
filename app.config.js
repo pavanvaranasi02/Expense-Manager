@@ -45,6 +45,43 @@ export default {
             buildArchs: ["arm64-v8a"]
           }
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          widgets: [
+            {
+              name: "KoshQuickExpenseWidget",
+              label: "KOSH Quick Expense",
+              minWidth: "250dp",
+              minHeight: "110dp",
+              targetCellWidth: 4,
+              targetCellHeight: 2,
+              resizeMode: "horizontal|vertical",
+              description: "View combined bank & cash balances, log expenses quickly, and open transaction history.",
+              updatePeriodMillis: 1800000
+            }
+          ]
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          bundleIdentifier: "com.pavan.kosh.widgets",
+          groupIdentifier: "group.com.pavan.kosh",
+          enableAndroid: false,
+          widgets: [
+            {
+              name: "KoshQuickExpenseWidget",
+              displayName: "KOSH Quick Expense",
+              description: "View combined bank & cash balances, log expenses quickly, and open transaction history.",
+              ios: {
+                supportedFamilies: ["systemSmall", "systemMedium"],
+                initialLayout: "./src/widgets/KoshIosWidget.jsx"
+              }
+            }
+          ]
+        }
       ]
     ],
     extra: {

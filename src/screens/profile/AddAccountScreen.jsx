@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addAccount, updateAccount } from '../../services/accountService';
+import { refreshWidgetSnapshot } from '../../services/widgetService';
 import useAccountStore from '../../store/useAccountStore';
 
 const ACCOUNT_TYPES = [
@@ -92,6 +93,7 @@ const AddAccountScreen = ({ navigation, route }) => {
     }
 
     if (result.success) {
+      refreshWidgetSnapshot();
       navigation.goBack();
     } else {
       Alert.alert('Error', 'Failed to save: ' + result.error);

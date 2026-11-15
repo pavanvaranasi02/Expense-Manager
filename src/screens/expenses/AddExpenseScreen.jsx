@@ -23,6 +23,7 @@ import { getAccounts } from '../../services/accountService';
 import { getAllCategories } from '../../services/categoryService';
 import { addExpense, updateExpense } from '../../services/expenseService';
 import { generateStableId } from '../../services/transactionValidation';
+import { refreshWidgetSnapshot } from '../../services/widgetService';
 import useAuthStore from '../../store/useAuthStore';
 import { Theme } from '../../theme/theme';
 
@@ -93,7 +94,17 @@ const AddExpenseScreen = ({ navigation, route }) => {
         getAccounts(),
       ]);
       if (!active) return;
-      if (catResult.success) setCategories(catResult.categories || []);
+      if (catResult.success) {
+        const loadedCategories = catResult.categories || [];
+        setCategories(loadedCategories);
+        const paramCategoryId = route?.params?.categoryId;
+        if (!editData && paramCategoryId) {
+          const matched = loadedCategories.find((c) => c.id === paramCategoryId);
+          if (matched) {
+            setSelectedCategory(matched);
+          }
+        }
+      }
       if (accResult.success) {
         const list = accResult.accounts || [];
         setAccounts(list);
@@ -113,6 +124,16 @@ const AddExpenseScreen = ({ navigation, route }) => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const paramCategoryId = route?.params?.categoryId;
+    if (!isEdit && paramCategoryId && categories.length > 0) {
+      const matched = categories.find((c) => c.id === paramCategoryId);
+      if (matched) {
+        setSelectedCategory(matched);
+      }
+    }
+  }, [route?.params?.categoryId, categories, isEdit]);
 
   const handleAccountSelect = (account) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -199,6 +220,7 @@ const AddExpenseScreen = ({ navigation, route }) => {
         : await addExpense(expenseData);
 
       if (result.success) {
+        refreshWidgetSnapshot();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         navigation.goBack();
       } else {

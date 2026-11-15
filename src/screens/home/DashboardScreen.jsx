@@ -36,6 +36,7 @@ import { getDashboardData } from "../../services/expenseService";
 import { getMonthlyFamilyExpenses } from "../../services/familyExpenseService";
 import { getFamily } from "../../services/familyService";
 import { calculateAccountTotals } from "../../services/financialCalculationService";
+import { refreshWidgetSnapshot } from "../../services/widgetService";
 import {
   calculateInvestmentTotals,
   getAllPendingActions,
@@ -98,7 +99,10 @@ const DashboardScreen = ({ navigation }) => {
         ]);
 
       if (dashResult.success) setDashData(dashResult.data);
-      if (accResult.success) setAccounts(accResult.accounts);
+      if (accResult.success) {
+        setAccounts(accResult.accounts);
+        refreshWidgetSnapshot(accResult.accounts);
+      }
       if (budgetResult.success) setBudgets(budgetResult.budgets);
       if (notifResult.success) {
         setNotifications(notifResult.notifications);
