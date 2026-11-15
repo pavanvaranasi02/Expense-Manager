@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "KOSH",
     slug: "kosh",
-    version: "1.5.3-beta",
+    version: "1.5.4-beta",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     icon: "./assets/kosh-icon.png",
@@ -16,7 +16,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.pavan.kosh",
-      buildNumber: "1.5.3"
+      buildNumber: "1.5.4"
     },
     android: {
       adaptiveIcon: {
@@ -24,7 +24,7 @@ export default {
         backgroundColor: "#0F3D3A"
       },
       package: "com.pavan.kosh",
-      versionCode: 23
+      versionCode: 24
     },
     plugins: [
       "expo-secure-store",
