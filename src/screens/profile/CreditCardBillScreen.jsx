@@ -996,7 +996,7 @@ const CreditCardBillScreen = ({ navigation }) => {
       {/* ================================================= */}
       <Modal visible={showAddEmiModal} animationType="slide" transparent statusBarTranslucent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
         >
           <TouchableOpacity
@@ -1261,7 +1261,7 @@ const CreditCardBillScreen = ({ navigation }) => {
       {/* ================================================= */}
       <Modal visible={showRecordEmiModal} animationType="slide" transparent statusBarTranslucent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
         >
           <TouchableOpacity

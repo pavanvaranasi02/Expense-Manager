@@ -1364,7 +1364,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* 6. Add Investment Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -1845,7 +1845,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* 8. Update Current Value Modal */}
       <Modal visible={showUpdateModal} animationType="slide" transparent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
           <View style={styles.modalOverlay}>
@@ -1887,7 +1887,7 @@ const PortfolioScreen = ({ navigation }) => {
       {/* 9. Top-Up / Add Amount Modal */}
       <Modal visible={showAddAmountModal} animationType="slide" transparent>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
           <View style={[styles.modalContent, { maxHeight: "88%" }]}>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "KOSH",
     "slug": "kosh",
-    "version": "1.5.4-beta",
+    "version": "1.5.5-beta",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/kosh-icon.png",
@@ -16,19 +16,28 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pavan.kosh",
-      "buildNumber": "1.5.4"
+      "buildNumber": "1.5.5"
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/kosh-icon.png",
         "backgroundColor": "#0F3D3A"
       },
       "package": "com.pavan.kosh",
-      "versionCode": 24
+      "versionCode": 25
     },
     "plugins": [
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F3D3A",
+          "image": "./assets/kosh-icon.png",
+          "imageWidth": 200
+        }
+      ]
     ]
   }
 }
