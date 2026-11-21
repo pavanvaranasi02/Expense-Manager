@@ -42,6 +42,7 @@ export const INVESTMENT_TYPES = [
   { id: 'real_estate', name: 'Real Estate', icon: '🏠', color: '#EC4899' },
   { id: 'nps', name: 'NPS', icon: '📋', color: '#0284C7' },
   { id: 'bonds', name: 'Bonds', icon: '📄', color: '#64748B' },
+  { id: 'lic', name: 'LIC Policy', icon: '🏛️', color: '#0F766E' },
   { id: 'other', name: 'Other', icon: '💰', color: '#9E9E9E' },
 ];
 

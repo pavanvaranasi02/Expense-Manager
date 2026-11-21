@@ -1717,8 +1717,8 @@ const PortfolioScreen = ({ navigation }) => {
                     </>
                   )}
 
-                  {/* Fixed Income / FD / RD Interest */}
-                  {addMode === "new" && ["fd", "rd", "ppf", "nps", "bonds"].includes(invType.id) && (
+                  {/* Fixed Income / FD / RD / LIC Interest */}
+                  {addMode === "new" && ["fd", "rd", "ppf", "nps", "bonds", "lic"].includes(invType.id) && (
                     <>
                       <Text style={styles.modalLabel}>Interest Rate (% p.a.)</Text>
                       <TextInput

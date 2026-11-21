@@ -18,6 +18,7 @@ import SectionHeader from '../../components/ui/SectionHeader';
 import { getCurrencySymbol } from '../../constants/currencies';
 import { getAccounts } from '../../services/accountService';
 import { calculateAccountTotals } from '../../services/financialCalculationService';
+import { calculateInsuranceTotals, getInsurances } from '../../services/insuranceService';
 import { calculateInvestmentTotals, getInvestments } from '../../services/investmentService';
 import useAuthStore from '../../store/useAuthStore';
 import { Theme } from '../../theme/theme';
@@ -46,10 +47,15 @@ const WealthScreen = ({ navigation }) => {
   const [accounts, setAccounts] = useState([]);
   const [invTotals, setInvTotals] = useState(null);
   const [investmentsCount, setInvestmentsCount] = useState(0);
+  const [insTotals, setInsTotals] = useState(null);
 
   const fetchWealthData = useCallback(async () => {
     try {
-      const [accRes, invRes] = await Promise.all([getAccounts(), getInvestments()]);
+      const [accRes, invRes, insRes] = await Promise.all([
+        getAccounts(),
+        getInvestments(),
+        getInsurances(),
+      ]);
       if (accRes?.success) {
         setAccounts((accRes.accounts || []).filter((a) => a.isActive !== false));
       }
@@ -57,6 +63,9 @@ const WealthScreen = ({ navigation }) => {
         const list = invRes.investments || [];
         setInvestmentsCount(list.filter((i) => i.isActive).length);
         setInvTotals(calculateInvestmentTotals(list));
+      }
+      if (insRes?.success) {
+        setInsTotals(calculateInsuranceTotals(insRes.insurances || []));
       }
     } catch (e) {
       console.log('Wealth fetch error:', e);
@@ -248,6 +257,54 @@ const WealthScreen = ({ navigation }) => {
                   <Text style={styles.portfolioTitle}>No investments tracked yet</Text>
                   <Text style={styles.portfolioSub}>
                     Track Mutual Funds, SIPs & Fixed Deposits
+                  </Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={15} color={Theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* D. Insurance — Health, Term & Car */}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Insurance"
+            actionLabel={insTotals?.activeCount > 0 ? 'Manage' : 'Add Policy'}
+            onAction={() => navigation.navigate('Insurance')}
+          />
+
+          <View style={styles.ledgerBox}>
+            <TouchableOpacity
+              style={styles.portfolioRow}
+              onPress={() => navigation.navigate('Insurance')}
+              activeOpacity={0.75}
+            >
+              <View style={styles.rowIconWrap}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={Theme.colors.primary} />
+              </View>
+              {insTotals?.activeCount > 0 ? (
+                <>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.portfolioTitle} numberOfLines={1}>
+                      {insTotals.activeCount} Active Polic{insTotals.activeCount > 1 ? 'ies' : 'y'}
+                    </Text>
+                    <Text style={styles.portfolioSub} numberOfLines={1}>
+                      Premium {formatAmt(insTotals.annualPremium)}/yr
+                      {insTotals.upcomingRenewals > 0
+                        ? ` • ${insTotals.upcomingRenewals} due soon`
+                        : ''}
+                    </Text>
+                  </View>
+                  <View style={styles.portfolioRight}>
+                    <Text style={styles.portfolioAmount}>{formatAmt(insTotals.totalCoverage)}</Text>
+                    <Text style={styles.portfolioSub}>Coverage</Text>
+                  </View>
+                </>
+              ) : (
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.portfolioTitle}>No insurance policies tracked</Text>
+                  <Text style={styles.portfolioSub}>
+                    Track Health, Term Life & Car insurance
                   </Text>
                 </View>
               )}

@@ -2,7 +2,7 @@
   "expo": {
     "name": "KOSH",
     "slug": "kosh",
-    "version": "1.5.5-beta",
+    "version": "1.5.6-beta",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/kosh-icon.png",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pavan.kosh",
-      "buildNumber": "1.5.5"
+      "buildNumber": "1.5.6"
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -25,7 +25,7 @@
         "backgroundColor": "#0F3D3A"
       },
       "package": "com.pavan.kosh",
-      "versionCode": 25
+      "versionCode": 26
     },
     "plugins": [
       "expo-secure-store",

@@ -16,6 +16,7 @@ export const LOCAL_COLLECTIONS = {
   BUDGETS: 'budgets',
   CUSTOM_CATEGORIES: 'custom_categories',
   INVESTMENTS: 'investments',
+  INSURANCES: 'insurances',
   EMIS: 'emis',
   NOTIFICATIONS: 'notifications',
   ACTIVITY_LOGS: 'activity_logs',

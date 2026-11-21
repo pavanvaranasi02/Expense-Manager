@@ -148,7 +148,7 @@ const InvestmentEditModal = ({
   };
 
   const isMutualFund = investment?.type === "mutual_fund";
-  const isFixedIncome = ["fd", "rd", "ppf", "nps", "bonds"].includes(
+  const isFixedIncome = ["fd", "rd", "ppf", "nps", "bonds", "lic"].includes(
     investment?.type,
   );
 

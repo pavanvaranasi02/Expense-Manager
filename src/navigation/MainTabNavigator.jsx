@@ -27,6 +27,8 @@ import PlanScreen from '../screens/plan/PlanScreen';
 import CreditCardBillScreen from '../screens/profile/CreditCardBillScreen';
 
 // Wealth Stack Screens
+import AddInsuranceScreen from '../screens/insurance/AddInsuranceScreen';
+import InsuranceScreen from '../screens/insurance/InsuranceScreen';
 import PortfolioScreen from '../screens/investments/PortfolioScreen';
 import AddAccountScreen from '../screens/profile/AddAccountScreen';
 import ManageAccountsScreen from '../screens/profile/ManageAccountsScreen';
@@ -75,6 +77,8 @@ const WealthStack = () => (
     <Stack.Screen name="ManageAccounts" component={ManageAccountsScreen} />
     <Stack.Screen name="AddAccount" component={AddAccountScreen} />
     <Stack.Screen name="Portfolio" component={PortfolioScreen} />
+    <Stack.Screen name="Insurance" component={InsuranceScreen} />
+    <Stack.Screen name="AddInsurance" component={AddInsuranceScreen} />
     <Stack.Screen name="CreditCardBill" component={CreditCardBillScreen} />
   </Stack.Navigator>
 );
